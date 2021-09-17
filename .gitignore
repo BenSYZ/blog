@@ -1,3 +1,4 @@
 /themes/*
 !/themes/my-hugo-theme
 /resources
+/docs/*
