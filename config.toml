@@ -1,3 +1,13 @@
-baseURL = 'http://example.org/'
-languageCode = 'en-us'
-title = 'My New Hugo Site'
+#baseURL = "https://bensyz.github.io"
+baseURL = "https://bensyz.github.io/blog"
+# last is the repo name
+languageCode = "en-us"
+title = "Ben's Blog"
+#theme = "ananke"
+#theme = "dream"
+#theme = "zen"
+#theme = "simpleness"
+#theme = "theme-example"
+theme = "my-hugo-theme"
+disablePathToLower = true
+publishDir = "docs"
