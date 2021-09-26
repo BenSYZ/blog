@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+
+
+
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>vector_analysis 1</title>
+    <link rel="stylesheet" href="https://bensyz.github.io/blog/css/style.css">
+    <link rel="stylesheet" href="https://bensyz.github.io/blog/css/footer.css">
+
+    <link rel="icon" id="light-scheme-icon" href="https://bensyz.github.io/blog/icons/favicon_Light.svg" type="image/svg+xml">
+    <link rel="icon" id="dark-scheme-icon" href="https://bensyz.github.io/blog/icons/favicon_Dark.svg" type="image/svg+xml">
+    <script src="https://bensyz.github.io/blog/js/favicon.js"></script> 
+  </head>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css" integrity="sha384-zTROYFVGOfTw7JV7KUu8udsvW2fx4lWOsCEDqhBreBwlHI4ioVRtmIvEThzJHGET" crossorigin="anonymous">
+
+    
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js" integrity="sha384-GxNFqL3r9uRJQhR+47eDxuPoNE7yLftQM8LcxzgS4HT73tp970WS/wV5p8UzCOmb" crossorigin="anonymous"></script>
+
+    
+    <script
+	defer src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/contrib/auto-render.min.js"
+	      integrity="sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl"
+	      crossorigin="anonymous"
+	      onload="renderMathInElement(
+	      document.body,
+	      {
+	      delimiters: [
+	      {left: '$$', right: '$$', display: true},
+	      {left: '\\[', right: '\\]', display: true},
+	      {left: '$', right: '$', display: false},
+	      {left: '\\(', right: '\\)', display: false}
+	      ]
+	      }
+	      );"></script>
+    
+
+</head>
+</html>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>vector_analysis 1</title>
+</head>
+    <h1>vector_analysis 1</h1>
+    Tue, 2021-09-14
+    
+    
+    <hr>
+</html>
+
+
+  <!--
+# Vector Analysis
+-->
+<p>Review Triple product</p>
+<ul>
+<li>Vector triple product <span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - C (A \cdot B)
+\]</span></li>
+<li>Scalar triple product <span class="math display">\[
+A \cdot (B \times C) = B \cdot(C \times A)
+\]</span></li>
+<li>轮换</li>
+</ul>
+<hr />
+<ol type="1">
+<li>Show that <span class="math display">\[
+(a \times b) \times (a\times c) = (a \cdot(b\times c))a
+\]</span></li>
+</ol>
+<p><span class="math display">\[
+(a \times b) \cdot (c\times d) = (a \cdot c)(b \cdot d) - (a \cdot d)(b \cdot c)
+\]</span></p>
+<hr />
+<ul>
+<li>Relation of divergences <span class="math display">\[
+\nabla \cdot (fA) = (\nabla f) \cdot A + f(\nabla \cdot A)
+\]</span> <span class="math inline">\(\nabla\)</span> operate on f, that’s gradient ???</li>
+<li>Relation of curls <span class="math display">\[
+\nabla \times (fA) = (\nabla f) \times A + f(\nabla \times A)
+\]</span> <span class="math inline">\(\nabla\)</span> operate on f, that’s still gradient</li>
+</ul>
+<h2 id="second-derivatives">Second derivatives</h2>
+<ul>
+<li>1.1. div grad f: <span class="math inline">\(\nabla \cdot (\nabla f) = \nabla^2 f = \Delta f\)</span></li>
+<li>1.2. curl grad f: <span class="math inline">\(\nabla \times (\nabla f) =0\)</span></li>
+<li>2 grad div A: <span class="math inline">\(\nabla (\nabla \cdot A)\)</span></li>
+<li>3.1 div curl A: <span class="math inline">\(\nabla \cdot (\nabla \times A) =0\)</span></li>
+<li>3.2 curl curl A: <span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)</span></li>
+</ul>
+<p>extra for Laplace: * scalar: <span class="math inline">\(\nabla^2f = \nabla \cdot (\nabla f)\)</span> * vector: <span class="math inline">\(\nabla^2 A \equiv (\nabla \cdot \nabla)A = \nabla (\nabla \cdot A) - \nabla \times (\nabla \times A)\)</span></p>
+<ol start="2" type="1">
+<li>From Maxwell’s equations <span class="math display">\[
+\left\{\begin{matrix}
+\nabla \cdot E = 0; \nabla \times E = - \frac{\partial B}{\partial t} \\
+\nabla \cdot B = 0; \nabla \times B = \mu_0 \epsilon_0 \frac{\partial E}{\partial t} \\
+\end{matrix}\right.
+\]</span></li>
+</ol>
+<p>Derive the wave equations: <span class="math display">\[
+\begin{matrix}
+\nabla^2 E = \mu_0\epsilon_0\frac{\partial^2 E}{\partial^2 t} \\
+\nabla^2 B = \mu_0\epsilon_0\frac{\partial^2 B}{\partial^2 t} \\
+\end{matrix}
+\]</span></p>
+<p>How to understand <span class="math inline">\(\nabla^2 A =(\nabla \cdot \nabla)E\)</span></p>
+<h1 id="integral-calculus">Integral Calculus</h1>
+<p><span class="math display">\[
+\int_{x_1}^{x_2} f(x) dx = F(x)|_{x_1}^{x_2}
+\]</span></p>
+<p><strong>Meaning</strong>: Only care about the value on two side point. 3D volume to surface</p>
+<h2 id="line-integrals">line integrals</h2>
+<p><span class="math display">\[
+\int_{aP}^{b}v \cdot dl
+\]</span> 保守场 <span class="math display">\[
+\ldots
+\]</span></p>
+<h2 id="surface-integral">Surface Integral</h2>
+<p><span class="math display">\[
+\int v \cdot dS
+\]</span> flux</p>
+<ul>
+<li><span class="math inline">\(dS\)</span> surface define a direction</li>
+<li><span class="math inline">\(v\)</span> or <span class="math inline">\(E\)</span> has a direction</li>
+</ul>
+<p>surface close intergrals <span class="math display">\[
+\oint
+\]</span></p>
+<h2 id="fundamental-theorem-of-gradient">Fundamental theorem of gradient</h2>
+<p><span class="math display">\[
+\int_{aP}^{b}\nabla f \cdot  dl=f(b)-f(a)
+\]</span> <span class="math display">\[
+\oint_{P} \nabla f \cdot  dl=0
+\]</span></p>
+<hr />
+<p>Proof:</p>
+<p>From the beginning <span class="math inline">\(\nabla f \cdot dl \equiv df\)</span> <span class="math display">\[
+df = \int
+\]</span> pic 094047.png</p>
+<hr />
+<h2 id="fundamental-theorem-of-divergence">Fundamental theorem of divergence:</h2>
+<p><span class="math display">\[
+\int_V(\nabla \cdot  v )dV = \oint_S v \cdot  dS
+\]</span> * <span class="math inline">\(v\)</span> has 3 values + <span class="math inline">\(v_x(x,y,z)\)</span> + <span class="math inline">\(v_y(x,y,z)\)</span> + <span class="math inline">\(v_z(x,y,z)\)</span></p>
+<p>surface vector points out forward of a small volume</p>
+<p>why v(x) from left to right</p>
+<h2 id="fundamental-theorem-of-curl">Fundamental theorem of curl:</h2>
+<p><span class="math display">\[
+\int_S (\nabla \times  v) \cdot dS = \oint_P v \cdot  dl
+\]</span></p>
+<hr />
+<ol start="3" type="1">
+<li>Show that <span class="math display">\[
+\int_v (\nabla \cdot  v) dV = \int
+\]</span></li>
+</ol>
+<h1 id="curvilinear-coordinates">Curvilinear Coordinates</h1>
+<h2 id="spherical-polar-coordinates-spc">Spherical polar coordinates (SPC):</h2>
+<p><span class="math display">\[
+\begin{matrix}
+x = r\sin \theta \cos \phi\\
+y = r \sin \theta \sin\phi\\
+z = r \cos \theta
+\end{matrix}
+\]</span></p>
+<p>direction of <span class="math inline">\(\theta\)</span> is increase of theta</p>
+<p>unlinke discard coordinates, the Sp coordinates changes with r ,theta phi</p>
+<p>now calculate the value of infinite small volume, because <span class="math inline">\(\theta\)</span> <span class="math inline">\(\phi\)</span> are not length</p>
+<p>so <span class="math inline">\(dr d\theta d\phi\)</span></p>
+
+
+<html>
+  <body>
+    <p class="footer">
+    
+
+    <hr>
+
+      Ben's Blog <br />
+      <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
+	<img alt="知识共享许可协议" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" />
+      </a> <br />
+      本作品采用<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。
+    </p>
+  </body>
+</html>
+

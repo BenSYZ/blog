@@ -2,8 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://bensyz.github.io/blog/</loc>
-    <lastmod>2021-09-17T12:13:02+08:00</lastmod>
+    <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</loc>
+    <lastmod>2021-09-23T00:30:00+08:00</lastmod>
   </url><url>
     <loc>https://bensyz.github.io/blog/page_content/my-first-post/</loc>
     <lastmod>2021-09-17T12:13:02+08:00</lastmod>
@@ -11,8 +11,20 @@
     <loc>https://bensyz.github.io/blog/page_content/</loc>
     <lastmod>2021-09-17T12:13:02+08:00</lastmod>
   </url><url>
-    <loc>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/</loc>
-    <lastmod>2021-04-29T19:53:43+08:00</lastmod>
+    <loc>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</loc>
+    <lastmod>2021-09-16T12:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</loc>
+    <lastmod>2021-09-16T00:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</loc>
+    <lastmod>2021-09-14T00:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://bensyz.github.io/blog/study_notes/</loc>
+    <lastmod>2021-09-09T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://bensyz.github.io/blog/</loc>
+    <lastmod>2021-09-01T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://bensyz.github.io/blog/about/</loc>
     <lastmod>2021-04-29T19:53:43+08:00</lastmod>
@@ -23,21 +35,11 @@
     <loc>https://bensyz.github.io/blog/blogs/licenses/Copyright_and_Copyleft/</loc>
     <lastmod>2021-04-29T19:53:43+08:00</lastmod>
   </url><url>
-    <loc>https://bensyz.github.io/blog/study_notes/</loc>
-    <lastmod>2021-04-29T19:53:43+08:00</lastmod>
-  </url><url>
-    <loc>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/tm/</loc>
-    <lastmod>2021-04-29T19:53:43+08:00</lastmod>
-  </url><url>
     <loc>https://bensyz.github.io/blog/post/my-first-post/</loc>
     <lastmod>2021-04-29T12:04:22+08:00</lastmod>
   </url><url>
     <loc>https://bensyz.github.io/blog/post/</loc>
     <lastmod>2021-04-29T12:04:22+08:00</lastmod>
-  </url><url>
-    <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/</loc>
-  </url><url>
-    <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/ed/</loc>
   </url><url>
     <loc>https://bensyz.github.io/blog/categories/</loc>
   </url><url>
