@@ -6,7 +6,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>vector_analysis 1</title>
+    <title>Vector Analysis 1</title>
     <link rel="stylesheet" href="https://bensyz.github.io/blog/css/style.css">
     <link rel="stylesheet" href="https://bensyz.github.io/blog/css/footer.css">
 
@@ -51,9 +51,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>vector_analysis 1</title>
+    <title>Vector Analysis 1</title>
 </head>
-    <h1>vector_analysis 1</h1>
+    <h1>Vector Analysis 1</h1>
     Tue, 2021-09-14
     
     
@@ -61,25 +61,24 @@
 </html>
 
 
-  <!--
-# Vector Analysis
--->
+  <h2 id="vector-analysis">Vector Analysis</h2>
 <p>Review Triple product</p>
 <ul>
 <li>Vector triple product <span class="math display">\[
 A \times (B\times C) = B(A \cdot C) - C (A \cdot B)
 \]</span></li>
+</ul>
+<p>Proved by expand <span class="math inline">\(ABC\)</span></p>
+<ul>
 <li>Scalar triple product <span class="math display">\[
 A \cdot (B \times C) = B \cdot(C \times A)
 \]</span></li>
 <li>轮换</li>
 </ul>
 <hr />
-<ol type="1">
-<li>Show that <span class="math display">\[
+<p>Q1. Show that <span class="math display">\[
 (a \times b) \times (a\times c) = (a \cdot(b\times c))a
-\]</span></li>
-</ol>
+\]</span></p>
 <p><span class="math display">\[
 (a \times b) \cdot (c\times d) = (a \cdot c)(b \cdot d) - (a \cdot d)(b \cdot c)
 \]</span></p>
@@ -87,98 +86,221 @@ A \cdot (B \times C) = B \cdot(C \times A)
 <ul>
 <li>Relation of divergences <span class="math display">\[
 \nabla \cdot (fA) = (\nabla f) \cdot A + f(\nabla \cdot A)
-\]</span> <span class="math inline">\(\nabla\)</span> operate on f, that’s gradient ???</li>
+\]</span></li>
+</ul>
+<p><span class="math inline">\(\nabla\)</span> operate on f, that’s gradient, from the gradient definition.</p>
+<ul>
 <li>Relation of curls <span class="math display">\[
 \nabla \times (fA) = (\nabla f) \times A + f(\nabla \times A)
-\]</span> <span class="math inline">\(\nabla\)</span> operate on f, that’s still gradient</li>
+\]</span></li>
 </ul>
-<h2 id="second-derivatives">Second derivatives</h2>
+<p><span class="math inline">\(\nabla\)</span> operate on f, that’s still gradient</p>
+<h3 id="second-derivatives">Second derivatives</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>div grad f <br> curl grad f</td>
+<td><span class="math inline">\(\nabla \cdot (\nabla f) = \nabla^2 f = \Delta f\)</span> <br> <span class="math inline">\(\nabla \times (\nabla f) =0\)</span> (可以看成两个相同的矢量相乘）</td>
+</tr>
+<tr class="even">
+<td>grad div A</td>
+<td><span class="math inline">\(\nabla (\nabla \cdot A)\)</span></td>
+</tr>
+<tr class="odd">
+<td>div curl A <br> curl curl A</td>
+<td><span class="math inline">\(\nabla \cdot (\nabla \times A) =0\)</span> <br> <span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)</span>的证明似乎也要展开，而不能使用<span class="math inline">\(A \times(B \times C)\)</span>?不是的， <span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - C (A \cdot B)
+\]</span> 也可以写成</p>
+<p><span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - (A \cdot B) C
+\]</span></p>
+<p>当<span class="math inline">\(A \cdot B\)</span> 是数的时候，两个可以互换，但当他们是算符的时候就会丧失一定的一般性。</p>
+<p>有二重导可以想想上面几个公式。</p>
 <ul>
-<li>1.1. div grad f: <span class="math inline">\(\nabla \cdot (\nabla f) = \nabla^2 f = \Delta f\)</span></li>
-<li>1.2. curl grad f: <span class="math inline">\(\nabla \times (\nabla f) =0\)</span></li>
-<li>2 grad div A: <span class="math inline">\(\nabla (\nabla \cdot A)\)</span></li>
-<li>3.1 div curl A: <span class="math inline">\(\nabla \cdot (\nabla \times A) =0\)</span></li>
-<li>3.2 curl curl A: <span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)</span></li>
+<li><strong>Note</strong>: Extra for Laplace,<span class="math inline">\(\nabla^2\)</span>:</li>
+<li>scalar: <span class="math inline">\(\nabla^2f = \nabla \cdot (\nabla f)\)</span></li>
+<li>vector: <span class="math inline">\(\nabla^2 A \equiv (\nabla \cdot \nabla)A = \nabla (\nabla \cdot A) - \nabla \times (\nabla \times A)\)</span></li>
 </ul>
-<p>extra for Laplace: * scalar: <span class="math inline">\(\nabla^2f = \nabla \cdot (\nabla f)\)</span> * vector: <span class="math inline">\(\nabla^2 A \equiv (\nabla \cdot \nabla)A = \nabla (\nabla \cdot A) - \nabla \times (\nabla \times A)\)</span></p>
-<ol start="2" type="1">
-<li>From Maxwell’s equations <span class="math display">\[
+<hr />
+<p>Q2. From Maxwell’s equations <span class="math display">\[
 \left\{\begin{matrix}
 \nabla \cdot E = 0; \nabla \times E = - \frac{\partial B}{\partial t} \\
 \nabla \cdot B = 0; \nabla \times B = \mu_0 \epsilon_0 \frac{\partial E}{\partial t} \\
 \end{matrix}\right.
-\]</span></li>
-</ol>
+\]</span></p>
 <p>Derive the wave equations: <span class="math display">\[
 \begin{matrix}
 \nabla^2 E = \mu_0\epsilon_0\frac{\partial^2 E}{\partial^2 t} \\
 \nabla^2 B = \mu_0\epsilon_0\frac{\partial^2 B}{\partial^2 t} \\
 \end{matrix}
 \]</span></p>
-<p>How to understand <span class="math inline">\(\nabla^2 A =(\nabla \cdot \nabla)E\)</span></p>
-<h1 id="integral-calculus">Integral Calculus</h1>
+<p>Solve:</p>
+<p>Cross product to dot product: <span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)</span></p>
+<p><span class="math display">\[
+\nabla \times (\nabla \times E)=-\mu_0 \epsilon_0 \frac{\partial^2 E}{ \partial t^2}
+\]</span></p>
+<p>So</p>
+<p><span class="math display">\[
+\nabla^2E= \mu_0 \epsilon_0 \frac{\partial^2 E}{ \partial t^2} + \nabla(\nabla \cdot E)
+\]</span></p>
+<p>While the divergence of <span class="math inline">\(E\)</span> is <span class="math inline">\(0\)</span>, because:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\nabla \times \frac{\hat{r}}{r^2} &amp;= \nabla \times \frac{\bold{r}}{r^3} \\
+&amp;=\nabla \times \left(\nabla \frac{1}{r}\right)\\
+&amp;=0
+\end{aligned}
+\]</span></p>
+<ul>
+<li><strong>NOTE</strong>: How to understand <span class="math inline">\(\nabla^2 A\)</span>? <span class="math inline">\(\Rightarrow\)</span> <span class="math inline">\((\nabla \cdot \nabla)E\)</span></li>
+</ul>
+<hr />
+<h2 id="integral-calculus">Integral Calculus</h2>
+<p>Newton-Leibniz formula: 1D</p>
 <p><span class="math display">\[
 \int_{x_1}^{x_2} f(x) dx = F(x)|_{x_1}^{x_2}
 \]</span></p>
-<p><strong>Meaning</strong>: Only care about the value on two side point. 3D volume to surface</p>
-<h2 id="line-integrals">line integrals</h2>
-<p><span class="math display">\[
-\int_{aP}^{b}v \cdot dl
-\]</span> 保守场 <span class="math display">\[
-\ldots
+<p><strong>Meaning</strong>: Only care about the value on two side point. What about 3D? <span class="math display">\[
+\int_{?}^{?}f(x,y,z)?dxdydz
 \]</span></p>
-<h2 id="surface-integral">Surface Integral</h2>
+<p>In 3D, three types of integrals</p>
+<ul>
+<li>Line (or path) integrals</li>
+<li>Surface integrals (or flux)</li>
+<li>Volume integrals</li>
+</ul>
+<h3 id="line-integrals">line integrals</h3>
 <p><span class="math display">\[
-\int v \cdot dS
-\]</span> flux</p>
+\int_{a \mathcal{P}}^{b}v \cdot dl
+\]</span></p>
+<p>For a closed loop: <span class="math display">\[
+\oint_\mathcal{P} \bold{v} \cdot d \bold{l} = 0
+\]</span></p>
+<p>Conservative(保守场): <span class="math display">\[
+\int_{a \mathcal{P}}^b \bold{v} \cdot d \bold{l}
+=\int_{a \mathcal{P&#39;}}^b \bold{v} \cdot d \bold{l}
+\]</span></p>
+<p>不同路径的值是一样的</p>
+<h3 id="surface-integral">Surface Integral</h3>
+<p><span class="math display">\[
+\int_{\mathcal{S}} v \cdot dS
+\]</span></p>
+<p>Flux</p>
 <ul>
 <li><span class="math inline">\(dS\)</span> surface define a direction</li>
 <li><span class="math inline">\(v\)</span> or <span class="math inline">\(E\)</span> has a direction</li>
 </ul>
-<p>surface close intergrals <span class="math display">\[
-\oint
+<p>Surface integral for a closed surface <span class="math display">\[
+\oint_{\mathcal{S}} \bold{v}\cdot d\bold{S}
 \]</span></p>
-<h2 id="fundamental-theorem-of-gradient">Fundamental theorem of gradient</h2>
+<h3 id="volume-integrals">Volume Integrals</h3>
 <p><span class="math display">\[
-\int_{aP}^{b}\nabla f \cdot  dl=f(b)-f(a)
+\int_{\mathcal{V}}TdV
+\]</span></p>
+<h3 id="fundamental-theorem-of-gradient-divergence-and-curl">Fundamental theorem of gradient, divergence and curl</h3>
+<p>Like Newton-Leibniz equation, we only cares about the two side of, and there is no need to care about things in.</p>
+<p>Meaning: 降维</p>
+<p><span class="math display">\[
+\int_{aP}^{b}\nabla f \cdot  d\bold{l}=f(b)-f(a)
 \]</span> <span class="math display">\[
-\oint_{P} \nabla f \cdot  dl=0
+\oint_{P} \nabla \mathcal{f} \cdot  d\bold{l}=0
+\]</span></p>
+<p><span class="math display">\[
+\int_\mathcal{V}(\nabla \cdot \bold{v} )dV = \oint_\mathcal{S} \bold{v} \cdot  d \bold{S}
+\]</span></p>
+<p><span class="math display">\[
+\int_{\mathcal{S}} (\nabla \times \bold{v}) \cdot d \mathcal{S} = \oint_{\mathcal{P}} \bold{v} \cdot  d \bold{l}
 \]</span></p>
 <hr />
-<p>Proof:</p>
+<h3 id="proofs">Proofs:</h3>
+<h4 id="fundamental-theorem-of-gradient">Fundamental theorem of gradient:</h4>
 <p>From the beginning <span class="math inline">\(\nabla f \cdot dl \equiv df\)</span> <span class="math display">\[
-df = \int
-\]</span> pic 094047.png</p>
+\begin{aligned}
+\int df \cdot dl =&amp; \int_{r(x,y,z)}^{r&#39;(x,y,z)} \frac{\partial f}{ \partial x} dx + \frac{\partial f}{ \partial y} dy + \frac{\partial f}{ \partial z} dz\\
+=&amp; \int \frac{\partial f}{ \partial x} dx + \ldots \\
+=&amp; f(x_1,y_0,z_0) - f(x_0,y_0,z_0) \\
+&amp;+f(x_1,y_1,z_0) - f(x_1,y_0,z_0)\\
+&amp;+ f(x_1,y_1,z_1)-f(x_1,y_0,z_0)\\
+=&amp; f(x_1,y_1,z_1) - f(x_0,y_0,z_0)
+\end{aligned}
+\]</span> 最后一步的图像类似：</p>
+<p><img src="figures/全微分.jpg" width=200 height=200 alt="全微分"></p>
 <hr />
-<h2 id="fundamental-theorem-of-divergence">Fundamental theorem of divergence:</h2>
+<h4 id="fundamental-theorem-of-divergence">Fundamental theorem of divergence:</h4>
 <p><span class="math display">\[
-\int_V(\nabla \cdot  v )dV = \oint_S v \cdot  dS
-\]</span> * <span class="math inline">\(v\)</span> has 3 values + <span class="math inline">\(v_x(x,y,z)\)</span> + <span class="math inline">\(v_y(x,y,z)\)</span> + <span class="math inline">\(v_z(x,y,z)\)</span></p>
-<p>surface vector points out forward of a small volume</p>
-<p>why v(x) from left to right</p>
-<h2 id="fundamental-theorem-of-curl">Fundamental theorem of curl:</h2>
-<p><span class="math display">\[
-\int_S (\nabla \times  v) \cdot dS = \oint_P v \cdot  dl
+\int_\mathcal{V}(\nabla \cdot \bold{v} )dV = \oint_\mathcal{S} \bold{v} \cdot  d \bold{S}
 \]</span></p>
-<hr />
-<ol start="3" type="1">
-<li>Show that <span class="math display">\[
-\int_v (\nabla \cdot  v) dV = \int
+<p><img alt="fundamental_theorem_of_divergence" src="./figures/fundamental_theorem_of_divergence.png" width=200></p>
+<p>先看通量，右边</p>
+<ul>
+<li>对一个面<span class="math inline">\(v\)</span> has 3 values
+<ul>
+<li><span class="math inline">\(v_x(x,y,z)\)</span></li>
+<li><span class="math inline">\(v_y(x,y,z)\)</span></li>
+<li><span class="math inline">\(v_z(x,y,z)\)</span></li>
+</ul></li>
+<li>Surface vector points out forward of a small volume</li>
+</ul>
+<p><span class="math display">\[
+\begin{aligned}
+\bold{v} \cdot  d\bold{S} &amp;= [v_x(x_2) - v_x(x_1)]dydz\\
+&amp;+ [v_y(y_2) -v_y(y_1)] dxdz\\
+&amp;+ [v_z(z_2) -v_z(z_1)] dxdy\\
+&amp;= \left[\frac{\partial v_x}{ \partial x} + \frac{\partial v_y}{ \partial y} + \frac{\partial v_z}{ \partial z}\right] dxdydz\\
+&amp;= \nabla v \cdot  dV
+\end{aligned}
+\]</span></p>
+<p>这也是<strong>散度</strong>这么定义的来源</p>
+<p>Why <span class="math inline">\(v(x)\)</span> from left to right: <span class="math display">\[
+v = v_x \hat{x} + v_y\hat{y} + v_z\hat{z}
+\]</span></p>
+<h4 id="fundamental-theorem-of-curl">Fundamental theorem of curl:</h4>
+<p><span class="math display">\[
+\int_\mathcal{S} (\nabla \times  \bold{v}) \cdot d \bold{S} = \oint_P \bold{v} \cdot  d \bold{l}
+\]</span></p>
+<p><img alt="fundamental_theorem_of_curl" src="./figures/fundamental_theorem_of_curl.png " width=200></p>
+<p>同样从右边看，看一个小的环路的积分，微元加起来，重复的边界 cancel 掉了</p>
+<h2 id="curvilinear-coordinates">Curvilinear Coordinates</h2>
+<h3 id="spherical-polar-coordinates-spc">Spherical polar coordinates (SPC):</h3>
+<p><span class="math display">\[
+\begin{aligned}
+x &amp;= r\sin \theta \cos \phi\\
+y &amp;= r \sin \theta \sin\phi\\
+z &amp;= r \cos \theta
+\end{aligned}
+\]</span></p>
+<p><img alt="spherical_polar_coordinates" src="./figures/spherical_polar_coordinates.png" width="200"></p>
+<p>Direction of <span class="math inline">\(\theta\)</span> is increase of theta</p>
+<p>Unlike Descartes(笛卡尔) coordinates, the SPC coordinates changes with <span class="math inline">\(r\)</span> ,<span class="math inline">\(\theta\)</span> <span class="math inline">\(\phi\)</span>,坐标轴会变。</p>
+<p>If we want to calculate the value of infinite small volume, because <span class="math inline">\(\theta\)</span> <span class="math inline">\(\phi\)</span> are not length, we need to 要算体积微元, <span class="math inline">\(dl\)</span> <span class="math inline">\(dl_\theta\)</span> <span class="math inline">\(dl_\phi\)</span></p>
+<p><span class="math display">\[
+\begin{aligned}
+dl_r &amp;= dr = h_1 dr\\
+dl_\theta &amp;= r d\theta =h_2 d\theta\\
+dl_\phi &amp;= r \sin \theta d \phi = h_3 d\phi
+\end{aligned}
+\]</span></p>
+<p>Here <span class="math inline">\(h_1,h_2,h_3\)</span> are geometrical factors</p>
+<p>For Cylindrical coordinates:</p>
+<ul>
+<li>和<span class="math inline">\(x\)</span> 夹角<span class="math inline">\(\phi\)</span></li>
+<li><span class="math inline">\(r\)</span>投影到<span class="math inline">\(x-y\)</span> 平面长度</li>
+<li>z <span class="math display">\[
+\begin{aligned}
+dl_s &amp;= ds = h_1 ds\\
+dl_\phi &amp;= s d\phi =h_2 d\phi\\
+dl_z &amp;= d z = h_3 dz
+\end{aligned}
 \]</span></li>
-</ol>
-<h1 id="curvilinear-coordinates">Curvilinear Coordinates</h1>
-<h2 id="spherical-polar-coordinates-spc">Spherical polar coordinates (SPC):</h2>
-<p><span class="math display">\[
-\begin{matrix}
-x = r\sin \theta \cos \phi\\
-y = r \sin \theta \sin\phi\\
-z = r \cos \theta
-\end{matrix}
-\]</span></p>
-<p>direction of <span class="math inline">\(\theta\)</span> is increase of theta</p>
-<p>unlinke discard coordinates, the Sp coordinates changes with r ,theta phi</p>
-<p>now calculate the value of infinite small volume, because <span class="math inline">\(\theta\)</span> <span class="math inline">\(\phi\)</span> are not length</p>
-<p>so <span class="math inline">\(dr d\theta d\phi\)</span></p>
+</ul>
 
 
 <html>
