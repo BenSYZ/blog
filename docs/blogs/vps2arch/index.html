@@ -24,21 +24,24 @@
     <title>将服务器的 Ubuntu 系统换成 Arch Linux</title>
 </head>
     <h1>将服务器的 Ubuntu 系统换成 Arch Linux</h1>
-    Thu, 2021-09-30
+    Mon, 2021-10-04
+    <br>
+    本文最后修改于 Mon, 2021-10-04
+
     
     
     <hr>
 </html>
 
   
-  <h2>2021-21-97</h2>
+  
   
   <h2 id="introduction">Introduction</h2>
 <p>这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。</p>
 <p>早就听说了有一个叫 <code>vps2arch</code> 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 <a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#从一个主机运行另一个%20Linux%20发行版">Arch wiki</a> 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)</p>
 <p>然而 Arch wiki 在后面<a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#安装提示">安装提示</a> 那节让我从 <a href="https://wiki.archlinux.org/title/Installation_guide_（简体中文）">Installation Guide</a> 中的重新分区开始，继续后面的操作，我就这样试了，然后….🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。</p>
 <p>后来我找到了这篇<a href="https://blog.inkuang.com/2020/114/">博客</a>，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。</p>
-<p>写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 , 我把它改啦😏</p>
+<p>写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏</p>
 <h2 id="原理">原理</h2>
 <p>通过 <code>chroot</code> 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 <em>内核</em> 和 <em>操作系统</em> 的关系可以看看我的这篇关于 <a href="https://bensyz.github.io/blog/blogs/gpio/">gpio</a> 的文章。</p>
 <p>在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 <code>/proc</code> <code>/sys</code> <code>/run</code> 下的各种文件等等，还有设备文件夹 <code>/dev</code> 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 <code>ls</code> 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 <code>/bin/ls</code> 和它所依赖的各种库 （通过 <code>ldd /bin/ls</code> 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。</p>
@@ -110,6 +113,7 @@ DHCP=ipv4</code></pre>
   <body>
     <p class="footer">
     
+    <br />
 
     <hr>
 

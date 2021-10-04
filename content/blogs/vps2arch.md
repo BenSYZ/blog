@@ -1,9 +1,11 @@
 ---
 title: "将服务器的 Ubuntu 系统换成 Arch Linux"
 date: 2021-09-30T19:13:30+08:00
+PublishDate: 2021-10-04
+LastMod: 2021-10-04
 draft: false
 author: "Ben"
-description: 根据 Arch wiki, 通过 `chroot` 将服务器的 Ubuntu 系统换成 Arch Linux
+description: 根据 Arch wiki, 通过 chroot 将服务器的 Ubuntu 系统换成 Arch Linux
 tag: 'arch-chroot, Linux, Install Arch,'
 ---
 
@@ -16,7 +18,7 @@ tag: 'arch-chroot, Linux, Install Arch,'
 
 后来我找到了这篇[博客](https://blog.inkuang.com/2020/114/)，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。
 
-写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 , 我把它改啦😏
+写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏
 
 ## 原理
 通过 `chroot` 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 *内核* 和 *操作系统* 的关系可以看看我的这篇关于 [gpio]({{<ref "/blogs/gpio">}}) 的文章。

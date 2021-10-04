@@ -5,6 +5,19 @@ disablePathToLower: true
 publishDir: docs
 languageCode: en-us
 
+frontmatter:
+  date:
+    - date
+    - publishDate
+    - lastmod
+  publishDate:
+    - publishDate
+    - date
+  lastMod:
+    - lastMod
+    - publishDate
+    - date
+
 markup:
   asciidocExt:
     attributes: {}
