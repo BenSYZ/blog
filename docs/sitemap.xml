@@ -2,6 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://bensyz.github.io/blog/blogs/gpio/</loc>
+    <lastmod>2021-10-04T13:03:23+08:00</lastmod>
+  </url><url>
+    <loc>https://bensyz.github.io/blog/blogs/vps2arch/</loc>
+    <lastmod>2021-09-30T19:13:30+08:00</lastmod>
+  </url><url>
     <loc>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</loc>
     <lastmod>2021-09-23T00:30:00+08:00</lastmod>
   </url><url>

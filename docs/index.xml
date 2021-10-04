@@ -8,6 +8,30 @@
     <language>en-us</language>
     <lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>gpio</title>
+      <link>https://bensyz.github.io/blog/blogs/gpio/</link>
+      <pubDate>Mon, 04 Oct 2021 13:03:23 +0800</pubDate>
+      
+      <guid>https://bensyz.github.io/blog/blogs/gpio/</guid>
+      <description>Under construction…</description>
+    </item>
+    
+    <item>
+      <title>将服务器的 Ubuntu 系统换成 Arch Linux</title>
+      <link>https://bensyz.github.io/blog/blogs/vps2arch/</link>
+      <pubDate>Thu, 30 Sep 2021 19:13:30 +0800</pubDate>
+      
+      <guid>https://bensyz.github.io/blog/blogs/vps2arch/</guid>
+      <description>Introduction 这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。
+早就听说了有一个叫 vps2arch 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 Arch wiki 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)
+然而 Arch wiki 在后面安装提示 那节让我从 Installation Guide 中的重新分区开始，继续后面的操作，我就这样试了，然后….🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。
+后来我找到了这篇博客，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。
+写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 , 我把它改啦😏
+原理 通过 chroot 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 内核 和 操作系统 的关系可以看看我的这篇关于 gpio 的文章。
+在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 /proc /sys /run 下的各种文件等等，还有设备文件夹 /dev 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 ls 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 /bin/ls 和它所依赖的各种库 （通过 ldd /bin/ls 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。</description>
+    </item>
+    
+    <item>
       <title>Electrostatic 2</title>
       <link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link>
       <pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate>
