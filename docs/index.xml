@@ -2,26 +2,26 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Ben&#39;s Blog</title>
-    <link>https://bensyz.github.io/blog/</link>
+    <link>https://www.bensyz.com/</link>
     <description>Recent content on Ben&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://www.bensyz.com/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>gpio</title>
-      <link>https://bensyz.github.io/blog/blogs/gpio/</link>
+      <link>https://www.bensyz.com/blogs/gpio/</link>
       <pubDate>Mon, 04 Oct 2021 13:03:23 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/blogs/gpio/</guid>
+      <guid>https://www.bensyz.com/blogs/gpio/</guid>
       <description>Under construction…</description>
     </item>
     
     <item>
       <title>将服务器的 Ubuntu 系统换成 Arch Linux</title>
-      <link>https://bensyz.github.io/blog/blogs/vps2arch/</link>
+      <link>https://www.bensyz.com/blogs/vps2arch/</link>
       <pubDate>Thu, 30 Sep 2021 19:13:30 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/blogs/vps2arch/</guid>
+      <guid>https://www.bensyz.com/blogs/vps2arch/</guid>
       <description>Introduction 这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。
 早就听说了有一个叫 vps2arch 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 Arch wiki 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)
 然而 Arch wiki 在后面安装提示 那节让我从 Installation Guide 中的重新分区开始，继续后面的操作，我就这样试了，然后….🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。
@@ -33,10 +33,10 @@
     
     <item>
       <title>Electrostatic 2</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/2.Electrostatics/1/</link>
       <pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/2.Electrostatics/1/</guid>
       <description>Maxwell’s equation Gauss’s Law Charge &amp;lt;-&amp;gt; Electric field Flux
 一个体积内的电荷 vs 这个体积表面的通量
 \[ \nabla \cdot E = \frac{\rho}{\epsilon_0} \]
@@ -47,20 +47,20 @@
     
     <item>
       <title>My First Post</title>
-      <link>https://bensyz.github.io/blog/page_content/my-first-post/</link>
+      <link>https://www.bensyz.com/page_content/my-first-post/</link>
       <pubDate>Fri, 17 Sep 2021 12:13:02 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/page_content/my-first-post/</guid>
+      <guid>https://www.bensyz.com/page_content/my-first-post/</guid>
       <description>Hello Hugo This my first Hugo blog markdown.
 Test update. 你好 </description>
     </item>
     
     <item>
       <title>210916</title>
-      <link>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</link>
+      <link>https://www.bensyz.com/study_notes/theoretical_mechanics/210916/</link>
       <pubDate>Thu, 16 Sep 2021 12:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</guid>
+      <guid>https://www.bensyz.com/study_notes/theoretical_mechanics/210916/</guid>
       <description>Review \(F=ma\) 推出一些东西 动量定理…
 最小做用量原理，路径积分
 Variational Method(变分法) differential calculus (\(d\),微分) \(\to\) variational calculus(\(\delta\),变分)
@@ -74,10 +74,10 @@ Define: \(\tilde{f}(x) = f(x)+\alpha \eta(x)\) as a set of function(泛函)
     
     <item>
       <title>Vector Analysis 2</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/2/</link>
       <pubDate>Thu, 16 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/2/</guid>
       <description>Q1: Derive the formula for the volume of a sphere
 \[ \begin{aligned} V &amp;amp;=\int dV \\ &amp;amp;= \int r^2\sin\theta dr d\theta d\phi\\ &amp;amp;=\frac{1}{3} r^3|_{0}^{r} \times (-\cos\theta)|_{0}^{\pi}\times 2\pi\\ &amp;amp;=\frac{4}{3}r^3 \end{aligned} \]
 \(r^2\sin\theta\): it can also be derivative form Jacobi formula.
@@ -87,10 +87,10 @@ Curvilinear Coordinates Spherical polar coordinates (SPC): review  4 types integ
     
     <item>
       <title>Vector Analysis 1</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/1/</link>
       <pubDate>Tue, 14 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/1/</guid>
       <description>Vector Analysis Review Triple product
  Vector triple product \[ A \times (B\times C) = B(A \cdot C) - C (A \cdot B) \]  Proved by expand \(ABC\)
  Scalar triple product \[ A \cdot (B \times C) = B \cdot(C \times A) \] 轮换  Q1. Show that \[ (a \times b) \times (a\times c) = (a \cdot(b\times c))a \]
@@ -99,10 +99,10 @@ Curvilinear Coordinates Spherical polar coordinates (SPC): review  4 types integ
     
     <item>
       <title>About me</title>
-      <link>https://bensyz.github.io/blog/about/</link>
+      <link>https://www.bensyz.com/about/</link>
       <pubDate>Thu, 29 Apr 2021 19:53:43 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/about/</guid>
+      <guid>https://www.bensyz.com/about/</guid>
       <description>Hi there, this is my blog build with hugo.
 You can view the blog source code at Github.
 The blog theme is here.
@@ -111,10 +111,10 @@ If you have any question, you can create an issue on Github.</description>
     
     <item>
       <title>Copyright and Copyleft</title>
-      <link>https://bensyz.github.io/blog/blogs/licenses/Copyright_and_Copyleft/</link>
+      <link>https://www.bensyz.com/blogs/licenses/Copyright_and_Copyleft/</link>
       <pubDate>Thu, 29 Apr 2021 19:53:43 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/blogs/licenses/Copyright_and_Copyleft/</guid>
+      <guid>https://www.bensyz.com/blogs/licenses/Copyright_and_Copyleft/</guid>
       <description>Cover: Copyright or Copyleft
 本作品采用 知识共享 署名 - 非商业性使用 4.0 国际许可协议进行许可。 Introduction 一直想写一些技术文章，现在微信公众号，CSDN，都要你声明你是否是原创。如果是不是原创，请贴上原文链接，以及确定是否征求过原作者同意，但是我们这种小白想写一些技术分享，想写一些心得体会怎么可能写出完全原创的技术文章。总归都是学习，然后有什么所得。可能本来就不应该写？以免产生像毕业论文那种垃圾？但是把我总想分享一下自己的经验，所以有些畏首畏脚，自从上次写过一篇 ssh 的文章（貌似还担心因为版权问题还删了），就再也不想写了。
 有同样困惑和犹豫的当然不止我一个，因此在这段停滞不前的时间里我了解到了 Creative Commons 和其他 Copyleft 协议，现将其分享出来。
@@ -127,10 +127,10 @@ Copyleft 著作权 (Copyright) 在讲 Copyleft 之前我们先讲一下 Copyrigh
     
     <item>
       <title>My First Post</title>
-      <link>https://bensyz.github.io/blog/post/my-first-post/</link>
+      <link>https://www.bensyz.com/post/my-first-post/</link>
       <pubDate>Thu, 29 Apr 2021 12:04:22 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/post/my-first-post/</guid>
+      <guid>https://www.bensyz.com/post/my-first-post/</guid>
       <description>Hello Hugo This my first Hugo blog markdown.
 Test update. 你好 </description>
     </item>

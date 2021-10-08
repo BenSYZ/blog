@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Study Notes on Ben&#39;s Blog</title>
-    <link>https://bensyz.github.io/blog/study_notes/</link>
+    <link>https://www.bensyz.com/study_notes/</link>
     <description>Recent content in Study Notes on Ben&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 09 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/study_notes/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 09 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://www.bensyz.com/study_notes/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Electrostatic 2</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/2.Electrostatics/1/</link>
       <pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/2.Electrostatics/1/</guid>
       <description>Maxwell’s equation Gauss’s Law Charge &amp;lt;-&amp;gt; Electric field Flux
 一个体积内的电荷 vs 这个体积表面的通量
 \[ \nabla \cdot E = \frac{\rho}{\epsilon_0} \]
@@ -23,10 +23,10 @@
     
     <item>
       <title>210916</title>
-      <link>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</link>
+      <link>https://www.bensyz.com/study_notes/theoretical_mechanics/210916/</link>
       <pubDate>Thu, 16 Sep 2021 12:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</guid>
+      <guid>https://www.bensyz.com/study_notes/theoretical_mechanics/210916/</guid>
       <description>Review \(F=ma\) 推出一些东西 动量定理…
 最小做用量原理，路径积分
 Variational Method(变分法) differential calculus (\(d\),微分) \(\to\) variational calculus(\(\delta\),变分)
@@ -40,10 +40,10 @@ Define: \(\tilde{f}(x) = f(x)+\alpha \eta(x)\) as a set of function(泛函)
     
     <item>
       <title>Vector Analysis 2</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/2/</link>
       <pubDate>Thu, 16 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/2/</guid>
       <description>Q1: Derive the formula for the volume of a sphere
 \[ \begin{aligned} V &amp;amp;=\int dV \\ &amp;amp;= \int r^2\sin\theta dr d\theta d\phi\\ &amp;amp;=\frac{1}{3} r^3|_{0}^{r} \times (-\cos\theta)|_{0}^{\pi}\times 2\pi\\ &amp;amp;=\frac{4}{3}r^3 \end{aligned} \]
 \(r^2\sin\theta\): it can also be derivative form Jacobi formula.
@@ -53,10 +53,10 @@ Curvilinear Coordinates Spherical polar coordinates (SPC): review  4 types integ
     
     <item>
       <title>Vector Analysis 1</title>
-      <link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</link>
+      <link>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/1/</link>
       <pubDate>Tue, 14 Sep 2021 00:30:00 +0800</pubDate>
       
-      <guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</guid>
+      <guid>https://www.bensyz.com/study_notes/electrodynamics/1.vector_analysis/1/</guid>
       <description>Vector Analysis Review Triple product
  Vector triple product \[ A \times (B\times C) = B(A \cdot C) - C (A \cdot B) \]  Proved by expand \(ABC\)
  Scalar triple product \[ A \cdot (B \times C) = B \cdot(C \times A) \] 轮换  Q1. Show that \[ (a \times b) \times (a\times c) = (a \cdot(b\times c))a \]

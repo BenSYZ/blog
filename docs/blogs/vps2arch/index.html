@@ -6,13 +6,13 @@
   <head>
     <meta charset="UTF-8">
     <title>将服务器的 Ubuntu 系统换成 Arch Linux</title>
-    <link rel="stylesheet" href="https://bensyz.github.io/blog/css/style.css">
-    <link rel="stylesheet" href="https://bensyz.github.io/blog/css/footer.css">
-    <link rel="stylesheet" href="https://bensyz.github.io/blog/css/code.css">
+    <link rel="stylesheet" href="https://www.bensyz.com/css/style.css">
+    <link rel="stylesheet" href="https://www.bensyz.com/css/footer.css">
+    <link rel="stylesheet" href="https://www.bensyz.com/css/code.css">
 
-    <link rel="icon" id="light-scheme-icon" href="https://bensyz.github.io/blog/icons/favicon_B_Light.svg" type="image/svg+xml">
-    <link rel="icon" id="dark-scheme-icon" href="https://bensyz.github.io/blog/icons/favicon_B_Dark.svg" type="image/svg+xml">
-    <script src="https://bensyz.github.io/blog/js/favicon.js"></script> 
+    <link rel="icon" id="light-scheme-icon" href="https://www.bensyz.com/icons/favicon_B_Light.svg" type="image/svg+xml">
+    <link rel="icon" id="dark-scheme-icon" href="https://www.bensyz.com/icons/favicon_B_Dark.svg" type="image/svg+xml">
+    <script src="https://www.bensyz.com/js/favicon.js"></script> 
   </head>
 </html>
 
@@ -43,7 +43,7 @@
 <p>后来我找到了这篇<a href="https://blog.inkuang.com/2020/114/">博客</a>，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。</p>
 <p>写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏</p>
 <h2 id="原理">原理</h2>
-<p>通过 <code>chroot</code> 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 <em>内核</em> 和 <em>操作系统</em> 的关系可以看看我的这篇关于 <a href="https://bensyz.github.io/blog/blogs/gpio/">gpio</a> 的文章。</p>
+<p>通过 <code>chroot</code> 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 <em>内核</em> 和 <em>操作系统</em> 的关系可以看看我的这篇关于 <a href="https://www.bensyz.com/blogs/gpio/">gpio</a> 的文章。</p>
 <p>在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 <code>/proc</code> <code>/sys</code> <code>/run</code> 下的各种文件等等，还有设备文件夹 <code>/dev</code> 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 <code>ls</code> 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 <code>/bin/ls</code> 和它所依赖的各种库 （通过 <code>ldd /bin/ls</code> 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。</p>
 <h2 id="实验">实验</h2>
 <p><strong>注意</strong>: 记得对当前系统创建快照，因为有可能网不好，而你又还没配置好系统，那就没了….</p>
