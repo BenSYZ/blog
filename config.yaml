@@ -1,4 +1,4 @@
-baseURL: "https://bensyz.github.io/blog"
+baseURL: "https://www.bensyz.com"
 title: Ben's Blog
 theme: my-hugo-theme
 disablePathToLower: true
