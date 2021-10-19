@@ -5,6 +5,9 @@ disablePathToLower: true
 publishDir: docs
 languageCode: en-us
 
+params:
+  record_number: 浙ICP备2021032097
+
 frontmatter:
   date:
     - date
