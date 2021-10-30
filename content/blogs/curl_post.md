@@ -1,12 +1,26 @@
 ---
-title: "用 curl 来制作一些简单的小爬虫"
+title: "用 curl 来制作一些简单的网络小工具"
 date: 2021-10-09T10:37:10+08:00
-lastMod: 2021-10-09T10:37:10+08:00
+lastMod: 2021-10-24T08:09:27+08:00
 draft: false
 author: "Ben"
 description: "使用 curl 提交表单，拉取相关信息，以及借此制作的一些小工具"
 tag: 'curl, spider'
 ---
+
+
+## 问题的出现（碎碎念）
+### 1. 校园网登录
+校园网需要认证后才能登录上网，在使用 Linux 的时候有一点很麻烦，宿舍区必须使用客户端才能登录，不能像教学区那样可以网页登录，不知道是谁告诉我们宿舍区也可以网页登录，网址是:
+
+```
+http://172.30.255.2/a30.html
+```
+
+于是宿舍区使用 Linux 的问题得以解决。但是每次断网都要打开浏览器去连接也不是很方便，我想是否可以使用爬虫来实现登录，找着找着发现可以用 curl 来实现登录。
+
+### 2. 宿舍电费查询
+这个小工具的出现的起因是宿舍如果没电了，夏天早上会断电，我的树莓派会被强制断电，对 SD 卡不好于是我想每天做个定时任务爬一下宿舍电费是多少，一开始也是想用 selenium 爬虫做的，但是 selenium 太吃资源，于是我又找着找着想到了 curl，然后就成了。
 
 ## `curl` 简介
 我们常用 `curl`、`wget` 在 Linux 上下载东西：
@@ -24,54 +38,45 @@ wget www.baidu.com
 curl -d 'variable=value' URL
 ```
 
-## 使用脚本登录校园网 (curl)
-你是否会觉得每次连上校园网要打开登录界面很麻烦。
-你是否会遇上过新装的 Linux 还没有图形界面，不能通过浏览器登录上网。
-你是否会觉得校园网经常断，重连太麻烦。
+Windows、Linux、Mac 一般都有 curl 命令，Windows 没有的话可以去这里下 `https://curl.se/windows`
 
-那本文就可以帮你解决这些问题。本文实现的条件是你可以通过网页登录。
+## 如何制作
+上面说的 curl 来贴一个 POST表单，可能很难理解，我们借 drcom 来举一个例子，给大家介绍一下如何制作两个使用 `curl` 的小工具。
+### 登录 drcom 校园网
 
-好在深大宿舍区和教学区都可以通过网页登录。
+这里再提一下两个登录的网页地址，教学区这个域名默认的网页就是登录界面，但是宿舍区上网自动跳转的界面是让你下载客户端，但是`a30.html`是可以和教学区那样实现网页登录的：
+
 * 教学区： `https://drcom.szu.edu.cn`
 * 宿舍区： `http://172.30.255.2/a30.html`
 
+前面说到 curl 登录需要提交一份包含登录信息的表单。那这个表单是怎么样的呢？
 
-## 原理
-网页登录的原理一般是贴一个 POST 请求到服务器上。而`curl`这个命令可以把我们的登录信息表单发到服务器上。
-
-```sh
-curl -d 'variable=value' URL
-```
-
-Windows、Linux、Mac 一般都有 curl 命令，Windows 没有的话可以去这里下 `https://curl.se/windows`
-
-我以深大宿舍区上网为例演示一下：
-
-## 相关信息获取
-1. 在浏览器中打开登录网页，并输入帐号密码，不要登录。
+1. 在浏览器中打开登录网页，并输入帐号密码，**不要登录**。
 
 2. 打开调试，选择`网络 (Network)`， 并勾选`保留日志 (Preserve log)`(Firefox 默认保留）
+
+![2](./curl_post/figures/1.fn12_preserve_log.png)
 
 打开调试的方法：
 
 * Chrome, Firefox: F12
 * Mac 的 Safari:
-1. Safari 浏览器》偏好设置》高级》在菜单栏中显示“开发”菜单
-2. 开发》显示 JavaScript 控制台
-
-![2](./figures/1.fn12_preserve_log.png)
+    1. Safari 浏览器 > 偏好设置 > 高级 > 在菜单栏中显示“开发”菜单
+    2. 开发 > 显示 JavaScript 控制台
 
 3. 点击登录，调试框内会显示新的各种请求接受包
 
-![3](./figures/2.after_login.png)
+![3](./curl_post/figures/2.after_login.png)
 
 4. 点最上面的`a30.html`，点`标头 (Headers)`，这是一个`POST`包，并拉到最下面。
 
-![4](./figures/3.pull_to_end.png)
+![4](./curl_post/figures/3.pull_to_end.png)
 
 5. 看到输入的帐号密码（别的地方的 WIFI 可能是被加密过的，但没关系，拷下来就是），但以及一个`0MKKEY`，点击`view URL encoded`，`0MKKEY` 显示出来了
 
-![5](./figures/4.click_view_url_encoded.png)
+![5](./curl_post/figures/4.click_view_url_encoded.png)
+
+这个就是前面说的 curl 需要的表单。
 
 6. 用`curl`登录，在终端（Linux，Mac）cmd（Windows）输入命令，可以在登出后测试。
 
@@ -88,6 +93,13 @@ curl -d "DDDDD=245235" -d "upass=tsaeitonsr" -d "0MKKey=%B5%C7%A1%A1%C2%BC" http
 
 多说一句那一行的意思，在终端执行`./drcom.sh`时，系统会用`/bin/sh`来解释执行，它等同于在终端使用`/bin/sh drcom.sh`，如果你有 python 程序，在添加`#/bin/python`（自己注意 python 的位置和版本）后，可以使用`./script.py`来用 python 执行，当然`./drcom.sh`的前提是文件有执行权限。
 
+### 查询宿舍电费
+
+
+
+
+
+---
 
 ## 自动登录
 断网了就要重新去点运行脚本好麻烦，那能不能连上校园网断网自动重连呢？
