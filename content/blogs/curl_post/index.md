@@ -55,7 +55,7 @@ Windows、Linux、Mac 一般都有 curl 命令，Windows 没有的话可以去�
 
 2. 打开调试，选择`网络 (Network)`， 并勾选`保留日志 (Preserve log)`(Firefox 默认保留）
 
-![2](./curl_post/figures/1.fn12_preserve_log.png)
+![2](./figures/1.fn12_preserve_log.png)
 
 打开调试的方法：
 
@@ -66,15 +66,15 @@ Windows、Linux、Mac 一般都有 curl 命令，Windows 没有的话可以去�
 
 3. 点击登录，调试框内会显示新的各种请求接受包
 
-![3](./curl_post/figures/2.after_login.png)
+![3](./figures/2.after_login.png)
 
 4. 点最上面的`a30.html`，点`标头 (Headers)`，这是一个`POST`包，并拉到最下面。
 
-![4](./curl_post/figures/3.pull_to_end.png)
+![4](./figures/3.pull_to_end.png)
 
 5. 看到输入的帐号密码（别的地方的 WIFI 可能是被加密过的，但没关系，拷下来就是），但以及一个`0MKKEY`，点击`view URL encoded`，`0MKKEY` 显示出来了
 
-![5](./curl_post/figures/4.click_view_url_encoded.png)
+![5](./figures/4.click_view_url_encoded.png)
 
 这个就是前面说的 curl 需要的表单。
 
