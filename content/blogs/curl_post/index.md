@@ -2,6 +2,8 @@
 title: "用 curl 来制作一些简单的网络小工具"
 date: 2021-10-09T10:37:10+08:00
 lastMod: 2021-10-24T08:09:27+08:00
+code: true
+mermaid: false
 draft: false
 author: "Ben"
 description: "使用 curl 提交表单，拉取相关信息，以及借此制作的一些小工具"

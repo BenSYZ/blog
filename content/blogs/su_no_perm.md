@@ -1,6 +1,8 @@
 ---
 title: "超级用户su没有权限修改所属"
 date: 2019-07-16T14:07:27+08:00
+code: true
+mermaid: false
 draft: false
 author: "Ben"
 description: "su_no_perm"

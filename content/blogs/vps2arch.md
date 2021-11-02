@@ -3,6 +3,8 @@ title: "将服务器的 Ubuntu 系统换成 Arch Linux"
 date: 2021-09-30T19:13:30+08:00
 PublishDate: 2021-10-04
 LastMod: 2021-10-04
+code: true
+mermaid: false
 draft: false
 author: "Ben"
 description: 根据 Arch wiki, 通过 chroot 将服务器的 Ubuntu 系统换成 Arch Linux

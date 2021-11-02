@@ -1,8 +1,14 @@
 ---
 title: "Copyright and Copyleft"
 date: 2021-04-29T19:53:43+08:00
+code: false
+mermaid: false
 draft: false
+author: "Ben"
+tag: 'license'
 ---
+
+
 
 Cover: Copyright or Copyleft
 
