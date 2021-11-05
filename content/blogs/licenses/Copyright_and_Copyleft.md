@@ -5,7 +5,7 @@ code: false
 mermaid: false
 draft: false
 author: "Ben"
-tag: 'license'
+tags: ['license']
 ---
 
 

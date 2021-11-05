@@ -5,7 +5,7 @@ code: true
 mermaid: false
 draft: false
 author: "Ben"
-tag: 'jupyterlab, vim, colemak, python'
+tags: ['jupyterlab', 'vim', 'colemak', 'python']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "Linux connect WiFi in command line"
-tag: 'Linux, network'
+tags: ['Linux', 'network']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

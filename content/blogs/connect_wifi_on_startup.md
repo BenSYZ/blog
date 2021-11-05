@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "connect_wifi_on_startup"
-tag: 'connect_wifi_on_startup'
+tags: ['Linux', 'wifi']
 ---
 
 整合自: https://bbs.archlinux.org/viewtopic.php?id=178625

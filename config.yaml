@@ -9,6 +9,11 @@ params:
   record_number: 浙ICP备2021032097
   selected_item_list: "blogs:Blogs;tips:Tips;study_notes:Study Notes;about:About"
 
+sitemap:
+  changefreq: "daily"
+  filename: "sitemap.xml"
+  priority: 0.5
+
 frontmatter:
   date:
     - date

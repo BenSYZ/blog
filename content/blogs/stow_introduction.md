@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "stow 介绍"
-tag: 'stow, source code, Linux'
+tags: ['stow', 'source code', 'Linux']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

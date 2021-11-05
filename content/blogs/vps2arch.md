@@ -8,7 +8,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: 根据 Arch wiki, 通过 chroot 将服务器的 Ubuntu 系统换成 Arch Linux
-tag: 'arch-chroot, Linux, Install Arch,'
+tags: ['arch-chroot', 'Linux', 'Install Arch']
 ---
 
 ## Introduction

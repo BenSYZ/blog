@@ -6,7 +6,7 @@ mermaid: false
 draft: true
 author: "Ben"
 description: "如何修改服务器的分区大小"
-tag: vps, partition, Linux
+tags: ['vps', 'partition', 'Linux']
 ---
 
 本文参考：

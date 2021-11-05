@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "Windows 10 中使用colemak键盘布局（包括拼音）以及修改`<esc>` 和 `<Caps Lock>`"
-tag: 'csdn, keyboard, Windows, colemak'
+tags: ['csdn', 'keyboard', 'Windows', 'colemak']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

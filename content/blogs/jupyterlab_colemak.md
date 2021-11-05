@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "jupyterlab_colemak"
-tag: 'jupyterlab, colemak, python'
+tags: ['jupyterlab', 'colemak', 'python']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "把硬件时钟当作UTC"
-tag: 'Windows, Linux, time'
+tags: ['Windows', 'Linux', 'time']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

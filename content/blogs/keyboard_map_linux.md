@@ -5,7 +5,7 @@ draft: false
 author: "Ben"
 description: "修改键位为colemak，交换＜esc＞ ＜capslock＞键——archlinux(其他也略有涉略)"
 code: true
-tag: 'colemak, keyboard, Linux'
+tags: ['colemak', 'keyboard', 'Linux']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

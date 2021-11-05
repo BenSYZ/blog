@@ -6,7 +6,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "tlp(auto) hdparm(manual)"
-tag: 'Linux'
+tags: ['Linux']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

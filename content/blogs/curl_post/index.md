@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "使用 curl 提交表单，拉取相关信息，以及借此制作的一些小工具"
-tag: 'curl, spider'
+tags: ['curl', 'spider']
 ---
 
 
