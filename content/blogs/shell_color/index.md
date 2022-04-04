@@ -1,12 +1,12 @@
 ---
-title: "Shell echo 美化输出"
+title: "Shell echo 输出带样式 (style) 的文字"
 date: 2022-04-04T12:23:29+08:00
 lastMod: 2022-04-04T12:23:29+08:00
 code: true
 mermaid: false
 draft: false
 author: "Ben"
-description: "echo -e 输出带颜色和样式 (style) 的文字"
+description: "通过 echo -e 和特定样式前缀，来实现格式化输出"
 tag: ["shell", "beauty"]
 ---
 
@@ -25,6 +25,7 @@ tag: ["shell", "beauty"]
 这里的样式码就是一些数字，比如 `1` 代表加粗，`32` 代表绿色：
 
 ```sh
+#!/bin/sh
 echo -e '\033[1mBold'
 echo -e '\033[32mGreen'
 ```
@@ -38,6 +39,7 @@ echo -e '\033[32mGreen'
 由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：
 
 ```sh
+#!/bin/sh
 echo -e '\033[1mBold' '\033[32mGreen'
 ```
 
@@ -46,6 +48,7 @@ echo -e '\033[1mBold' '\033[32mGreen'
 所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。
 
 ```sh
+#!/bin/sh
 echo -e '\033[1mBold\033[0m' '\033[32mGreen\033[0m'
 ```
 
@@ -55,6 +58,7 @@ echo -e '\033[1mBold\033[0m' '\033[32mGreen\033[0m'
 根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:
 
 ```sh
+#!/bin/sh
 echo -e '\033[1m\033[32mBold and Green\033[0m'
 ```
 
@@ -63,6 +67,7 @@ echo -e '\033[1m\033[32mBold and Green\033[0m'
 它有个简略的写法：用分号 `;` 分开两个样式码。比如加粗又加绿:
 
 ```sh
+#!/bin/sh
 echo -e '\033[1;32mBold and Green\033[0m'
 ```
 
@@ -74,6 +79,7 @@ echo -e '\033[1;32mBold and Green\033[0m'
 我们可以用一个小的脚本来列出所有样式
 
 ```sh
+#!/bin/sh
 for i in $(seq 0 109);do
     echo -e '\033['$i'm'$i'\033[0m '
 done
@@ -95,6 +101,7 @@ done
 不知发现没有，虽然打印出来好看了，但是脚本却变丑了，很难阅读，因此我们可以把这些样式定义成变量，要用时用变量来格式化输出：
 
 ```sh
+#!/bin/sh
 shellStyleNone='\033[0m'
 shellStyleGreen='\033[33m'
 shellStyleBold='\033[1m'
