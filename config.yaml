@@ -1,3 +1,4 @@
+rssLimit: 20
 baseURL: "https://www.bensyz.com"
 title: Ben's Blog
 theme: my-hugo-theme
