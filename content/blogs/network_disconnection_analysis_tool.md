@@ -1,13 +1,13 @@
 ---
-title: "network disconnection analysis"
+title: "网络断连分析工具介绍"
 date: 2022-04-26T02:32:01+08:00
 lastMod: 2022-04-26T02:32:01+08:00
 code: true
 mermaid: false
 draft: false
 author: "Ben"
-description: "network_disconnection_analysis"
-tag: ["network", "tool"]
+description: "mainly about ethtool and wireshark"
+tag: ["network", "tool", "ethtool"]
 ---
 
 # 网络断连分析工具介绍
