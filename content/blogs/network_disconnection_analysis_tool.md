@@ -1,7 +1,7 @@
 ---
 title: "网络断连分析工具介绍"
 date: 2022-04-26T02:32:01+08:00
-lastMod: 2022-04-26T02:32:01+08:00
+lastMod: 2022-04-27T07:03:30+08:00
 code: true
 mermaid: false
 draft: false
@@ -35,7 +35,15 @@ tag: ["network", "tool", "ethtool"]
 
 需要注意的是通讯双方的 `wireshark` 版本要保持一致，老版本的 sequence number 和新版本的对不上
 
-我们这次使用的是 Version 3.6.3，如果没有可以自行 [下载](https://1.as.dl.wireshark.org/src/wireshark-3.6.3.tar.xz) 编译
+我们这次使用的是 Version 3.6.3，如果没有可以自行 [下载](https://1.as.dl.wireshark.org/src/wireshark-3.6.3.tar.xz) 编译，编译方法查看 INSTALL 文件，对于 Ubnutu 来说
+
+```console
+# ./tools/debian-setup.sh
+# mkdir build
+# cmake -DCMAKE_INSTALL_PREFIX ..
+# make -j4
+# make install
+```
 
 ## PHY 芯片的查看（物理层）
 
