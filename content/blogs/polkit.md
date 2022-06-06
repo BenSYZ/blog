@@ -41,7 +41,7 @@ policy file 文件位置：
     + auth_admin[_keep] sudoer
 
 
-## Authorization rules(`pkaction --version >=106`)
+## Authorization rules
 文件位置：
 
 `/etc/polkit-1/rules.d/*.rules`
@@ -103,8 +103,9 @@ Tips:
         });
         ```
 
-### Authorization rules
-`pkaction --version` rules not work for pkaction less then 106
+### old Authorization rules
+
+`pkaction --version`, rules not work for pkaction less then 106
 
 <https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect>
 
