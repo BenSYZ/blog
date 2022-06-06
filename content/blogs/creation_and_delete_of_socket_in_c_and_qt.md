@@ -6,7 +6,7 @@ code: true
 mermaid: false
 draft: false
 author: "Ben"
-tag: ["network", "socket", "qt", "c"]
+tags: ["network", "socket", "qt", "c"]
 ---
 
 

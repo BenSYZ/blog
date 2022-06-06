@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "mainly about ethtool and wireshark"
-tag: ["network", "tool", "ethtool"]
+tags: ["network", "tool", "ethtool"]
 ---
 
 # 网络断连分析工具介绍

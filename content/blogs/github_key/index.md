@@ -6,7 +6,7 @@ code: true
 mermaid: false
 draft: false
 author: "Ben"
-tag: ["github","ssh","rsa","newbie"]
+tags: ["github","ssh","rsa","newbie"]
 ---
 
 
