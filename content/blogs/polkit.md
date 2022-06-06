@@ -23,7 +23,7 @@ polkit 是非特权进程向特权进程发消息的控制，从而实现特权�
 
 polkit 配置有两种方式，一种是应用自带的，叫Action，(`.policy`)；另一种是类似补丁的形式，叫Authorization rules,(`.rules` or `.pkla`)
 
-### Action:
+## Action:
 policy file 文件位置：
 
 `/usr/share/polkit-1/actions/*.policy`
@@ -41,7 +41,7 @@ policy file 文件位置：
     + auth_admin[_keep] sudoer
 
 
-### Authorization rules(`pkaction --version >=106`)
+## Authorization rules(`pkaction --version >=106`)
 文件位置：
 
 `/etc/polkit-1/rules.d/*.rules`
@@ -52,7 +52,7 @@ Tips:
 * `subject.local: true/false` responding to `allow_active`, etc in policy
 * `systemctl status polkit` 可以查看 Action name
 
-#### examples:
+### examples:
 
 * `addAdminRule()`
     需要特权时，使用何种身份验证是否有特权
@@ -103,8 +103,8 @@ Tips:
         });
         ```
 
-### Authorization rules(`pkaction --version <106`)
-rules not work for pkaction less then 106
+### Authorization rules
+`pkaction --version` rules not work for pkaction less then 106
 
 <https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect>
 
