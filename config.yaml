@@ -7,7 +7,7 @@ publishDir: docs
 languageCode: en-us
 
 params:
-  icp_record: 浙ICP备2021032097
+  icp_record: 浙ICP备2021032097号-1
   public_safety_record: 浙公网安备 33028102001039号
   public_safety_record_number: 33028102001039
   selected_item_list: "blogs:Blogs;tips:Tips;study_notes:Study Notes;about:About"
@@ -94,7 +94,7 @@ markup:
     style: monokai
     tabWidth: 4
   tableOfContents:
-    endLevel: 4
+    endLevel: 6
     ordered: false
     startLevel: 2
 security:
