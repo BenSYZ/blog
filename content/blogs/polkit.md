@@ -7,19 +7,17 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "非特权进程向特权进程发消息的控制"
-tags: ["polkit", "Linux", "permission", "learns"]
+tags: ["polkit", "Linux", "permission", "learns", "kenexs"]
 ---
 
 # polkit
 
-refs:
+## Introduction
+### 问题的出现
+`udisks2` 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 `/etc/fstab` 来自动挂载的分区。但由 `/etc/fstab` 挂载的分区却不能直接用 `udisks2` 卸载。(虽然加上 `users` 这个 option 可以不用 sudo 直接 umount，但 `udisks2` 限制了这种动作,后面会提到的 `org.freedesktop.udisks2.filesystem-unmount-others`)。又由于 File explorer 中点击卸载，使用的是 `udisks2`，所以对于前述的情况，便不能通过鼠标点击卸载。
 
-* <https://wiki.archlinux.org/title/Polkit>
-* <https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html>
-
-----
-
-polkit 是非特权进程向特权进程发消息的控制，从而实现特权功能，比如，普通用户的挂载和卸载硬盘
+### about polkit
+polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘
 
 polkit 配置有两种方式，一种是应用自带的，叫Action，(`.policy`)；另一种是类似补丁的形式，叫Authorization rules,(`.rules` or `.pkla`)
 
@@ -50,7 +48,7 @@ Tips:
 
 * 顺序是 `00-test.rules` 比 `99-test.rules` 更早验证，即，后面的不会覆写前面的。（区别于 `/etc/udev/hwdb.d/`）因为这里直接 return 了
 * `subject.local: true/false` responding to `allow_active`, etc in policy
-* `systemctl status polkit` 可以查看 Action name
+* `systemctl status polkit` 可以查看 `Action name`
 
 ### examples:
 
@@ -121,3 +119,35 @@ ResultInactive=no
 ResultActive=yes
 ```
 
+(似乎 `ResultAny` 和 `ResultActive` 有优先级，如果这里只设置 `ResultAny=yes`，默认的 `ResultActive` 还是 `no`，还是不生效)
+
+## 问题的解决
+
+`pkaction --version` 106 及以上的
+
+```rules
+#/etc/polkit-1/rules.d/00-udisk-unmount-others.rules
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.udisks2.filesystem-unmount-others" ){
+        return polkit.Result.YES;
+    }
+});
+```
+
+
+`pkaction --version` 低于 106 的
+
+```conf
+#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes
+```
+
+## refs:
+
+* <https://wiki.archlinux.org/title/Polkit>
+* <https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html>
