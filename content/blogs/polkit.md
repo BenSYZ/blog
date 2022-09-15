@@ -1,7 +1,7 @@
 ---
 title: "polkit"
 date: 2022-06-06T08:55:33+08:00
-lastMod: 2022-06-06T08:55:33+08:00
+lastMod: 2022-09-15T17:21:28+08:00
 code: true
 mermaid: false
 draft: false
@@ -29,14 +29,14 @@ policy file 文件位置：
 在 default section 中，有这几个选项:
 
 * keys: 
-    + allow_any: 所有
-    + allow_inactive: 远程的 session(ssh vnc, etc.)
-    + allow_active: 本地  tty, X display
+    + `allow_any`: 所有
+    + `allow_inactive`: 远程的 session(ssh vnc, etc.)
+    + `allow_active`: 本地  tty, X display
 * values:
-    + no                -
-    + yes               -
-    + auth_self[_keep]  non-sudoer [keep some minutes]
-    + auth_admin[_keep] sudoer
+    + `no`: 无权限
+    + `yes`: 有权限
+    + `auth_self[_keep]`: 对 non-sudoer [keep some minutes] 开放权限
+    + `auth_admin[_keep]`: sudoer 开放权限
 
 
 ## Authorization rules
@@ -54,6 +54,7 @@ Tips:
 
 * `addAdminRule()`
     需要特权时，使用何种身份验证是否有特权
+
     ```rules
     # wheel 组的用户就可以使用这个特权
     polkit.addAdminRule(function(action, subject) {
@@ -62,7 +63,7 @@ Tips:
     ```
 
     ```console
-    [test@Misaka ben]$ systemctl restart polkit.service
+    $ systemctl restart polkit.service
     ==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
     Authentication is required to restart 'polkit.service'.
     Authenticating as: ben (ben is in wheel)
@@ -76,13 +77,14 @@ Tips:
     ```
 
     ```console
-    [test@Misaka ben]$ systemctl restart polkit.service
+    $ systemctl restart polkit.service
     ==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
     Authentication is required to restart 'polkit.service'.
     Authenticating as: root
     ```
 * `addRule()`
     + change rule
+
         ```rules
         polkit.addRule(function(action, subject) {
             if (action.id == "org.gnome.gparted" &&
@@ -92,6 +94,7 @@ Tips:
         });
         ```
     + log
+
         ```rules
         polkit.addRule(function(action, subject) {
             if (action.id == "org.freedesktop.policykit.exec") {
