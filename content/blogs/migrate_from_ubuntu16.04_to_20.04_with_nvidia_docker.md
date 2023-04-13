@@ -6,8 +6,8 @@ code: true
 mermaid: false
 draft: false
 author: "Ben"
-description: "migrate_from_ubuntu16.04 to ubuntu20.04"
-tags: ["migrate_from_ubuntu16"]
+description: "migrate_from_ubuntu16.04 to ubuntu.04"
+tags: ["Linux", "docker", "NVIDIA"]
 ---
 
 公司服务器需要升级系统
