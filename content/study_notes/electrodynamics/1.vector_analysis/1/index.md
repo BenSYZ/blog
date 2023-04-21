@@ -1,10 +1,12 @@
 ---
 title: "Vector Analysis 1"
 date: 2021-09-14T00:30:00+08:00
+katex: true
 draft: false
 author: "Ben"
 description: "Vector analysis"
 ---
+
 
 ## Vector Analysis
 Review

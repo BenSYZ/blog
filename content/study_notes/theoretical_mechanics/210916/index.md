@@ -1,6 +1,7 @@
 ---
 title: "210916"
 date: 2021-09-16T12:30:00+08:00
+katex: true
 draft: false
 ---
 

@@ -4,6 +4,7 @@ date: 2023-04-21T14:03:48+08:00
 lastMod: 2023-04-21Tao:03:48+08:00
 code: true
 mermaid: false
+katex: true
 draft: false
 author: "Ben"
 description: "about maximum power transfer theorem"
