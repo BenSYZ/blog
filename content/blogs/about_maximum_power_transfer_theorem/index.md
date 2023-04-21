@@ -49,7 +49,7 @@ $$
 
 When $R_\text{L}$ goes from $0$ to $\infty$, $U_\text{L}$ will increase, while $I$ will decrease. We cannot get the maximum of $P_\text{L}$ at first time. Thus, it comes to numerical calculation:
 
-Holds the above assumption:
+Hold the previous assumptions:
 
 * direct current
 * load is pure resistor
@@ -66,7 +66,7 @@ $$
 \frac{d (\text{deno})}{dR_\text{L}} =1- \frac{R\text{s}^2}{R_\text{L}^2}
 $$
 
-Extreme point of original formular is when the above formula equals to $0$, which is when $R_\text{s} = R_\text{L}$ ($R>0$, omit the negative one). When $R_\text{L} < R_\text{s}$ the derivative is negative, So the original denominator decrease first, then increase. It means that when $R_\text{L} = R_\text{s}$, the original formula goes to it's maximum, which is
+Extreme point of original formula is when the above formula equals to $0$, which is when $R_\text{s} = R_\text{L}$ ($R>0$, omit the negative one). When $R_\text{L} < R_\text{s}$ the derivative is negative, So the original denominator decrease first, then increase. It means that when $R_\text{L} = R_\text{s}$, the original formula goes to it's maximum, which is
 $$
 P_\text{L} = \frac{U_\text{emf}}{4 R_\text{L}}
 $$
@@ -78,3 +78,8 @@ Besides, when the efficiency is maximum, the power is $0$
 Here is a picture from Wikipedia:
 
 ![](./figures/Maximum_Power_Transfer_Graph.svg)
+
+## AC case (TODO)
+in AC we could use complex number to describe the impedance of capacitor and inductance, whose effects is shift the phases.
+
+and we can convert the voltage to be effect voltage.
