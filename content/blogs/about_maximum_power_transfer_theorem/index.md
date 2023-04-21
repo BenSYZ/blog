@@ -47,10 +47,10 @@ $$
 P_\text{L} = U_\text{L}  \times  I
 $$
 
-
 When $R_\text{L}$ goes from $0$ to $\infty$, $U_\text{L}$ will increase, while $I$ will decrease. We cannot get the maximum of $P_\text{L}$ at first time. Thus, it comes to numerical calculation:
 
 Holds the above assumption:
+
 * direct current
 * load is pure resistor
 

@@ -12,6 +12,7 @@ description: "about effective voltage and rms"
 tags: ["physics", "formula"]
 ---
 
+## Effective voltage of sinusoidal
 
 In alternating current, to simplify the calculation, we often use effective voltage or current.
 
@@ -36,6 +37,7 @@ E_\text{one period} = \int_{0}^{T} \frac{1}{R} U(t)^2 dt
 $$
 
 While $U(t)$ is sinusoidal function in A.C we assume it to be $U(t) = U_\text{m}\sin(2\pi/T  \times t)$(when $t=T$, sine goes to its end of one period $2\pi$), in which $U_\text{m}$ is maximum voltage, or we can call it amplitude, thus,
+
 $$
 \begin{aligned}
 E_\text{one period}
@@ -47,6 +49,7 @@ E_\text{one period}
 $$
 
 What is a effective voltage? With this we can treat AC as DC, thus
+
 $$
 E_\text{one period} = U_\text{eff}^2 / R  \times T
 $$
@@ -66,15 +69,16 @@ U_\text{eff} =  \sqrt{R E_\text{one period}/T} = \sqrt{\frac{1}{T} \int_{0}^{T}U
 $$
 
 which happens to be the root mean square:
-$$
-U_\text{rms} \equiv  \sqrt{\frac{\sum U^2}{n}}
 
 $$
+U_\text{rms} \equiv  \sqrt{\frac{\sum U^2}{n}}
+$$
+
 or
+
 $$
 U_\text{rms} \equiv  \sqrt{ \frac{1}{T} \int_{0}^{T} U(t)^2 dt }
 $$
-
 
 So in general, if we want to calculate a quantity which is related to square periodic quantity, we can use the rms as its "average"(effective) variable to simplify it.
 
