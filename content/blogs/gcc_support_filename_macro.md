@@ -32,4 +32,4 @@ Qt pro:
 DEFINES += '__FILE_NAME__=\\\"$(shell basename $<)\\\"'
 ```
 
-Some information of macro is at [here](./macro_in_gcc_Makefile_qmake).
+Some information of macro is at [here](../macro_in_gcc_Makefile_qmake).

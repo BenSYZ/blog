@@ -1,6 +1,6 @@
 ---
 title: "macro set in gcc, Makefile, qmake"
-date: 2022-03-02T08:39:30+08:00
+date: 2023-06-02T07:44:40+08:00
 lastMod: 2023-06-02T07:44:40+08:00
 code: true
 mermaid: false
