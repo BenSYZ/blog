@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "about_rk3588_disk_patitions"
-tags: ["about_rk3588_disk_patitions"]
+tags: ["Linux", "partition", "fdisk", "dd", "rk3588", "uboot"]
 ---
 
 
