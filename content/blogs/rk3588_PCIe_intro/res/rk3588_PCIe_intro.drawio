@@ -1,0 +1,773 @@
+<mxfile host="Electron" modified="2023-11-24T02:23:35.452Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.2 Chrome/114.0.5735.289 Electron/25.9.4 Safari/537.36" etag="sXBpxA3m-SrrKoxAkakR" version="22.1.2" type="device">
+  <diagram name="Page-1" id="8yThxr1W3SgeWD0wD-ql">
+    <mxGraphModel dx="2757" dy="1012" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-392" value="SATA3.0 Controller/Controller 4" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1040" y="3754" width="172.15" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-396" value="USB3.0 Controller/SATA3.0 Controller/Controller 3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1138.85" y="4000" width="277.3" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-383" value="Controller 2/Controller 0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-998.85" y="3460" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-385" value="Controller 1/Controller 0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-998.85" y="3540" width="131" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-333" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-345.28000000000003" y="3170" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-332" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-345.28000000000003" y="3040" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-331" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-346.28000000000003" y="2910" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-289" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-893.2" y="3060" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-288" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-894.2" y="2950" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-233" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-324.25000000000006" y="2233" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-232" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-325.25000000000006" y="2123" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-119" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-903.3199999999999" y="2253" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-21" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-589.5" y="1560" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-20" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-589.5" y="1430" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-118" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-904.3199999999999" y="2123" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-19" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-590.5" y="1300" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-65" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-720" y="450" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-18" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-590.5" y="920" width="230" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-2" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-570.5" y="950" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-3" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-515.5" y="950" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-4" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-570.5" y="1030" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-5" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-515.5" y="1030" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-6" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-570.5" y="1110" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-7" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-515.5" y="1110" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-8" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-570.5" y="1190" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-9" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-515.5" y="1190" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-10" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-570.5" y="1324" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-11" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-515.5" y="1324" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-14" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-569.5" y="1450" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-15" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-514.5" y="1450" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-16" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-569.5" y="1574" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-17" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-514.5" y="1574" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-22" value="RK3588有两种 PCIe PHY&#xa;    * ⼀种是 PCIe 3.0 的 PHY 有 1 个&#xa;    * ⼀种是 PCIe 2.0 的 PHY 有 3 个&#xa;&#xa;* PCIe 3.0 含 2 个 Port 共 4 个 Lane&#xa;* 每个 PCIe 2.0 各自含 1 个Port 和 1 个Lane" style="text;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="-1140" y="170" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-27" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;PCIe PHY&lt;/font&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="-1130" y="100" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-50" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-720" y="70" width="230" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-51" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-700" y="100" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-52" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-645" y="100" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-53" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-700" y="180" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-54" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-645" y="180" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-55" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-700" y="260" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-56" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-645" y="260" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-57" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-700" y="340" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-58" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-645" y="340" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-59" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-700" y="474" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-60" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-645" y="474" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-61" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-699" y="600" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-62" value="PCIE3.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-644" y="600" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-63" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-699" y="724" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-64" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-644" y="724" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-66" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-719" y="580" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-67" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-719" y="710" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-68" value="PCIE3.0 PHY" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-579" y="40" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-69" value="PCIE2.0 PHY" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-579" y="420" width="89" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-70" value="PCIE2.0 PHY" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-579" y="550" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-71" value="PCIE2.0 PHY" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-579" y="680" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-83" value="Port0" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-335.5" y="1070" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-84" value="Port1" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-336.5" y="1320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-87" value="Port2" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-335.5" y="1450" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-89" value="Port3" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-336.5" y="1575" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-92" value="RK3588共有5个PCIe的控制器，硬件IP是⼀样的，配置不⼀样，&#xa;&#xa;* ⼀个 4 Lane DM（dual mode）模式可以作为 EP 和 RC&#xa;* ⼀个 2 Lane 和 3 个 1 Lane 控制器均只能作为 RC 使⽤" style="text;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="-1135.65" y="950" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-95" value="Controller 0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-771.5" y="1030" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-96" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-95" target="iyn1BOx3xSzwGO97l_Be-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-97" value="Controller 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-771.5" y="1310" width="123.3" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-98" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-97" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-589.2" y="1339" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-99" value="Controller 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-771.5" y="1435" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-100" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-99" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-590.5" y="1464" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-101" value="Controller 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-771.5" y="1560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-102" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-101" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-592.5" y="1589" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-103" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-904.3199999999999" y="1743" width="230" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-104" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-884.3199999999999" y="1773" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-105" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-829.3199999999999" y="1773" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-106" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-884.3199999999999" y="1853" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-107" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-829.3199999999999" y="1853" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-108" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-884.3199999999999" y="1943" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-109" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-829.3199999999999" y="1943" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-110" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-884.3199999999999" y="2023" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-111" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-829.3199999999999" y="2023" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-112" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-884.3199999999999" y="2147" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-113" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-829.3199999999999" y="2147" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-114" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-883.3199999999999" y="2273" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-115" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-828.3199999999999" y="2273" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-116" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-883.3199999999999" y="2397" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-117" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-828.3199999999999" y="2397" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-120" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-903.3199999999999" y="2383" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-129" value="&lt;b style=&quot;font-size: 18px;&quot;&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;PCIe Controller&lt;/font&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="-1130" y="840" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-130" value="最普通的一种组合方式，一个 PHY，对应一个 Controller" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-812.1" y="930" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-132" value="把 PCIe 3.0 的 PHY 拆开使用，拆成两个 Port" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1147.62" y="1703" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-134" value="Controller 0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-1083.32" y="1793" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-135" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-134" target="iyn1BOx3xSzwGO97l_Be-103">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-907.62" y="1882" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-136" value="Controller 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1083.3200000000002" y="2128" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-137" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-136" target="iyn1BOx3xSzwGO97l_Be-118">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-904.32" y="2162" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-138" value="Controller 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1084.62" y="2258" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-139" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-138" target="iyn1BOx3xSzwGO97l_Be-119">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-905.62" y="2287" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-140" value="Controller 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1086.62" y="2383" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-141" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-140" target="iyn1BOx3xSzwGO97l_Be-120">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-907.62" y="2412" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-142" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-904.3199999999999" y="1923" width="230" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-143" value="Controller 1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-1083.32" y="1973" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-145" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-143" target="iyn1BOx3xSzwGO97l_Be-142">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-905.62" y="2002.58" as="targetPoint" />
+            <mxPoint x="-965.3199999999999" y="2003" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-196" value="Port0" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-653.37" y="1808" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-197" value="Port1" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-653.37" y="1983" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-200" value="Port2" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-653.37" y="2143" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-201" value="Port3" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-653.37" y="2273" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-202" value="Port4" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-653.37" y="2393" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-214" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-325.25000000000006" y="2013" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-217" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-325.25000000000006" y="1743" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-218" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-305.25000000000006" y="1773" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-219" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-250.25000000000006" y="1773" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-220" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-305.25000000000006" y="1853" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-221" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-250.25000000000006" y="1853" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-222" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-305.25000000000006" y="1943" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-223" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-250.25000000000006" y="1943" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-224" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-306.75000000000006" y="2033" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-225" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-251.75000000000006" y="2033" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-226" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-305.25000000000006" y="2147" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-227" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-250.25000000000006" y="2147" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-228" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-304.25000000000006" y="2253" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-229" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-249.25000000000006" y="2253" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-230" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-304.25000000000006" y="2377" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-231" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-249.25000000000006" y="2377" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-234" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-324.25000000000006" y="2353" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-235" value="把 PCIe 3.0 的 PHY 拆开使用，拆成 4 个 Port" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-528.15" y="1703" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-236" value="Controller 0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-524.2499999999999" y="1753" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-237" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-236" target="iyn1BOx3xSzwGO97l_Be-217">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-328.55" y="1882" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-238" value="Controller 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-524.2499999999999" y="2128" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-239" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-238" target="iyn1BOx3xSzwGO97l_Be-232">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-325.25000000000006" y="2162" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-240" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-325.25000000000006" y="1923" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-241" value="Controller 1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-524.2499999999999" y="1928" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-242" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-241" target="iyn1BOx3xSzwGO97l_Be-240">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-326.55" y="2002.58" as="targetPoint" />
+            <mxPoint x="-386.24999999999983" y="2003" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-243" value="" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-244" target="iyn1BOx3xSzwGO97l_Be-245">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-244" value="Controller 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-524.2499999999999" y="1843" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-245" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-325.25000000000006" y="1833" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-246" value="Controller 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-524.2499999999999" y="2018" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-247" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-246" target="iyn1BOx3xSzwGO97l_Be-214">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-325.25000000000006" y="2038" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-253" value="Port0" style="text;html=1;strokeColor=#FF0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FF0000;" vertex="1" parent="1">
+          <mxGeometry x="-74.75000000000007" y="1773" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-254" value="Port1" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-74.75000000000007" y="1853" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-255" value="Port2" style="text;html=1;strokeColor=#FF0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FF0000;" vertex="1" parent="1">
+          <mxGeometry x="-74.75000000000007" y="1943" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-256" value="Port4" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-73.15000000000005" y="2143" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-258" value="Port3" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-74.75000000000007" y="2033" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-272" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-894.2" y="2840" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-273" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-894.2" y="2570" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-274" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-874.2" y="2600" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-275" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-819.2" y="2600" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-276" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-874.2" y="2680" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-277" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-819.2" y="2680" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-278" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-874.2" y="2770" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-279" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-819.2" y="2770" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-280" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-875.7" y="2860" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-281" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-820.7" y="2860" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-282" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-874.2" y="2974" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-283" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-819.2" y="2974" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-284" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-873.2" y="3080" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-285" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-818.2" y="3080" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-286" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-873.2" y="3204" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-287" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-818.2" y="3204" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-290" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-893.2" y="3180" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-291" value="Controller 0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="2580" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-292" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-291" target="iyn1BOx3xSzwGO97l_Be-273" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-897.5" y="2709" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-293" value="Controller 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="2955" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-294" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-293" target="iyn1BOx3xSzwGO97l_Be-288" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-894.2" y="2989" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-295" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-894.2" y="2750" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-296" value="Controller 1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="2755" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-297" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="iyn1BOx3xSzwGO97l_Be-296" target="iyn1BOx3xSzwGO97l_Be-295" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-895.5" y="2829.58" as="targetPoint" />
+            <mxPoint x="-955.2" y="2830" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-298" value="" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-299" target="iyn1BOx3xSzwGO97l_Be-300" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-299" value="Controller 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="2670" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-300" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-894.2" y="2660" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-301" value="Controller 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="2845" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-302" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" source="iyn1BOx3xSzwGO97l_Be-301" target="iyn1BOx3xSzwGO97l_Be-272" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-894.2" y="2865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-303" value="Port0" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-643.7" y="2600" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-304" value="Port1" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-643.7" y="2680" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-305" value="Port2" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-643.7" y="2770" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-306" value="Port4" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-642.1" y="2970" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-307" value="Port3" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-643.7" y="2860" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-308" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;就 PCIe 而言因为有只有 5 个controller，在把 PCIe 3.0 拆成 4 个 Port 的情况下， Lane5 和 Lane 6 就空掉了。&lt;br&gt;&lt;/span&gt;&lt;br&gt;根据使用限制，原先控制这两条 lane 的 Controller 需要去控制 PCIE3.0 的 Lane，而不是控制这两条 Lane。" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-523.15" y="2273" width="155" height="137" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-309" value="&lt;span style=&quot;font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;这个时候，把这两条多出来的 lane 去和 USB 和 SATA mux&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontColor=#000000;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="-1156.2800000000002" y="2520" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-310" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#ff0000;fontColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-311" target="iyn1BOx3xSzwGO97l_Be-289">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-1018.95" y="3095" as="sourcePoint" />
+            <mxPoint x="-1118.95" y="3060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-311" value="SATA3.0 controller" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="3065" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-312" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#ff0000;fontColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-313" target="iyn1BOx3xSzwGO97l_Be-290">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-1018.95" y="3220" as="sourcePoint" />
+            <mxPoint x="-892.95" y="3220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-313" value="USB controller&lt;br&gt;or&lt;br&gt;SATA3.0 controller" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;align=center;" vertex="1" parent="1">
+          <mxGeometry x="-1143.2" y="3190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-315" value="那么回过头来，看第一种情况，我们也可以不接 controller 2 和 controller 3" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-543.76" y="2530" width="173.76" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-316" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-346.28000000000003" y="2530" width="230" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-317" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-326.28000000000003" y="2560" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-318" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-271.28000000000003" y="2560" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-319" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-326.28000000000003" y="2640" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-320" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-271.28000000000003" y="2640" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-321" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-326.28000000000003" y="2720" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-322" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-271.28000000000003" y="2720" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-323" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-326.28000000000003" y="2800" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-324" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-271.28000000000003" y="2800" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-325" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-326.28000000000003" y="2934" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-326" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-271.28000000000003" y="2934" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-327" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-325.28000000000003" y="3060" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-328" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-270.28000000000003" y="3060" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-329" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-325.28000000000003" y="3184" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-330" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-270.28000000000003" y="3184" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-334" value="Port0" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-91.28000000000003" y="2680" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-335" value="Port1" style="text;html=1;strokeColor=#000000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-92.28000000000003" y="2930" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-336" value="Port2" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-91.28000000000003" y="3060" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-337" value="Port3" style="text;html=1;strokeColor=#ff0000;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-92.28000000000003" y="3185" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-338" value="Controller 0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-527.2800000000001" y="2640" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-339" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-338" target="iyn1BOx3xSzwGO97l_Be-316">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-340" value="Controller 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-527.2800000000001" y="2920" width="123.3" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-341" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#000000;strokeColor=#000000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-340">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-344.9800000000001" y="2949" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-343" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-347">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-346.28000000000003" y="3074" as="targetPoint" />
+            <mxPoint x="-407.28000000000003" y="3075" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-345" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.01;entryY=0.435;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" edge="1" parent="1" source="iyn1BOx3xSzwGO97l_Be-348">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-348.28000000000003" y="3199" as="targetPoint" />
+            <mxPoint x="-407.28000000000003" y="3200" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-347" value="SATA3.0 controller" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="-527.2800000000001" y="3045" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-348" value="USB controller&lt;br&gt;or&lt;br&gt;SATA3.0 controller" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontColor=#ff0000;strokeColor=#ff0000;align=center;" vertex="1" parent="1">
+          <mxGeometry x="-527.2800000000001" y="3170" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-349" value="所以这个事情就变得非常灵活了。&lt;br&gt;那再来一张相对完整的图片，（没有包含使用组合的限制）" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1158.77" y="3370" width="181.15" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-351" value="Lane0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-847.85" y="3390" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-352" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-792.85" y="3390" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-353" value="Lane1&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-847.85" y="3470" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-354" value="PCIE3.0 Port0" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-792.85" y="3470" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-355" value="Lane2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-847.85" y="3550" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-356" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-792.85" y="3550" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-357" value="Lane3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-847.85" y="3630" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-358" value="PCIE3.0 Port1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-792.85" y="3630" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-359" value="Lane4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-847.85" y="3764" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-360" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="-792.85" y="3764" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-361" value="Lane5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-846.85" y="3890" width="55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-362" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-791.85" y="3890" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-363" value="Lane6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-846.85" y="4014" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-364" value="PCIE2.0 Port" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="-791.85" y="4014" width="140" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-373" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" target="iyn1BOx3xSzwGO97l_Be-351" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-938.85" y="3405" as="sourcePoint" />
+            <mxPoint x="-847.85" y="3405" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-381" value="Controller 0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-940.4" y="3380" width="71.55" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-382" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="iyn1BOx3xSzwGO97l_Be-353">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1008.85" y="3485" as="sourcePoint" />
+            <mxPoint x="-847.85" y="3485" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-384" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="iyn1BOx3xSzwGO97l_Be-355">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1008.85" y="3565" as="sourcePoint" />
+            <mxPoint x="-846.85" y="3565" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-386" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="iyn1BOx3xSzwGO97l_Be-357">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1068.85" y="3645" as="sourcePoint" />
+            <mxPoint x="-848.85" y="3645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-391" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1040" y="3779" as="sourcePoint" />
+            <mxPoint x="-846.85" y="3779" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-393" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="iyn1BOx3xSzwGO97l_Be-361">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1038.85" y="3905" as="sourcePoint" />
+            <mxPoint x="-847.85" y="3905" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-394" value="SATA3.0 Controller/Controller 2" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1045.1499999999999" y="3880" width="177.3" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-395" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontColor=#000000;strokeColor=#000000;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1134.85" y="4026" as="sourcePoint" />
+            <mxPoint x="-846.85" y="4027" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iyn1BOx3xSzwGO97l_Be-398" value="Controller 3/Controller 1/Controller 0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1068.85" y="3620" width="201" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
