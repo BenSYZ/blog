@@ -1,7 +1,7 @@
 ---
 title: "gpio"
 date: 2021-10-04T13:03:23+08:00
-draft: false
+draft: true,
 author: "Ben"
 description: "gpio"
 tags: ['Linux', 'driver']
