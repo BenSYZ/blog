@@ -1,7 +1,7 @@
 ---
 title: "RK3588 PCIe Introduction"
 date: 2023-11-23T10:51:55+08:00
-lastMod: 2023-11-24T02:33:26+08:00
+lastMod: 2023-12-06T11:15:53+08:00
 code: true
 mermaid: false
 katex: false
@@ -130,11 +130,11 @@ comboPHY dts alias name rule:
 
 | Controller index | dts alias   | dts point       |
 |------------------|-------------|-----------------|
-| 1                | `pcie3x4`   | `pcie@fe150000` |
-| 2                | `pcie3x2`   | `pcie@fe160000` |
-| 3                | `pcie2x1l0` | `pcie@fe170000` |
-| 4                | `pcie2x1l1` | `pcie@fe180000` |
-| 5                | `pcie2x1l2` | `pcie@fe190000` |
+| 0                | `pcie3x4`   | `pcie@fe150000` |
+| 1                | `pcie3x2`   | `pcie@fe160000` |
+| 2                | `pcie2x1l0` | `pcie@fe170000` |
+| 3                | `pcie2x1l1` | `pcie@fe180000` |
+| 4                | `pcie2x1l2` | `pcie@fe190000` |
 
 dts alias rule:
 
