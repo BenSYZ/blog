@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>time on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/time/</link><description>Recent content in time on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Feb 2020 10:05:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/time/index.xml" rel="self" type="application/rss+xml"/><item><title>统一Linux Windows 时区</title><link>https://bensyz.github.io/blog/blogs/timezone_win_linux/</link><pubDate>Wed, 26 Feb 2020 10:05:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/timezone_win_linux/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="思路">思路&lt;/h2>
+&lt;p>把硬件时间修改为UTC，system的修改为local time。&lt;/p>
+&lt;h2 id="windows">windows&lt;/h2>
+&lt;p>参考&lt;a href="https://blog.csdn.net/qq_40197828/article/details/79334158">https://blog.csdn.net/qq_40197828/article/details/79334158&lt;/a> ### 打开注册表编辑器&lt;/p>
+&lt;pre class="cmd">&lt;code>regedit&lt;/code>&lt;/pre>
+&lt;h3 id="新建表项">新建表项&lt;/h3>
+&lt;p>在 &lt;code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation&lt;/code>中新建&lt;code>RealTimeIsUniversal&lt;/code>项目&lt;/p>
+&lt;ul>
+&lt;li>64 位系统，“QWORD（64位）值”。&lt;/li>
+&lt;li>32 位系统，“DWORD（32位）值”。&lt;/li>
+&lt;/ul>
+&lt;p>它的大体意思是，硬件时间被作为全球统一时间。&lt;/p>
+&lt;h3 id="修改表项值">修改表项值&lt;/h3>
+&lt;p>然后双击这一条目，弹出“编辑 QWORD（64位）值”的对话框，确保选中了“十六进制”，然后将“数值数据”改为“1”。最后点击“确定”。&lt;/p>
+&lt;h3 id="可以备份下次直接注入注册表即可">可以备份下次直接注入注册表即可&lt;/h3>
+&lt;h2 id="linux">&lt;a href="https://wiki.archlinux.org/index.php/Installation_guide">linux&lt;/a>&lt;/h2>
+&lt;p>按照官方的操作，好像市区还是有点问题。具体是那个命令我忘记了就是搞着搞着就可以了，大家如果知道是哪个还请在评论区告诉我&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ls&lt;/span> -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localetime&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> hwclock --systohc&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> set-local-rtc false&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> set-timezone Asia/Shanghai&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> status&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>后来发现其实windows和arch linux 没必要设置时区，因为它们都是把硬件时间当作当地时间，但是ubuntu就不一样了。&lt;/p></description></item></channel></rss>

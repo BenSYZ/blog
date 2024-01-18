@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>kenexs on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/kenexs/</link><description>Recent content in kenexs on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 11 Jul 2023 09:33:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/kenexs/index.xml" rel="self" type="application/rss+xml"/><item><title>io_with_plc</title><link>https://bensyz.github.io/blog/blogs/io_with_plc/</link><pubDate>Tue, 11 Jul 2023 09:33:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/io_with_plc/</guid><description>&lt;p>2023-08-17 update: summary 中添加开关状态&lt;/p>
+&lt;h1 id="intro">Intro&lt;/h1>
+&lt;p>在阅读之前有一点需要注意的是，我们的输出、输入，和 PLC 的输出、输入不一样，PLC 的输出和输入是带着电源的，我们的不带电源。这点对输入很好理解，但是对于输出，不能理解成我们输出电压，我们的输出只是一个开关。&lt;/p>
+&lt;h2 id="input">Input&lt;/h2>
+&lt;figure>
+&lt;img src="./figures/input.png" alt="" />&lt;figcaption>input&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="一些标记">一些标记&lt;/h3>
+&lt;ul>
+&lt;li>左侧
+&lt;ul>
+&lt;li>&lt;code>OP_IN0&lt;/code>：外部看到的 &lt;code>IN0&lt;/code>&lt;/li>
+&lt;li>&lt;code>COMIN1&lt;/code>：外部看到的 IN 口的 &lt;code>COM&lt;/code> 口&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>右侧
+&lt;ul>
+&lt;li>⏚ ：地 GND&lt;/li>
+&lt;li>&lt;code>GPIO1_C0_Z&lt;/code>：连到上级芯片（主芯片）。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>中间
+&lt;ul>
+&lt;li>&lt;code>PS2805&lt;/code>：光耦，如果 &lt;code>1&lt;/code> &lt;code>2&lt;/code> 引脚间有电压差，就会发光，会激发 &lt;code>3&lt;/code> &lt;code>4&lt;/code> 引脚间的光敏二极管，即 &lt;code>3&lt;/code> &lt;code>4&lt;/code> 导通，也就是 &lt;strong>有电压差，开关闭合&lt;/strong>&lt;/li>
+&lt;/ul>
+&lt;img src="./figures/PS2805.png" title="fig:" alt="PS2805" />&lt;/li>
+&lt;/ul>
+&lt;h3 id="右内侧电路">右（内）侧电路&lt;/h3>
+&lt;p>先说简单的：&lt;/p>
+&lt;ul>
+&lt;li>工作状态：&lt;code>3&lt;/code> &lt;code>4&lt;/code> 引脚间的光敏二极管导通，&lt;code>GPIO1_C0_Z&lt;/code> 的电压等于 3 引脚的 &lt;code>GND&lt;/code>，低电平&lt;/li>
+&lt;li>停止工作状态：&lt;code>3&lt;/code> &lt;code>4&lt;/code> 引脚间的光敏二极管开路断开，&lt;code>GPIO1_C0_Z&lt;/code> 的电压等于 &lt;code>VCC_1V8_S0&lt;/code>，高电平&lt;/li>
+&lt;/ul>
+&lt;h3 id="左外侧电路">左（外）侧电路&lt;/h3>
+&lt;ul>
+&lt;li>&lt;code>COMIN1&lt;/code> 高电平
+&lt;ul>
+&lt;li>&lt;code>OP_IN0&lt;/code> 低电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>有&lt;/strong>电压差，中间的光耦工作。&lt;/li>
+&lt;li>&lt;code>OP_IN0&lt;/code> 高电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>无&lt;/strong>电压差，中间的光耦不工作。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>COMIN1&lt;/code> 低电平，&lt;code>OP_IN0=1&lt;/code>，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间有电压差，中间的光耦工作
+&lt;ul>
+&lt;li>&lt;code>OP_IN0&lt;/code> 低电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>无&lt;/strong>电压差，中间的光耦不工作。&lt;/li>
+&lt;li>&lt;code>OP_IN0&lt;/code> 高电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>有&lt;/strong>电压差，中间的光耦工作。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="整体电路">整体电路&lt;/h3>
+&lt;p>定义：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>COMIN1&lt;/code> 为 &lt;code>COM&lt;/code>&lt;/li>
+&lt;li>&lt;code>OP_IN0&lt;/code> 为 &lt;code>IN&lt;/code>&lt;/li>
+&lt;li>&lt;code>GPIO1_C0_Z&lt;/code> 为 &lt;code>GPIO&lt;/code>&lt;/li>
+&lt;li>高电平为 1， 低电平为 0&lt;/li>
+&lt;/ul>
+&lt;p>那么：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>&lt;code>IN = 1&lt;/code>&lt;/th>
+&lt;th>&lt;code>IN = 0&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>COM = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>COM = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;span class="math inline">\(\text{GPIO} = \text{IN} \odot \text{COM}\)&lt;/span> 同或关系（相同为1）&lt;/p>
+&lt;p>上升沿和下降沿看的是 &lt;code>IN&lt;/code>，所以：&lt;/p>
+&lt;ul>
+&lt;li>如果 &lt;code>COM&lt;/code> 口 是高电平，&lt;span class="math inline">\(\text{GPIO} = \text{IN}\)&lt;/span>&lt;/li>
+&lt;li>如果 &lt;code>COM&lt;/code> 口 是低电平，&lt;span class="math inline">\(\text{GPIO} = \overline{\text{IN}}\)&lt;/span>，那么实际的上升沿和输入到系统的上升沿是反的&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;ul>
+&lt;li>&lt;code>COM&lt;/code> 口 高电平对应的 &lt;code>PLC&lt;/code> 类型是 &lt;code>NPN&lt;/code>&lt;/li>
+&lt;li>&lt;code>COM&lt;/code> 口 低电平对应的 &lt;code>PLC&lt;/code> 类型是 &lt;code>PNP&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>&lt;code>IN = 1&lt;/code>&lt;/th>
+&lt;th>&lt;code>IN = 0&lt;/code>&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>NPN&lt;/code> &lt;code>COM = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>No reverse&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>PNP&lt;/code> &lt;code>COM = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>Reverse&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="with-plc-side">With PLC side&lt;/h3>
+&lt;p>为了理解输出我们需要看完整的电路情况&lt;/p>
+&lt;h4 id="simple-view">Simple View&lt;/h4>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;code>COM = 1&lt;/code>&lt;/th>
+&lt;th>&lt;code>COM = 0&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;img src="./figures/input_com_p.png" width="500" alt="input_com_p" />&lt;/td>
+&lt;td>&lt;img src="./figures/input_com_n.png" width="500" alt="input_com_n" />&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>值：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>&lt;code>IN = 1&lt;/code> （PLC 开关断开）&lt;/th>
+&lt;th>&lt;code>IN = 0&lt;/code> （PLC 开关闭合）&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>NPN&lt;/code> &lt;code>COM = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>No reverse&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>PNP&lt;/code> &lt;code>COM = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>Reverse&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>延触发：&lt;/p>
+&lt;p>&lt;code>NPN&lt;/code>， &lt;code>COM=1&lt;/code>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>开关状态&lt;/th>
+&lt;th>&lt;code>IN&lt;/code>&lt;/th>
+&lt;th>外部的沿&lt;/th>
+&lt;th>光耦间电压差&lt;/th>
+&lt;th>&lt;code>GPIO&lt;/code>&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>断开-&amp;gt;闭合&lt;/code>&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;td>无-&amp;gt;有&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>闭合-&amp;gt;断开&lt;/code>&lt;/td>
+&lt;td>&lt;code>0-&amp;gt;1&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;td>有-&amp;gt;无&lt;/td>
+&lt;td>&lt;code>0-&amp;gt;1&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;code>PNP&lt;/code>，&lt;code>COM=0&lt;/code>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>开关状态&lt;/th>
+&lt;th>&lt;code>IN&lt;/code>&lt;/th>
+&lt;th>外部的沿&lt;/th>
+&lt;th>光耦间电压差&lt;/th>
+&lt;th>&lt;code>GPIO&lt;/code>&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>断开-&amp;gt;闭合&lt;/code>&lt;/td>
+&lt;td>&lt;code>0-&amp;gt;1&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;td>无-&amp;gt;有&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>闭合-&amp;gt;断开&lt;/code>&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;td>有-&amp;gt;无&lt;/td>
+&lt;td>&lt;code>0-&amp;gt;1&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h4 id="full-view">Full View&lt;/h4>
+&lt;p>相对更完整的视图&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;code>COM = 1&lt;/code>, &lt;code>NPN&lt;/code>&lt;/th>
+&lt;th>&lt;code>COM = 0&lt;/code>, &lt;code>PNP&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;img src="./figures/input_with_npn_plc.png" width="500" alt="input_with_npn_plc" />&lt;/td>
+&lt;td>&lt;img src="./figures/input_with_pnp_plc.png" width="500" alt="input_with_pnp_plc" />&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="输出端">输出端：&lt;/h2>
+&lt;figure>
+&lt;img src="./figures/output.png" alt="" />&lt;figcaption>output&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="一些标记-1">一些标记&lt;/h3>
+&lt;ul>
+&lt;li>右（外）侧
+&lt;ul>
+&lt;li>&lt;code>OP_OUT0&lt;/code>：外部看到的 &lt;code>OUT0&lt;/code>&lt;/li>
+&lt;li>&lt;code>COMOUT0&lt;/code>：外部看到的 OUT 口的 &lt;code>COM&lt;/code> 口&lt;/li>
+&lt;li>&lt;code>BCX55&lt;/code>：NPN 三极管&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>左（内）侧
+&lt;ul>
+&lt;li>&lt;code>RJ45_3V3&lt;/code>：3.3V&lt;/li>
+&lt;li>&lt;code>OUT0_V&lt;/code>：连到上级芯片（主芯片），被控制的引脚。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>中间
+&lt;ul>
+&lt;li>&lt;code>PS2805&lt;/code> 同 INPUT&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="左内侧电路">左（内）侧电路&lt;/h3>
+&lt;ul>
+&lt;li>&lt;code>OUT0_V&lt;/code> 低电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>有&lt;/strong>电压差，中间的光耦工作。&lt;/li>
+&lt;li>&lt;code>OUT0_V&lt;/code> 高电平，&lt;code>1&lt;/code> &lt;code>2&lt;/code> 之间&lt;strong>无&lt;/strong>电压差，中间的光耦不工作。&lt;/li>
+&lt;/ul>
+&lt;h3 id="右外侧电路">右（外）侧电路&lt;/h3>
+&lt;p>如开始所说，我们的输出的外侧需要接外部电源。由于中间的三极管是 &lt;code>NPN&lt;/code>，&lt;code>e&lt;/code>极需接低电平，&lt;code>c&lt;/code>极需接高电平，所以，&lt;code>COMOUT0&lt;/code> 需要连低电平，&lt;code>OP_OUT0 = 1&lt;/code> 需要连接高电平。&lt;/p>
+&lt;ul>
+&lt;li>停止工作状态：&lt;code>3&lt;/code> &lt;code>4&lt;/code> 引脚间的光敏二极管开路断开，三极管&lt;code>NPN&lt;/code> 的 &lt;code>b&lt;/code> 极电平等于&lt;code>COMOUT0=0&lt;/code>，三极管截止，&lt;code>OP_OUT0&lt;/code> 电压等于外部电压也就是 &lt;code>0&lt;/code>&lt;/li>
+&lt;li>工作状态：&lt;code>3&lt;/code> &lt;code>4&lt;/code> 引脚间的光敏二极管导通，三极管&lt;code>NPN&lt;/code> 的 &lt;code>b&lt;/code> 极电平等于&lt;code>OP_OUT0=1&lt;/code>，三极管导通，&lt;code>OP_OUT0&lt;/code> 的电压等于 &lt;code>COMOUT0 + 三极管分压 ~0&lt;/code>（有个问题：为什么不是 &lt;code>COMOUT0&lt;/code> 的电压等于 &lt;code>OP_OUT0&lt;/code> 的电压？这个问题需要考虑负载，但是通常，&lt;code>COM&lt;/code> 口会直连电源的正负极，负载会在 &lt;code>OP_OUT0&lt;/code> 和电源之间，所以这里是 &lt;code>OP_OUT0&lt;/code> 电平被拉到和 &lt;code>COMOUT0&lt;/code> 一致。有点绕，因为这里没有地）&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;code>3&lt;/code> &lt;code>4&lt;/code> 光敏二极管&lt;/th>
+&lt;th>&lt;code>NPN&lt;/code> 的 &lt;code>b&lt;/code> 极电压&lt;/th>
+&lt;th>三极管状态&lt;/th>
+&lt;th>&lt;code>OP_OUT0&lt;/code> 电压&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>断开&lt;/td>
+&lt;td>等于&lt;code>COMOUT0=0&lt;/code>&lt;/td>
+&lt;td>截止&lt;/td>
+&lt;td>初始电压 &lt;code>0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>导通&lt;/td>
+&lt;td>等于&lt;code>OP_OUT0&lt;/code> &lt;code>=1&lt;/code>然后略大于 &lt;code>0&lt;/code>&lt;/td>
+&lt;td>导通&lt;/td>
+&lt;td>拉低 &lt;code>~0+&lt;/code>(三极管分压)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="整体电路-1">整体电路&lt;/h3>
+&lt;p>定义：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>COMOUT0&lt;/code> 为 &lt;code>COM&lt;/code>&lt;/li>
+&lt;li>&lt;code>OP_OUT0&lt;/code> 为 &lt;code>OUT&lt;/code>&lt;/li>
+&lt;li>&lt;code>OUT0_V&lt;/code> 为 &lt;code>GPIO&lt;/code>&lt;/li>
+&lt;li>高电平为 1， 低电平为 0&lt;/li>
+&lt;/ul>
+&lt;p>那么：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>&lt;code>COM = 0&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>GPIO = 1&lt;/code>&lt;/td>
+&lt;td>&lt;code>OUT = 1&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>GPIO = 0&lt;/code>&lt;/td>
+&lt;td>&lt;code>OUT = 0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="with-plc-side-1">With PLC side&lt;/h3>
+&lt;figure>
+&lt;img src="./figures/output_with_plc.png" width="500" alt="" />&lt;figcaption>output_wit_plc&lt;/figcaption>
+&lt;/figure>
+&lt;p>&lt;code>COM=0&lt;/code>&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;code>GPIO&lt;/code> 写&lt;/th>
+&lt;th>光耦间电压差&lt;/th>
+&lt;th>开关状态&lt;/th>
+&lt;th>&lt;code>OUT&lt;/code>&lt;/th>
+&lt;th>外部的沿&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>无-&amp;gt;有&lt;/td>
+&lt;td>&lt;code>断开-&amp;gt;闭合&lt;/code>&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>0-&amp;gt;1&lt;/code>&lt;/td>
+&lt;td>有-&amp;gt;无&lt;/td>
+&lt;td>&lt;code>闭合-&amp;gt;断开&lt;/code>&lt;/td>
+&lt;td>&lt;code>1-&amp;gt;0&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="others">Others&lt;/h2>
+&lt;p>最开始说的我们的输出和输入是不带源的，那么如果想让我们的 Output 输出到 Input，需要做的就是外加一个电源。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/output_to_input.png" width="500" alt="" />&lt;figcaption>output_to_input&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="summary">Summary&lt;/h2>
+&lt;p>由于很多机构只关注自己的开关型号和是否有输出（即上文所述的开关的状态）。而我们的软件给的是电平，所以这里也给出相应的结论：&lt;/p>
+&lt;h3 id="input-1">Input&lt;/h3>
+&lt;p>外部 PLC &lt;code>NPN&lt;/code> （&lt;code>COM=1&lt;/code>）&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>开关状态&lt;/th>
+&lt;th>外部的沿&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>按下&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>松开&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>外部 PLC &lt;code>PNP&lt;/code> （&lt;code>COM=0&lt;/code>）&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>开关状态&lt;/th>
+&lt;th>外部的沿&lt;/th>
+&lt;th>to soc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>按下&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>松开&lt;/td>
+&lt;td>&lt;code>下降沿&lt;/code>&lt;/td>
+&lt;td>&lt;code>上升沿&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="output">Output&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;code>GPIO&lt;/code> 写&lt;/th>
+&lt;th>“开关状态”&lt;/th>
+&lt;th>外部的电平&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>0&lt;/code>&lt;/td>
+&lt;td>按下(有输出)&lt;/td>
+&lt;td>&lt;code>0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>1&lt;/code>&lt;/td>
+&lt;td>松开(无输出)&lt;/td>
+&lt;td>&lt;code>1&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>当然我们自己的板子是没有所谓的开关状态的，就是方便和外部对状态。&lt;/li>
+&lt;li>Kenexs 软件中的输出高低电平是和外部的电平统一的&lt;/li>
+&lt;/ul></description></item><item><title>polkit</title><link>https://bensyz.github.io/blog/blogs/polkit/</link><pubDate>Mon, 06 Jun 2022 08:55:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/polkit/</guid><description>&lt;h1 id="polkit">polkit&lt;/h1>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;h3 id="问题的出现">问题的出现&lt;/h3>
+&lt;p>&lt;code>udisks2&lt;/code> 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 &lt;code>/etc/fstab&lt;/code> 来自动挂载的分区。但由 &lt;code>/etc/fstab&lt;/code> 挂载的分区却不能直接用 &lt;code>udisks2&lt;/code> 卸载。(虽然加上 &lt;code>users&lt;/code> 这个 option 可以不用 sudo 直接 umount，但 &lt;code>udisks2&lt;/code> 限制了这种动作,后面会提到的 &lt;code>org.freedesktop.udisks2.filesystem-unmount-others&lt;/code>)。又由于 File explorer 中点击卸载，使用的是 &lt;code>udisks2&lt;/code>，所以对于前述的情况，便不能通过鼠标点击卸载。&lt;/p>
+&lt;h3 id="about-polkit">about polkit&lt;/h3>
+&lt;p>polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘&lt;/p>
+&lt;p>polkit 配置有两种方式，一种是应用自带的，叫Action，(&lt;code>.policy&lt;/code>)；另一种是类似补丁的形式，叫Authorization rules,(&lt;code>.rules&lt;/code> or &lt;code>.pkla&lt;/code>)&lt;/p>
+&lt;h2 id="action">Action:&lt;/h2>
+&lt;p>policy file 文件位置：&lt;/p>
+&lt;p>&lt;code>/usr/share/polkit-1/actions/*.policy&lt;/code>&lt;/p>
+&lt;p>在 default section 中，有这几个选项:&lt;/p>
+&lt;ul>
+&lt;li>keys:
+&lt;ul>
+&lt;li>&lt;code>allow_any&lt;/code>: 所有&lt;/li>
+&lt;li>&lt;code>allow_inactive&lt;/code>: 远程的 session(ssh vnc, etc.)&lt;/li>
+&lt;li>&lt;code>allow_active&lt;/code>: 本地 tty, X display&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>values:
+&lt;ul>
+&lt;li>&lt;code>no&lt;/code>: 无权限&lt;/li>
+&lt;li>&lt;code>yes&lt;/code>: 有权限&lt;/li>
+&lt;li>&lt;code>auth_self[_keep]&lt;/code>: 对 non-sudoer [keep some minutes] 开放权限&lt;/li>
+&lt;li>&lt;code>auth_admin[_keep]&lt;/code>: sudoer 开放权限&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="authorization-rules">Authorization rules&lt;/h2>
+&lt;p>文件位置：&lt;/p>
+&lt;p>&lt;code>/etc/polkit-1/rules.d/*.rules&lt;/code>&lt;/p>
+&lt;p>Tips:&lt;/p>
+&lt;ul>
+&lt;li>顺序是 &lt;code>00-test.rules&lt;/code> 比 &lt;code>99-test.rules&lt;/code> 更早验证，即，后面的不会覆写前面的。（区别于 &lt;code>/etc/udev/hwdb.d/&lt;/code>）因为这里直接 return 了&lt;/li>
+&lt;li>&lt;code>subject.local: true/false&lt;/code> responding to &lt;code>allow_active&lt;/code>, etc in policy&lt;/li>
+&lt;li>&lt;code>systemctl status polkit&lt;/code> 可以查看 &lt;code>Action name&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h3 id="examples">examples:&lt;/h3>
+&lt;ul>
+&lt;li>&lt;p>&lt;code>addAdminRule()&lt;/code> 需要特权时，使用何种身份验证是否有特权&lt;/p>
+&lt;pre class="rules">&lt;code># wheel 组的用户就可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-group:wheel&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: ben (ben is in wheel)&lt;/code>&lt;/pre>
+&lt;pre class="rules">&lt;code># root 用户才可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-user:root&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: root&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>&lt;code>addRule()&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>&lt;p>change rule&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.gnome.gparted&amp;quot; &amp;amp;&amp;amp;
+subject.isInGroup(&amp;quot;admin&amp;quot;)) {
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>log&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.policykit.exec&amp;quot;) {
+polkit.log(&amp;quot;action=&amp;quot; + action);
+polkit.log(&amp;quot;subject=&amp;quot; + subject);
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="old-authorization-rules">old Authorization rules&lt;/h3>
+&lt;p>&lt;code>pkaction --version&lt;/code>, rules not work for pkaction less then 106&lt;/p>
+&lt;p>&lt;a href="https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect" class="uri">https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect&lt;/a>&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+# section: random name
+# man pklocalauthority(8)
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;p>(似乎 &lt;code>ResultAny&lt;/code> 和 &lt;code>ResultActive&lt;/code> 有优先级，如果这里只设置 &lt;code>ResultAny=yes&lt;/code>，默认的 &lt;code>ResultActive&lt;/code> 还是 &lt;code>no&lt;/code>，还是不生效)&lt;/p>
+&lt;h2 id="问题的解决">问题的解决&lt;/h2>
+&lt;p>&lt;code>pkaction --version&lt;/code> 106 及以上的&lt;/p>
+&lt;pre class="rules">&lt;code>#/etc/polkit-1/rules.d/00-udisk-unmount-others.rules
+polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.udisks2.filesystem-unmount-others&amp;quot; ){
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>
+&lt;p>&lt;code>pkaction --version&lt;/code> 低于 106 的&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;h2 id="refs">refs:&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://wiki.archlinux.org/title/Polkit" class="uri">https://wiki.archlinux.org/title/Polkit&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html" class="uri">https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html&lt;/a>&lt;/li>
+&lt;/ul></description></item></channel></rss>

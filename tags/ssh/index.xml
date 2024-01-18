@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ssh on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/ssh/</link><description>Recent content in ssh on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 22 Dec 2021 13:36:53 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/ssh/index.xml" rel="self" type="application/rss+xml"/><item><title>github 使用key 来pull fetch</title><link>https://bensyz.github.io/blog/blogs/github_key/</link><pubDate>Wed, 22 Dec 2021 13:36:53 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/github_key/</guid><description>&lt;h2 id="问题的出现">问题的出现&lt;/h2>
+&lt;p>github 似乎不能使用帐号密码来push了，我们这里介绍一下如何使用 rsa 密钥对来进行身份认证。&lt;/p>
+&lt;p>github 上有&lt;a href="https://docs.github.com/cn/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account">文档&lt;/a>&lt;/p>
+&lt;h2 id="如何操作">如何操作&lt;/h2>
+&lt;h3 id="生成密钥对">生成密钥对&lt;/h3>
+&lt;p>在&lt;code>~/.ssh&lt;/code>下生成 rsa 非对称密钥对，可以把密钥名取为&lt;code>github&lt;/code>，可以不用设置密码&lt;/p>
+&lt;pre class="shell">&lt;code>$ cd ~/.ssh/
+$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/ben/.ssh/id_rsa): github&lt;/code>&lt;/pre>
+&lt;p>非对称密钥对在我 &lt;a href="../rsa_ssh/">ssh 免密登录&lt;/a>里有讲到一点。&lt;/p>
+&lt;p>于是我们得到了 &lt;code>github&lt;/code> 这一密钥 和 &lt;code>github.pub&lt;/code> 这一公钥。将 &lt;code>github.pub&lt;/code> 中的内容拷贝出来，一会儿放在 github 上&lt;/p>
+&lt;h3 id="将公钥内容拷贝到-github-上">将公钥内容拷贝到 github 上&lt;/h3>
+&lt;ul>
+&lt;li>点击路径：头像-&amp;gt; Settings -&amp;gt; 左侧SSH and GPG keys&lt;/li>
+&lt;li>或者直接访问这个链接 &lt;a href="https://github.com/settings/keys">https://github.com/settings/keys&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;img src="./figures/steps_to_keys.png" alt="steps to keys" />&lt;/th>
+&lt;th>&lt;img src="./figures/steps_to_keys2.png" alt="steps to keys2" />&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;/tbody>
+&lt;/table>
+&lt;p>然后就是 New SSH key&lt;/p>
+&lt;figure>
+&lt;img src="./figures/new_ssh_key.png" alt="" />&lt;figcaption>new ssh key&lt;/figcaption>
+&lt;/figure>
+&lt;p>把内容拷贝到 Key 框下，title 就是自己知道的标记&lt;/p>
+&lt;figure>
+&lt;img src="./figures/key_example.png" alt="" />&lt;figcaption>key example&lt;/figcaption>
+&lt;/figure>
+&lt;p>&lt;code>Add SSH key&lt;/code> 后这样远端的配置就好啦&lt;/p>
+&lt;h3 id="让本地密钥生效">让本地密钥生效&lt;/h3>
+&lt;p>远端的公钥准备好了，那如何使第一步中生成的密钥在 &lt;code>git push&lt;/code> 时生效呢&lt;/p>
+&lt;pre class="sshconfig">&lt;code>host github.com
+HostName github.com
+IdentityFile ~/.ssh/github
+User git
+ForwardX11 no&lt;/code>&lt;/pre>
+&lt;p>&lt;a href="../rsa_ssh/#附不用输入nameip的方法">ssh 免密登录&lt;/a>中有提到这点也有讲到。&lt;/p>
+&lt;p>github 的目标和 ssh 的差不多的:&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh&lt;/span> name@ip&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="fu">git&lt;/span> clone git@github.com:BenSYZ/blog.git&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>解释一下 &lt;code>~/.ssh/config&lt;/code>：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>host&lt;/code> 的 &lt;code>github.com&lt;/code> 其实对应的就是这里的&lt;code>git@github.com&lt;/code>，你可以把它换成任意你喜欢的，但是为了方便，在github 拷贝的 clone 就是 &lt;code>git@github.com:BenSYZ/blog.git&lt;/code>， 所以我们将它也设置成了 &lt;code>github.com&lt;/code>&lt;/li>
+&lt;li>&lt;code>Hostname&lt;/code>：是真正访问的地址&lt;/li>
+&lt;li>&lt;code>IdentityFile&lt;/code>：刚刚生成的密钥&lt;/li>
+&lt;li>&lt;code>User&lt;/code>：就是 &lt;code>git@github.com:BenSYZ/blog.git&lt;/code> 中&lt;code>@&lt;/code>前的用户名&lt;/li>
+&lt;li>&lt;code>ForwardX11&lt;/code>：若为yes 就等同于 &lt;code>ssh -X&lt;/code> 这样就可以启动远程的图形界面啦。&lt;/li>
+&lt;/ul></description></item><item><title>ssh 免密登录</title><link>https://bensyz.github.io/blog/blogs/rsa_ssh/</link><pubDate>Fri, 05 Feb 2021 12:13:15 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/rsa_ssh/</guid><description>&lt;h2 id="rsa简介">rsa简介&lt;/h2>
+&lt;h3 id="rsa">rsa&lt;/h3>
+&lt;h4 id="什么是rsa">&lt;a href="http://www.baidu.com/link?url=E7VV9LiPjbQHlSeIcFqyi_sx7fSDsVr8zPdlhSn7GVcsXuA5uiwUEmqmHXNQoJyroo71V84SlMGwRAML75z7D8HCAxMS6Ovzlljv0_Pr8DUNGyzrqNQWbsqTpXBlfsDAQfUx78JGfySl5JN4km2Qka&amp;amp;wd=&amp;amp;eqid=f42870ad0000ace4000000055e393bea">什么是rsa&lt;/a>&lt;/h4>
+&lt;p>RSA加密算法是一种非对称加密算法。在公开密钥加密和电子商业中RSA被广泛使用。它的基本原理是利用大数难以质因数分解，它有一对数字： 1. 密钥(&lt;a href="https://zhidao.baidu.com/question/1579778969145333380.html">yao4&lt;/a>)：绝对&lt;strong>不能&lt;/strong>透露给别人。 2. 公钥：是要给别人的。&lt;/p>
+&lt;p>具体原理请见阮一峰的&lt;a href="http://www.ruanyifeng.com/blog/2013/06/rsa_algorithm_part_one.html">blog&lt;/a>&lt;/p>
+&lt;h4 id="rsa的用途">rsa的用途&lt;/h4>
+&lt;h5 id="身份验证">&lt;a href="www.ruanyifeng.com/blog/2011/12/ssh_remote_login.html">身份验证&lt;/a>&lt;/h5>
+&lt;p>所谓“公钥登录”，原理很简单，就是用户将自己的公钥储存在远程主机上。登录的时候，远程主机会向用户发送一段随机字符串，用户用自己的私钥加密后，再发回来。远程主机用事先储存的公钥进行解密，如果成功，就证明用户是可信的，直接允许登录shell，不再要求密码。&lt;/p>
+&lt;h5 id="数字签名">&lt;a href="https://www.ruanyifeng.com/blog/2011/08/what_is_a_digital_signature.html">数字签名&lt;/a>&lt;/h5>
+&lt;p>数字签名用于发行软件时防止别人篡改，具体流程是这样的：&lt;/p>
+&lt;ol type="1">
+&lt;li>&lt;p>发行者对文件进行hash校验，并把这个校验值和进行私钥加密得到&lt;em>数字签名&lt;/em>，大家通过&lt;em>公布在网站上的公钥&lt;/em>解开这段密文（数字签名），也就是文件的hash值。&lt;/p>&lt;/li>
+&lt;li>&lt;p>下载者对文件进行hash校验，和1.中得到的hash值进行比对。&lt;/p>
+&lt;p>上面两个步骤如何防止第三方修改，发行者加密的文件第三方当然可以通过公钥解密之后修改，但是你也无法生成（到时候用户要用公布在网站上的公钥解密的）&lt;em>数字签名&lt;/em>（必须知道密钥）。&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;hr />
+&lt;h2 id="ssh用rsa方式登录远程主机">ssh用rsa方式登录远程主机&lt;/h2>
+&lt;h3 id="为什么要用rsa登录">为什么要用rsa登录&lt;/h3>
+&lt;ol type="1">
+&lt;li>方便，每次登录不用输密码。&lt;/li>
+&lt;li>安全，禁用密码登录后，不怕别人猜到密码。&lt;/li>
+&lt;/ol>
+&lt;h3 id="文件信息">文件信息&lt;/h3>
+&lt;p>本文会涉及两个文件夹，一个是在客户端（client），一个是服务器端（server）：&lt;/p>
+&lt;ul>
+&lt;li>rsa 密钥位置(&lt;strong>client&lt;/strong>)：&lt;code>~/.ssh/&lt;/code>&lt;/li>
+&lt;li>ssh 配置文件(&lt;strong>server&lt;/strong>)：&lt;code>/etc/ssh/sshd_config&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>client 和 server 是相对的概念，在一次连接中，主动寻求连接的是 client ，被连的是 server。&lt;/p>
+&lt;h3 id="如何配置">如何配置&lt;/h3>
+&lt;h4 id="client">client&lt;/h4>
+&lt;ol type="1">
+&lt;li>&lt;strong>生成密钥对：rsa 和 rsa.pub&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh-keygen&lt;/span> -t rsa&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>得到&lt;/p>
+&lt;pre>&lt;code>Generating public/private rsa key pair.
+# 输入rsa对（`id_rsa`和`id_rsa.pub`）名称（带路径）
+Enter file in which to save the key (/home/user/.ssh/id_rsa):
+# 输入密码，使用rsa密钥时（这里就是登录远程主机时）用的
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:&lt;/code>&lt;/pre>
+&lt;p>将会生成&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>rsa&lt;/code>: 密钥&lt;/li>
+&lt;li>&lt;code>rsa_rsa.pub&lt;/code>: 公钥&lt;/li>
+&lt;/ul>
+&lt;ol start="2" type="1">
+&lt;li>&lt;strong>&lt;a href="https://www.ruanyifeng.com/blog/2011/12/ssh_remote_login.html">将&lt;code>rsa.pub&lt;/code>附加到server &lt;code>~/.ssh/authorized_keys&lt;/code>的文件内&lt;/a>&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co"># Following 2 commands are excuted on client&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="ex">ssh-copy-id&lt;/span> [-i ~/.ssh/rsa.pub] user@host&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="co"># or&lt;/span>&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh&lt;/span> user@host &lt;span class="st">&amp;#39;mkdir -p .ssh &amp;amp;&amp;amp; cat &amp;gt;&amp;gt; .ssh/authorized_keys&amp;#39;&lt;/span> &lt;span class="op">&amp;lt;&lt;/span> ~/.ssh/id_rsa.pub&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>一个粗暴的办法，复制client内的&lt;code>id_rsa.pub&lt;/code>的内容，登录server，附加到&lt;code>~/.ssh/authorized_keys&lt;/code>中&lt;/p>
+&lt;h4 id="server">server&lt;/h4>
+&lt;ol type="1">
+&lt;li>&lt;strong>&lt;code>/etc/ssh/sshd_config&lt;/code> 的配置&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 允许公钥登录&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="ex">PubkeyAuthentication&lt;/span> yes&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="co"># 由 client 生成的公钥，可以添加多个，多行，自己注释&lt;/span>&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a>&lt;span class="ex">AuthorizedKeysFile&lt;/span> .ssh/authorized_keys&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;span class="co"># 是否允许用密码登录&lt;/span>&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a>&lt;span class="co"># 禁用后，如果密钥丢失就不能登录远程主机了&lt;/span>&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a>&lt;span class="ex">PasswordAuthentication&lt;/span> yes&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>可以找到相应的项并取消注释。&lt;/p>
+&lt;p>可能你的系统用的是第一版ssh协议需要添加 &lt;code>RSAAuthentication yes&lt;/code> 这一项来允许rsa方式登录，或者在&lt;code>/etc/ssh/sshd_config&lt;/code>中&lt;a href="https://www.cnblogs.com/Leroscox/p/9627809.html">添加&lt;/a>&lt;/p>
+&lt;pre class="config">&lt;code>Protocol 2&lt;/code>&lt;/pre>
+&lt;p>&lt;em>更多详细帮助见&lt;code>man sshd_config&lt;/code>&lt;/em>&lt;/p>
+&lt;ol start="2" type="1">
+&lt;li>&lt;strong>&lt;a href="https://www.ruanyifeng.com/blog/2011/12/ssh_remote_login.html">重启远程主机的ssh服务&lt;/a>&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="co">#ubuntu系统&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="ex">service&lt;/span> ssh restart&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a>&lt;span class="co">#debian系统&lt;/span>&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a>&lt;span class="ex">/etc/init.d/ssh&lt;/span> restart&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="连接">连接&lt;/h3>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh&lt;/span> user@host -i .ssh/rsa&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="附不用输入nameip的方法">附：不用输入&lt;code>name@ip&lt;/code>的方法&lt;/h2>
+&lt;p>对 &lt;code>~/.ssh/config&lt;/code> 进行配置配置&lt;/p>
+&lt;pre class="sshconfig">&lt;code>Host ubuntu
+# 远程主机 ip， `ssh name@ip` 中的`ip`
+HostName X.X.X.X
+# 远程主机 端口号(port), 默认是22，termux: 8022
+Port 22
+# 登录名， `ssh name@ip` 中的`name`
+User name
+# rsa密钥，对应的公钥放在server上(若无此项，则用密码登录)
+IdentityFile ~/.ssh/id_rsa&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>更多参数详见帮助&lt;code>man ssh_config&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>这样就可以直接通过&lt;/p>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh&lt;/span> ubuntu&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>来登录远程主机&lt;/p>
+&lt;h2 id="附ssh-keygen-公钥如果丢失由私钥生成公钥">附：ssh-keygen 公钥如果丢失，由私钥生成公钥&lt;/h2>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ssh-keygen&lt;/span> -y -f id_rsa &lt;span class="op">&amp;gt;&lt;/span> id_rsa.pub&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>生成的&lt;code>id_rsa.pub&lt;/code> 相比于自动生成的少了最后一项，但是没关系因为&lt;code>rsa.pub&lt;/code>的&lt;a href="https://blog.csdn.net/weixin_34051201/article/details/92480568">格式&lt;/a>： 一般分为三部分：密钥类型、base64编码后的密钥、注释(可选)。中间用空格分开。&lt;/p>
+&lt;p>&lt;strong>注意&lt;/strong>：这里生成的是公钥，就如之前说的从公钥是几乎不可能找回私钥的&lt;/p>
+&lt;h2 id="附ssh-时的fingerprint作用">附：ssh 时的fingerprint作用&lt;/h2>
+&lt;div class="sourceCode" id="cb11">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb11-1">&lt;a href="#cb11-1" aria-hidden="true">&lt;/a>$ &lt;span class="fu">ssh&lt;/span> localhost&lt;/span>
+&lt;span id="cb11-2">&lt;a href="#cb11-2" aria-hidden="true">&lt;/a>&lt;span class="ex">The&lt;/span> authenticity of host &lt;span class="st">&amp;#39;localhost (127.0.0.1)&amp;#39;&lt;/span> can&lt;span class="st">&amp;#39;t be established.&lt;/span>&lt;/span>
+&lt;span id="cb11-3">&lt;a href="#cb11-3" aria-hidden="true">&lt;/a>&lt;span class="st">ECDSA key fingerprint is SHA256:o2cGXCQtdhvWUXG8liYGWJrhVuP4YF9/E839KY1HqH4.&lt;/span>&lt;/span>
+&lt;span id="cb11-4">&lt;a href="#cb11-4" aria-hidden="true">&lt;/a>&lt;span class="st">Are you sure you want to continue connecting (yes/no)?&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>这个是为了防止我连接的server不是我想连的server，有可能是假的。这个fingerprint是用来确认server的身份的。这个就是我们之前提到的rsa公钥，只不过这次的fingerprint是server的。&lt;/p>
+&lt;h2 id="附不要验证fingerprint">附：不要验证fingerprint&lt;/h2>
+&lt;p>局域网内ip会变，验证不通过很不方便，可以这样配置&lt;code>~/.ssh/config&lt;/code> 例如：&lt;/p>
+&lt;pre class="conf">&lt;code>Host ubuntu
+...
+StrictHostKeyChecking no&lt;/code>&lt;/pre></description></item></channel></rss>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>physics on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/physics/</link><description>Recent content in physics on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:18:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/physics/index.xml" rel="self" type="application/rss+xml"/><item><title>about effective voltage and rms</title><link>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</link><pubDate>Fri, 21 Apr 2023 15:18:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</guid><description>&lt;h2 id="effective-voltage-of-sinusoidal">Effective voltage of sinusoidal&lt;/h2>
+&lt;p>In alternating current, to simplify the calculation, we often use effective voltage or current.&lt;/p>
+&lt;p>Since I haven’t touched these knowledge points for a long time. I almost forgot how to get the effective voltage and what’s the relation of effective voltage with rms (root mean square). So this is about the derivation of effective voltage.&lt;/p>
+&lt;p>Effective voltage is always used in calculating power or energy during a time. So we start from the expression of power, because voltage and current change with time, we first calculate the energy in time &lt;span class="math inline">\(dt\)&lt;/span>, then integrate.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P(t) = U(t)^2 / R
+\]&lt;/span>&lt;/p>
+&lt;p>Energy expose in &lt;span class="math inline">\(dt\)&lt;/span> is&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P(t) dt = \frac{1}{R} U(t)^2dt
+\]&lt;/span>&lt;/p>
+&lt;p>Integrate it:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+E_\text{one period} = \int_{0}^{T} \frac{1}{R} U(t)^2 dt
+\]&lt;/span>&lt;/p>
+&lt;p>While &lt;span class="math inline">\(U(t)\)&lt;/span> is sinusoidal function in A.C we assume it to be &lt;span class="math inline">\(U(t) = U_\text{m}\sin(2\pi/T \times t)\)&lt;/span>(when &lt;span class="math inline">\(t=T\)&lt;/span>, sine goes to its end of one period &lt;span class="math inline">\(2\pi\)&lt;/span>), in which &lt;span class="math inline">\(U_\text{m}\)&lt;/span> is maximum voltage, or we can call it amplitude, thus,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+E_\text{one period}
+&amp;amp;= \frac{U_\text{m}^2}{R} \int_{0}^{T} \sin^2(\frac{2\pi}{T}t) dt \\
+&amp;amp;= \frac{U_\text{m}^2}{R} \times \frac{1}{2} \int_{0}^{T} (1-\cos(2\frac{2\pi}{T}t)) dt \\
+&amp;amp;= \frac{U_\text{m}^2}{2R}\left(T-0 + \frac{T}{4\pi} \sin(\frac{4\pi}{T} \times T) -0\right) \\
+&amp;amp;=\frac{U_\text{m}^2}{2R} \times T
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>What is a effective voltage? With this we can treat AC as DC, thus&lt;/p>
+&lt;p>&lt;span class="math display">\[
+E_\text{one period} = U_\text{eff}^2 / R \times T
+\]&lt;/span>&lt;/p>
+&lt;p>Thus for a sinusoidal voltage,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{R \frac{U_\text{m}^2}{2R} \times T /T}
+= \frac{1}{\sqrt{2}} U_m
+\]&lt;/span>&lt;/p>
+&lt;h3 id="rms">RMS&lt;/h3>
+&lt;p>If we not introduce sinusoidal, the effective U is &lt;span class="math display">\[
+U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{\frac{1}{T} \int_{0}^{T}U(t)^2dt}
+\]&lt;/span>&lt;/p>
+&lt;p>which happens to be the root mean square:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{rms} \equiv \sqrt{\frac{\sum U^2}{n}}
+\]&lt;/span>&lt;/p>
+&lt;p>or&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{rms} \equiv \sqrt{ \frac{1}{T} \int_{0}^{T} U(t)^2 dt }
+\]&lt;/span>&lt;/p>
+&lt;p>So in general, if we want to calculate a quantity which is related to square periodic quantity, we can use the rms as its “average”(effective) variable to simplify it.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+z \propto Y(x)^2
+\]&lt;/span>&lt;/p>
+&lt;p>where &lt;span class="math inline">\(z\)&lt;/span> is a quantity we want to get, &lt;span class="math inline">\(Y(x)\)&lt;/span> is periodic, we can use its rms which does not vary with &lt;span class="math inline">\(x\)&lt;/span>, to simplify the calculation.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+z \propto Y_\text{rms}^2
+\]&lt;/span>&lt;/p>
+&lt;p>I feel that we’ve been talk rms is very useful, but now I cannot find it…&lt;/p></description></item><item><title>about maximum power transfer theorem</title><link>https://bensyz.github.io/blog/blogs/about_maximum_power_transfer_theorem/</link><pubDate>Fri, 21 Apr 2023 14:03:48 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_maximum_power_transfer_theorem/</guid><description>&lt;p>This is a read note of &lt;a href="https://en.wikipedia.org/wiki/Maximum_power_transfer_theorem" class="uri">https://en.wikipedia.org/wiki/Maximum_power_transfer_theorem&lt;/a>&lt;/p>
+&lt;h2 id="maximum-efficiency">Maximum Efficiency&lt;/h2>
+&lt;ul>
+&lt;li>Assumption:
+&lt;ul>
+&lt;li>direct current&lt;/li>
+&lt;li>load is pure resistor&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>notation:
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(P_\text{L}\)&lt;/span> power of load&lt;/li>
+&lt;li>&lt;span class="math inline">\(R_\text{L}\)&lt;/span> resistance of load.&lt;/li>
+&lt;li>&lt;span class="math inline">\(R_\text{S}\)&lt;/span> resistance of source(e.g battery)&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>The efficiency is:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\eta = \frac{P_\text{L}}{P_\text{total}}
+= \frac{U_{\text{L}} \times I}{U_{\text{emf}} \times I}
+= \frac{R_{\text{L}} \times I}{(R_\text{L} + R_\text{s}) \times I}
+= \frac{1}{1+R_\text{s}/R_\text{L}}
+\]&lt;/span>&lt;/p>
+&lt;p>So when &lt;span class="math inline">\(R_\text{L}\)&lt;/span> goes to &lt;span class="math inline">\(\infty\)&lt;/span>, &lt;span class="math inline">\(\eta\)&lt;/span> will goes to &lt;span class="math inline">\(1\)&lt;/span> . Which is as we already know about max efficiency.&lt;/p>
+&lt;h2 id="maximum-power-transfer">Maximum power transfer&lt;/h2>
+&lt;p>But what if we do not care about efficiency(&lt;span class="math inline">\(\eta\)&lt;/span>), we just want the power goes to maximum. What is the &lt;em>power&lt;/em>? Energy provided per time (&lt;span class="math inline">\(P\)&lt;/span>). It’s something like speed. While efficiency is like something capacity, like how much you have, like a volume quantity. So it would be better to redefine the efficiency from its initial meaning: &lt;span class="math display">\[
+\eta = \frac{E_\text{used}}{E_\text{provided}}
+\]&lt;/span>&lt;/p>
+&lt;p>which is equal to &lt;span class="math inline">\(P_\text{L}/P_\text{total}\)&lt;/span>, as we can dividing time (&lt;span class="math inline">\(T\)&lt;/span>) both to numerator and denominator.&lt;/p>
+&lt;p>As we have know the difference between these two words, power(&lt;span class="math inline">\(P\)&lt;/span>) and efficiency(&lt;span class="math inline">\(\eta\)&lt;/span>). We will discuss the problem of this section name, which is that under what condition will the power be at its maximum?&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P_\text{L} = U_\text{L} \times I
+\]&lt;/span>&lt;/p>
+&lt;p>When &lt;span class="math inline">\(R_\text{L}\)&lt;/span> goes from &lt;span class="math inline">\(0\)&lt;/span> to &lt;span class="math inline">\(\infty\)&lt;/span>, &lt;span class="math inline">\(U_\text{L}\)&lt;/span> will increase, but at the mean time, &lt;span class="math inline">\(I\)&lt;/span> will decrease. So we cannot get the maximum of &lt;span class="math inline">\(P_\text{L}\)&lt;/span> at first glance. Thus, it comes to numerical calculation:&lt;/p>
+&lt;p>Hold the previous assumptions:&lt;/p>
+&lt;ul>
+&lt;li>direct current&lt;/li>
+&lt;li>load is pure resistor&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math display">\[
+P_\text{L} = I ^2 R_\text{L}
+= (\frac{U_\text{emf}}{R_\text{L} + R_\text{L}})^2 R_\text{L}
+= \frac{U_\text{emf}}{R_\text{L}+2R_\text{s} + R_\text{s}^2 /R_\text{L}}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math inline">\(P_\text{L}\)&lt;/span> max &lt;span class="math inline">\(\Rightarrow\)&lt;/span> denominator to minumum&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{d (\text{deno})}{dR_\text{L}} =1- \frac{R\text{s}^2}{R_\text{L}^2}
+\]&lt;/span>&lt;/p>
+&lt;p>Extreme point of original formula is when the above formula equals to &lt;span class="math inline">\(0\)&lt;/span>, which is when &lt;span class="math inline">\(R_\text{s} = R_\text{L}\)&lt;/span> (&lt;span class="math inline">\(R&amp;gt;0\)&lt;/span>, omit the negative one). When &lt;span class="math inline">\(R_\text{L} &amp;lt; R_\text{s}\)&lt;/span> the derivative is negative, So the original denominator decrease first, then increase. It means that when &lt;span class="math inline">\(R_\text{L} = R_\text{s}\)&lt;/span>, the original formula goes to it’s maximum, which is &lt;span class="math display">\[
+P_\text{L} = \frac{U_\text{emf}}{4 R_\text{L}}
+\]&lt;/span>&lt;/p>
+&lt;p>While, at this time the efficiency &lt;span class="math inline">\(\eta = \frac{1}{2}\)&lt;/span>.&lt;/p>
+&lt;p>Besides, when the efficiency is maximum, the power is &lt;span class="math inline">\(0\)&lt;/span>&lt;/p>
+&lt;p>Here is a picture of “maximum power transfer graph” from Wikipedia:&lt;/p>
+&lt;p>&lt;img src="./figures/Maximum_Power_Transfer_Graph.svg" />&lt;/p>
+&lt;h2 id="ac-case-todo">AC case (TODO)&lt;/h2>
+&lt;p>in AC we could use complex number to describe the impedance of capacitor and inductance, whose effects is shift the phases.&lt;/p>
+&lt;p>and we can convert the voltage to be effect voltage.&lt;/p></description></item></channel></rss>

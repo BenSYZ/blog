@@ -1,0 +1,98 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>jupyter-lab里的vim，colemak 配置</title><script src=/js/if_mobile.js></script>
+<script>!function(){$("pre > code").each(function(){var s,n=$(this).parent().attr("class");n==null||n===""?$(this).addClass("hljs"):(s={js:"javascript"},s[n]&&(n=s[n]),$(this).addClass(n))})}</script><link rel=stylesheet href=/css/hljs/snazzy.css><link rel=stylesheet href=/css/hljs/line-numbers.min.css><script src=/js/hljs/highlight.min.js></script>
+<script src=/js/hljs/highlightjs-line-numbers.min.js></script>
+<script>hljs.highlightAll()</script><script>hljs.initLineNumbersOnLoad()</script><link rel=stylesheet href=/css/code.css><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/footer.css><link rel=stylesheet href=/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/js/favicon.js></script></head><body><div class=container><div class=header><h1>jupyter-lab里的vim，colemak 配置</h1>Mon, 2020-08-03<hr></div><div class=middle><div id=TitleWithToc><div id=TitleOfToc>jupyter-lab里的vim，colemak 配置</div></div><div id=content><p>我原先发于 <a href=https://blog.csdn.net/BenSYZ>CSDN</a></p><p><a href=../jupyterlab_colemak>上一篇文章</a> 介绍了 <code>jupyter-notebook</code> 怎样 <code>map</code>。<code>jupyterlab</code> 是新一代的 <code>jupyter-notebook，</code> 有点像<code>R-Studio</code>, 有更多的功能了。</p><h2 id=tl-dr>TL; DR</h2><ul><li>install</li></ul><div class=sourceCode id=cb1><pre class="sourceCode sh"><code class="sourceCode bash"><span id=cb1-1><a href=#cb1-1 aria-hidden=true></a><span class=co># For jupyterlab 2.0</span></span>
+<span id=cb1-2><a href=#cb1-2 aria-hidden=true></a><span class=ex>jupyter-labextension</span> install @axlair/jupyterlab_vim</span>
+<span id=cb1-3><a href=#cb1-3 aria-hidden=true></a><span class=co># vimrc</span></span>
+<span id=cb1-4><a href=#cb1-4 aria-hidden=true></a><span class=ex>jupyter-labextension</span> install jupyterlab-vimrc</span></code></pre></div><ul><li>config</li></ul><pre class=json5><code>    &quot;nmap&quot;: [
+        [&quot;n&quot;,&quot;j&quot;],
+        [&quot;e&quot;,&quot;k&quot;]
+    ],</code></pre><hr><h2 id=安装jupyterlab>安装<code>jupyterlab</code></h2><div class=sourceCode id=cb3><pre class="sourceCode sh"><code class="sourceCode bash"><span id=cb3-1><a href=#cb3-1 aria-hidden=true></a><span class=ex>pip</span> install --user jupyterlab</span>
+<span id=cb3-2><a href=#cb3-2 aria-hidden=true></a><span class=co># or</span></span>
+<span id=cb3-3><a href=#cb3-3 aria-hidden=true></a><span class=ex>conda</span> activate <span class=op>&lt;</span>env<span class=op>&gt;</span></span>
+<span id=cb3-4><a href=#cb3-4 aria-hidden=true></a><span class=ex>conda</span> install jupyterlab</span></code></pre></div><h2 id=安装-extension>安装 extension</h2><h3 id=vim-binding>1. vim binding</h3><div class=sourceCode id=cb4><pre class="sourceCode sh"><code class="sourceCode bash"><span id=cb4-1><a href=#cb4-1 aria-hidden=true></a><span class=co># jupyterlab 1.0</span></span>
+<span id=cb4-2><a href=#cb4-2 aria-hidden=true></a><span class=ex>jupyter</span> labextension install jupyterlab_vim</span>
+<span id=cb4-3><a href=#cb4-3 aria-hidden=true></a><span class=co># jupyterlab 2.0</span></span>
+<span id=cb4-4><a href=#cb4-4 aria-hidden=true></a><span class=ex>jupyter-labextension</span> install @axlair/jupyterlab_vim</span></code></pre></div><h3 id=vim-keymap>2. vim keymap</h3><div class=sourceCode id=cb5><pre class="sourceCode sh"><code class="sourceCode bash"><span id=cb5-1><a href=#cb5-1 aria-hidden=true></a><span class=ex>jupyter-labextension</span> install jupyterlab-vimrc</span></code></pre></div><h4 id=配置>配置</h4><ol type=1><li><img src="https://img-blog.csdnimg.cn/20200803225854570.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JlblNZWg==,size_16,color_FFFFFF,t_70#pic_center%20=200x" title=fig: alt=在这里插入图片描述></li><li><img src=https://img-blog.csdnimg.cn/20200803225927188.png#pic_center title=fig: alt=在这里插入图片描述></li><li>仅供参考</li></ol><pre class=json5><code>{
+    // vimrc
+    // jupyterlab-vimrc:vimrc
+    // Settings to be applied to codemirror vim mode
+    // *********************************************
+
+    // imap commands
+    // [lhs, rhs] - e.g. &quot;imap&quot;: [[&quot;ii&quot;, &quot;&lt;Esc&gt;&quot;]]
+    &quot;imap&quot;: [
+    ],
+
+    // inoremap commands
+    // [lhs, rhs]
+    &quot;inoremap&quot;: [
+        []
+    ],
+
+    // nmap commands
+    // [lhs, rhs]
+    &quot;nmap&quot;: [
+        [&quot;n&quot;,&quot;j&quot;],
+        [&quot;e&quot;,&quot;k&quot;]
+
+    ],
+
+    // nnoremap commands
+    // [lhs, rhs]
+    &quot;nnoremap&quot;: [
+        [&quot;i&quot;,&quot;l&quot;],
+        [&quot;m&quot;,&quot;n&quot;],
+        [&quot;k&quot;,&quot;m&quot;],
+        [&quot;f&quot;,&quot;e&quot;],
+        [&quot;t&quot;,&quot;f&quot;],
+        [&quot;l&quot;,&quot;u&quot;],
+        [&quot;u&quot;,&quot;i&quot;],
+        
+        [&quot;N&quot;,&quot;J&quot;],
+        [&quot;E&quot;,&quot;K&quot;],
+        [&quot;I&quot;,&quot;L&quot;],
+        [&quot;M&quot;,&quot;N&quot;],
+        [&quot;K&quot;,&quot;M&quot;],
+        [&quot;F&quot;,&quot;E&quot;],
+        [&quot;T&quot;,&quot;F&quot;],
+        [&quot;L&quot;,&quot;U&quot;],
+        [&quot;U&quot;,&quot;I&quot;],
+        [&quot;\&#39;&quot;,&quot;&#39;&quot;]
+    ],
+
+    // vmap commands
+    // [lhs, rhs]
+    &quot;vmap&quot;: [
+        
+    ],
+
+    // vnoremap commands
+    // [lhs, rhs]
+    &quot;vnoremap&quot;: [
+        [&quot;n&quot;,&quot;j&quot;],
+        [&quot;e&quot;,&quot;k&quot;],
+        [&quot;i&quot;,&quot;l&quot;],
+        [&quot;k&quot;,&quot;n&quot;],
+        [&quot;f&quot;,&quot;e&quot;],
+        [&quot;t&quot;,&quot;f&quot;],
+        [&quot;l&quot;,&quot;u&quot;],
+        [&quot;u&quot;,&quot;i&quot;],
+        
+        [&quot;N&quot;,&quot;J&quot;],
+        [&quot;E&quot;,&quot;K&quot;],
+        [&quot;I&quot;,&quot;L&quot;],
+        [&quot;K&quot;,&quot;N&quot;],
+        [&quot;F&quot;,&quot;E&quot;],
+        [&quot;T&quot;,&quot;F&quot;],
+        [&quot;L&quot;,&quot;U&quot;],
+        [&quot;U&quot;,&quot;I&quot;],
+        
+        [&quot;\&#39;&quot;,&quot;:&quot;]
+    ]
+}</code></pre><p>其中需要<strong>注意</strong>的是</p><pre class=json5><code>    &quot;nmap&quot;: [
+        [&quot;n&quot;,&quot;j&quot;],
+        [&quot;e&quot;,&quot;k&quot;]
+    ],</code></pre><p>可能是因为 <code>jupyterlab_vim</code>, 会涉及到cell之间的跳转，所以需要使用<code>nmap</code></p></div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/avatar.jpg></div><ul><li><a href=/about>About Me</a></li><li><a href=/donate>Donate Me</a></li><li><a href=/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div></div><div class=footer><div id=tags><a href=https://bensyz.github.io/blog/tags><i class="fas fa-tags"></i></a>
+Keywords:<ul><li><a href=https://bensyz.github.io/blog/tags/jupyterlab>jupyterlab</a></li><li><a href=https://bensyz.github.io/blog/tags/vim>vim</a></li><li><a href=https://bensyz.github.io/blog/tags/colemak>colemak</a></li><li><a href=https://bensyz.github.io/blog/tags/python>python</a></li></ul></div><footer><hr><a href=/>Ben's Blog</a><br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。<br><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/icons/public_safety_icon.png>浙公网安备 33028102001039号</a>
+<a href=https://beian.miit.gov.cn/ target=_blank>浙ICP备2021032097号-1</a></footer></div></div></body></html>
