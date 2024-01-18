@@ -1,7 +1,7 @@
 ---
 title: "RK and Jetson SDK full work on ArchLinux"
 date: 2024-01-15T06:47:39+08:00
-lastMod: 2024-01-15T06:47:39+08:00
+lastMod: 2024-01-18T11:00:14+08:00
 code: true
 mermaid: false
 katex: false
@@ -18,12 +18,40 @@ tags: ["arch", "jetson", "rk", "docker", "linux"]
 
 遇到的几个问题，和解决措施：
 
-| Platform  | Problem                            | Solution                                                                            |
-|-----------|------------------------------------|-------------------------------------------------------------------------------------|
-| RK        | `mknod failed`                     | remount docker volume with `nodev,noexec`                                           |
-| Jetson    | `showmount -e` oom                 | ulimit docker option add `--ulimit nofile=1024:524288`                              |
-| RK Jetson | RK Maskrom and jetson  burn failed | disable usbcore autosuspend, `echo -1 > /sys/module/usbcore/parameters/autosuspend` |
+| Platform   | Problem                                  | Solution                                                                            |
+|------------|------------------------------------------|-------------------------------------------------------------------------------------|
+| RK         | `mknod failed`                           | remount docker volume with `nodev,noexec`                                           |
+| ~~Jetson~~ | ~~`showmount -e` oom~~                   | ~~ulimit docker option add `--ulimit nofile=1024:524288`~~                          |
+| RK Jetson  | RK Maskrom and jetson  burn failed       | disable usbcore autosuspend, `echo -1 > /sys/module/usbcore/parameters/autosuspend` |
+| Jetson     | `Error: ipv6: address already assigned.` | no `ping6` command, add a ping6 in PATH                                             |
+| Jetson     | `mount.nfs: Connection timed out`        | try to remount manually??                                                             |
 
+
+* 由于 docker 中 nfs 有问题（包括 service restart nfs），所以目前我没有使用 docker
+
+其他一些 Ubuntu 和 Arch 兼容性的问题：
+
+```sh
+# Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func
+enable_nfs_for_folder ()
+{
+    ...
+    #chown root.root "${nfs_dir}"
+    chown root:root "${nfs_dir}"
+    ...
+}
+```
+
+```sh
+# Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func
+network_prerequisite ()
+{
+    ...
+    #service nfs-kernel-server restart
+    systemctl restart nfs-server
+    ...
+}
+```
 
 ## Introduction
 
@@ -59,8 +87,7 @@ Keeping working dir at /l4t/Linux_for_Tegra/temp_initrdflash/bootloader0 and /tm
 
 
 ## work space creation
-### create container
-#### RK
+### RK
 参考 《Rockchip_Developer_Guide_Linux_Docker_Deploy_CN.pdf》
 
 ```dockerfile
@@ -91,12 +118,7 @@ wget xterm xz-utils zstd \
 && apt-get -y autoclean && apt-get -y autoremove && rm -rf /var/lib/apt/lists/*
 ```
 
-#### Jetson
-```sh
-docker pull nvcr.io/nvidia/jetson-linux-flash-x86:${SW_VERSION}
-```
-
-### use the container
+#### use the container
 ```zsh
 make_docker_rockchip_run(){
     if [ "$1" = "RK3588" ] || [ "$1" = "RK3399" ];then
@@ -115,30 +137,6 @@ make_docker_rockchip_run(){
                                               bash ./remount.sh; \
                                               exec /bin/bash"
 }
-alias mdrr=make_docker_rockchip_run
-
-make_docker_jetson_run(){
-    if [ "$1" = "r35.3.1" ];then
-        sdk_version="$1"
-    else
-        sdk_version="r35.3.1"
-        echo "use default sdk_version $sdk_version" >&2
-    fi
-    proxy_server="172.17.0.1:8119"
-    env_all=("http_proxy=http://$proxy_server" "https_proxy=http://$proxy_server")
-
-    docker_work_dir=/l4t
-    docker run --rm --privileged -it \
-        --ulimit nofile=1024:524288 \
-        --net=host \
-        -v /dev/bus/usb:/dev/bus/usb \
-        -v $PWD:/$docker_work_dir \
-        nvcr.io/nvidia/jetson-linux-flash-x86:$sdk_version \
-        env "${env_all[@]}" /bin/bash -c "cd $docker_work_dir; \
-                                          bash ./remount.sh; \
-                                          exec /bin/bash"
-}
-alias mdjr=make_docker_jetson_run
 ```
 
 
@@ -162,3 +160,44 @@ fi
 mount -l | grep "$PWD"
 ```
 
+### Jetson
+
+Arch 中没有 `ping6` 这个命令，所以需要做一个，记得添加到 PATH 里
+
+```sh
+# /usr/local/bin/ping6
+#!/bin/sh
+ping -6 "$@"
+```
+
+有一个 bug: `chown root.root "${nfs_dir}"`
+
+```sh
+# Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func
+enable_nfs_for_folder ()
+{
+    ...
+    #chown root.root "${nfs_dir}"
+    chown root:root "${nfs_dir}"
+    ...
+}
+```
+
+* `nfs-kernel-server` -> `nfs-server`
+* `service` -> `systemctl`
+
+```sh
+# Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func
+network_prerequisite ()
+{
+    #service nfs-kernel-server restart
+    systemctl restart nfs-server
+}
+```
+
+nfs 可能还有一个问题，会报超时，需要重新 export 一下，可以通过 `exportfs -s` 查看两个 ipv6 的 share，然后重新 export 一下，我前几次遇到了，后面再次烧录就没遇到了:
+
+```sh
+sudo exportfs -o rw,nohide,insecure,no_subtree_check,async,no_root_squash '[fc00:1:1::/48]:/r35.3.1/Linux_for_Tegra/rootfs'
+sudo exportfs -o rw,nohide,insecure,no_subtree_check,async,no_root_squash '[fc00:1:1::/48]:/r35.3.1/Linux_for_Tegra/tools/kernel_flash'
+```
