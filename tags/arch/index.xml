@@ -35,9 +35,9 @@
 &lt;td>no &lt;code>ping6&lt;/code> command, add a ping6 in PATH&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
-&lt;td>Jetson&lt;/td>
-&lt;td>&lt;code>mount.nfs: Connection timed out&lt;/code>&lt;/td>
-&lt;td>try to remount manually??&lt;/td>
+&lt;td>&lt;del>Jetson&lt;/del>&lt;/td>
+&lt;td>&lt;del>&lt;code>mount.nfs: Connection timed out&lt;/code>&lt;/del>&lt;/td>
+&lt;td>&lt;del>systemctl restart nfs-server&lt;/del> 看起来是我错误地添加 sudo 导致的，后面没再复现。&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
