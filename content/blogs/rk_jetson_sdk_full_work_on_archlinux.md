@@ -1,7 +1,7 @@
 ---
 title: "RK and Jetson SDK full work on ArchLinux"
 date: 2024-01-15T06:47:39+08:00
-lastMod: 2024-01-18T11:00:14+08:00
+lastMod: 2024-01-23T11:22:24+08:00
 code: true
 mermaid: false
 katex: false
@@ -24,7 +24,7 @@ tags: ["arch", "jetson", "rk", "docker", "linux"]
 | ~~Jetson~~ | ~~`showmount -e` oom~~                   | ~~ulimit docker option add `--ulimit nofile=1024:524288`~~                          |
 | RK Jetson  | RK Maskrom and jetson  burn failed       | disable usbcore autosuspend, `echo -1 > /sys/module/usbcore/parameters/autosuspend` |
 | Jetson     | `Error: ipv6: address already assigned.` | no `ping6` command, add a ping6 in PATH                                             |
-| Jetson     | `mount.nfs: Connection timed out`        | try to remount manually??                                                             |
+| ~~Jetson~~ | ~~`mount.nfs: Connection timed out`~~    | ~~systemctl restart nfs-server~~ 看起来是我错误地添加 sudo 导致的，后面没再复现。   |
 
 
 * 由于 docker 中 nfs 有问题（包括 service restart nfs），所以目前我没有使用 docker
