@@ -1,0 +1,129 @@
+@media all and (prefers-color-scheme: dark) {
+  body {
+    background: black;
+    color: white;
+  }
+}
+#Avatar > img{
+  width: 100pt;
+}
+html,body{
+  font-family: Verdana, Arial, sans-serif;
+  width: 100%;
+  height: 100%;
+  margin: 0; /* all the page is html and body*/
+}
+a{
+    color: #0681d0;
+}
+.container{
+      width:95%;
+      margin:0 0 0 2%;
+}
+
+.header {
+      width:100%;
+      margin:0 0 20px 0;
+}
+
+.middle {
+      width: 100%;
+      height: 100%;
+}
+
+.footer {
+      width:100%;
+      float: left;
+}
+
+footer > a > img{
+    vertical-align: middle;
+}
+
+#TitleOfToc {
+    font-size: x-large ;
+}
+#TableOfContents *{
+    font-size: normal ;
+}
+#TableOfContents > ul {
+    width:100%;
+    padding:0 0 0 1%;
+}
+#TableOfContents > ul > li >ul {
+    padding:0 0 0 10%;
+}
+
+
+img {
+    max-width:100%;
+}
+figcaption {
+  height: 10%;
+  font-size:70%;
+  color:#999;
+  margin:0 auto;
+  width:100%;
+}
+
+
+/*tags*/
+
+#tags {
+}
+#tags >ul >li {
+    margin:0 0.1% 0 0;
+    display: inline;
+}
+#tags >ul{
+    list-style-type: none;
+    display: inline;
+    padding: 0 0 0 0;
+}
+#tags > a{
+    color: #000000;
+}
+footer {
+      float: left;
+}
+del{
+    text-decoration-thickness: 1.5px
+}
+
+/* Table Styles */
+table:not(code table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table:not(code table) th,
+table:not(code table) td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+table:not(code table) th {
+  background-color: #f2f2f2;
+}
+
+table:not(code table) tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+
+@media all and (prefers-color-scheme: dark) {
+    table:not(code table) th {
+      background-color: black;
+    }
+    table:not(code table) tr:nth-child(even) {
+      background-color: #30363d;
+    }
+}
+
+/* Hover effect on rows
+table:not(code table) tr:hover {
+  background-color: #e5e5e5;
+}
+ */
+

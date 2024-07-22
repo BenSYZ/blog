@@ -1,0 +1,99 @@
+(kicad_sch (version 20230121) (generator eeschema)
+
+  (uuid e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143)
+
+  (paper "A4")
+
+  (lib_symbols
+  )
+
+
+  (sheet (at 91.44 34.925) (size 41.91 24.13) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 49624fb5-0b6e-4e1c-b036-89059543b76f)
+    (property "Sheetname" "output_with_plc" (at 91.44 34.2134 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "output_with_plc.kicad_sch" (at 91.44 59.6396 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "SimpeIODiagram"
+        (path "/e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143" (page "5"))
+      )
+    )
+  )
+
+  (sheet (at 38.1 34.925) (size 34.925 21.59) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 865db5fb-fda4-457e-9085-8894fde0dafe)
+    (property "Sheetname" "output" (at 38.1 34.2134 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "output.kicad_sch" (at 38.1 57.0996 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "SimpeIODiagram"
+        (path "/e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143" (page "3"))
+      )
+    )
+  )
+
+  (sheet (at 91.44 72.39) (size 41.275 23.495) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid b7af7bad-aecc-4068-a2d7-69cc07123091)
+    (property "Sheetname" "input_with_plc" (at 91.44 71.6784 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "intup_with_plc.kicad_sch" (at 91.44 96.4696 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "SimpeIODiagram"
+        (path "/e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143" (page "4"))
+      )
+    )
+  )
+
+  (sheet (at 33.02 116.205) (size 40.005 25.4) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid d234055a-e238-4b18-b0fa-97b1b7a62cc2)
+    (property "Sheetname" "In&Out" (at 33.02 115.4934 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "In&Out.kicad_sch" (at 33.02 142.1896 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "SimpeIODiagram"
+        (path "/e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143" (page "6"))
+      )
+    )
+  )
+
+  (sheet (at 37.465 74.93) (size 37.465 21.59) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid fee955f2-d3ba-4843-92b3-a0e93355ab1c)
+    (property "Sheetname" "input" (at 37.465 74.2184 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "intup.kicad_sch" (at 37.465 97.1046 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "SimpeIODiagram"
+        (path "/e29750f5-bbe6-4fb5-ac2e-b1ec6ef5e143" (page "2"))
+      )
+    )
+  )
+
+  (sheet_instances
+    (path "/" (page "1"))
+  )
+)
