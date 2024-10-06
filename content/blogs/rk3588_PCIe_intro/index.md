@@ -1,7 +1,7 @@
 ---
 title: "RK3588 PCIe Introduction"
 date: 2023-11-23T10:51:55+08:00
-lastMod: 2023-12-06T11:15:53+08:00
+lastMod: 2024-10-06T12:09:02+08:00
 code: true
 mermaid: false
 katex: false
@@ -74,7 +74,7 @@ RK3588共有5个PCIe的控制器，硬件IP是一样的，配置不一样，
 * 1 个 2 Lane 控制器 只能作为 RC 使用
 * 3 个 1 Lane 控制器 均只能作为 RC 使用
 
-关于 RC 和 EP 举个例子：`rtl8111` 就是 EP，它是 PCIe 信号协议的终点，再往下就是网络相关的信号协议了，一般 PCIe Controller 都用来做 RC。（我猜测像 RK 这里的 4Lane 控制器这种做 EP，就是意味着它的下游是别的信号了）
+关于 RC 和 EP，可以详见我的这篇文章 [PCIe 和 lspci](./PCIe_and_lspci)。对于 RK3588 这个 PCIe 控制器的 EP 模式，其实此时，是将 RK3588 所在的 PCB 板当作板卡，就像显卡一样，插在其他主机的 PCIe 槽上，作为从设备。就像显卡、RTL8168 系列芯片一样。
 
 PCIe PHY 受 PCIe Controller 控制，所以上面几个 PHY 的上游需要接 PCIe Controller。接法有很多，最简单的接法是这样子的：
 
