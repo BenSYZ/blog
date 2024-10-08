@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>rk on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/rk/</link><description>Recent content in rk on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 15 Jan 2024 06:47:39 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/rk/index.xml" rel="self" type="application/rss+xml"/><item><title>RK and Jetson SDK full work on ArchLinux</title><link>https://bensyz.github.io/blog/blogs/rk_jetson_sdk_full_work_on_archlinux/</link><pubDate>Mon, 15 Jan 2024 06:47:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/rk_jetson_sdk_full_work_on_archlinux/</guid><description>&lt;h2 id="tldr">tl;dr&lt;/h2>
+&lt;p>遇到的几个问题，和解决措施：&lt;/p>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 6%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 68%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Platform&lt;/th>
+&lt;th>Problem&lt;/th>
+&lt;th>Solution&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>RK&lt;/td>
+&lt;td>&lt;code>mknod failed&lt;/code>&lt;/td>
+&lt;td>remount docker volume with &lt;code>nodev,noexec&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;del>Jetson&lt;/del>&lt;/td>
+&lt;td>&lt;del>&lt;code>showmount -e&lt;/code> oom&lt;/del>&lt;/td>
+&lt;td>&lt;del>ulimit docker option add &lt;code>--ulimit nofile=1024:524288&lt;/code>&lt;/del>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>RK Jetson&lt;/td>
+&lt;td>RK Maskrom and jetson burn failed&lt;/td>
+&lt;td>disable usbcore autosuspend, &lt;code>echo -1 &amp;gt; /sys/module/usbcore/parameters/autosuspend&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Jetson&lt;/td>
+&lt;td>&lt;code>Error: ipv6: address already assigned.&lt;/code>&lt;/td>
+&lt;td>no &lt;code>ping6&lt;/code> command, add a ping6 in PATH&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;del>Jetson&lt;/del>&lt;/td>
+&lt;td>&lt;del>&lt;code>mount.nfs: Connection timed out&lt;/code>&lt;/del>&lt;/td>
+&lt;td>&lt;del>systemctl restart nfs-server&lt;/del> 看起来是我错误地添加 sudo 导致的，后面没再复现。&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Jetson&lt;/td>
+&lt;td>&lt;code>failed to flash&lt;/code> (something like this)&lt;/td>
+&lt;td>arch ssh does not support &lt;code>dsa&lt;/code>, &lt;code>tools/ota_tools/version_upgrade/ota_make_recovery_img_dtb.sh&lt;/code> 118 行附近，去除 dsa sshd key 的生成&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>RK&lt;/td>
+&lt;td>uboot make menuconfig failed&lt;/td>
+&lt;td>add &lt;code>cc -&amp;gt; gcc-7&lt;/code> to PATH&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>RK&lt;/td>
+&lt;td>native &lt;code>cp2102&lt;/code> driver does not support 1500000&lt;/td>
+&lt;td>Use &lt;a href="https://aur.archlinux.org/packages/cp210x-overclock-dkms">AUR cp210x-overclock-dkms&lt;/a>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>由于 docker 中 nfs 有问题（包括 service restart nfs），所以目前我没有使用 docker&lt;/li>
+&lt;/ul>
+&lt;p>其他一些 Ubuntu 和 Arch 兼容性的问题：&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="fu">enable_nfs_for_folder ()&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a> &lt;span class="co">#chown root.root &amp;quot;${nfs_dir}&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a> &lt;span class="fu">chown&lt;/span> root:root &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${nfs_dir}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">network_prerequisite ()&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a> &lt;span class="co">#service nfs-kernel-server restart&lt;/span>&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a> &lt;span class="ex">systemctl&lt;/span> restart nfs-server&lt;/span>
+&lt;span id="cb2-7">&lt;a href="#cb2-7" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb2-8">&lt;a href="#cb2-8" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>因为我们用 RK 的板子，然后我在使用 Arch 时遇到一个问题，在板子是 &lt;code>Maskrom&lt;/code> 状态的时候，我用 RK 提供的 &lt;code>upgrade_tool&lt;/code> 不能烧录，会报段错误，提给 redmine 后，修复了段错误的问题，但是还是不能烧录，这个时候报下面的错误：&lt;/p>
+&lt;pre class="log">&lt;code>14:40:29 Upgrade Tool v2.26
+14:40:29 Current process in /home/ben/Downloads/upgrade_tool_v2.26_for_linux
+14:40:29 Using /home/ben/Downloads/upgrade_tool_v2.26_for_linux/config.ini
+14:40:29 Command Line: ./upgrade_tool uf /home/ben/nfs/ubuntu_local/benWork/images/RK/RK3588_20230907-1/rockdev/update.img
+14:40:29 Current Device Location ID:13
+14:41:12 Error:InitializeUsb--&amp;gt;open device failed,err=-1,device=0x11d19f0
+14:41:12 Error:upgrade_firmware-&amp;gt;Fail to create comm object!&lt;/code>&lt;/pre>
+&lt;p>反馈给 RK 无果后，此事搁置了。最近又在用 nvidia jetson 的板子，Nvidia 提供了烧录的 &lt;a href="https://catalog.ngc.nvidia.com/orgs/nvidia/containers/jetson-linux-flash-x86">docker&lt;/a>(Arch 上 docker 有点问题，&lt;code>showmount -e&lt;/code> 会 oom，要做 ulimit 限制 nofile) 又是不能烧录， &lt;code>flash.sh&lt;/code> 报的错如下&lt;/p>
+&lt;pre class="log">&lt;code>...
+[ 0.2263 ] tegrarcm_v2 --new_session --chip 0x23 0 --uid --download bct_br br_bct_BR.bct --download mb1 mb1_t234_prod_aligned_sigheader.bin.encrypt --download psc_bl1 psc_bl1_t234_prod_aligned_sigheader.bin.encrypt --download bct_mb1 mb1_bct_MB1_sigheader.bct.encrypt
+[ 0.2275 ] BR_CID: 0x80012344705DE7C8200000000EFD80C0
+[ 0.2351 ] Sending bct_br
+[ 0.2351 ] ERROR: might be timeout in USB write.
+Error: Return value 3
+Command tegrarcm_v2 --new_session --chip 0x23 0 --uid --download bct_br br_bct_BR.bct --download mb1 mb1_t234_prod_aligned_sigheader.bin.encrypt --download psc_bl1 psc_bl1_t234_prod_aligned_sigheader.bin.encrypt --download bct_mb1 mb1_bct_MB1_sigheader.bct.encrypt
+Reading board information failed.
+Error: failed to generate images
+Cleaning up...
+Keeping working dir at /l4t/Linux_for_Tegra/temp_initrdflash/bootloader0 and /tmp/tmp.9slBpS2jmL&lt;/code>&lt;/pre>
+&lt;p>嘿，RK 的无果，Nvidia 的可以看看，当然我这个时候没有意识到两者有关联性，最后看到了这条 &lt;a href="https://forums.developer.nvidia.com/t/cannot-flash-jetson-agx-orin-jetpack-5-1-1/253705/15">post&lt;/a>，说禁用 usbcore 的 autosuspend。&lt;code>echo -1 &amp;gt; /sys/module/usbcore/parameters/autosuspend&lt;/code>，然后真的，重新启动 jetson 的板子后，就能烧录了，太牛了。这个时候突然回想起来，usbcore 的 autosuspend？那 RK 的是不是也可以了，马上一试，果然，Maskrom 也能烧录了。爽啊，从此，我 Arch 的一条腿被接上来呃，原来说残次品是因为，RK 的首选支持是 Windows ，Jetson 的首选支持是 Ubuntu，但是我哪个都没用，就很尴尬。&lt;/p>
+&lt;h2 id="work-space-creation">work space creation&lt;/h2>
+&lt;h3 id="rk">RK&lt;/h3>
+&lt;p>参考 《Rockchip_Developer_Guide_Linux_Docker_Deploy_CN.pdf》&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode dockerfile">&lt;code class="sourceCode dockerfile">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="kw">FROM&lt;/span> ubuntu:22.04&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="kw">ENV&lt;/span> DEBIAN_FRONTEND=noninteractive&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>&lt;span class="kw">RUN&lt;/span> \&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a>sed -i &lt;span class="st">&amp;#39;s/archive.ubuntu.com/mirrors.ustc.edu.cn/&amp;#39;&lt;/span> /etc/apt/sources.list \&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; apt-get update -y &amp;amp;&amp;amp; apt-get upgrade -y \&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; apt-get install -y curl repo \&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; apt-get install -y bc binfmt-support bison bsdmainutils build-essential bzip2 chrpath cmake cpio cpp-aarch64-linux-gnu \&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a>debianutils device-tree-compiler diffstat expat expect fakeroot fdisk file flex g++ gawk gcc gcc-multilib git git-core \&lt;/span>
+&lt;span id="cb5-9">&lt;a href="#cb5-9" aria-hidden="true">&lt;/a>g++-multilib gpgv2 iputils-ping libegl1-mesa libelf-dev libgmp-dev libgucharmap-2-90-dev liblz4-tool libmpc-dev \&lt;/span>
+&lt;span id="cb5-10">&lt;a href="#cb5-10" aria-hidden="true">&lt;/a>libsdl1.2-dev libssl-dev live-build make ncurses-dev net-tools patchelf python2 python3 python-is-python3 python3-git \&lt;/span>
+&lt;span id="cb5-11">&lt;a href="#cb5-11" aria-hidden="true">&lt;/a>python3-jinja2 python3-pexpect python3-pip qemu-user-static rsync socat ssh strace sudo texinfo time tree unzip vim \&lt;/span>
+&lt;span id="cb5-12">&lt;a href="#cb5-12" aria-hidden="true">&lt;/a>wget xterm xz-utils zstd \&lt;/span>
+&lt;span id="cb5-13">&lt;a href="#cb5-13" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; useradd -c &lt;span class="st">&amp;#39;ben user&amp;#39;&lt;/span> -m -d /home/kenxes -s /bin/bash ben &amp;amp;&amp;amp; sed -i -e &lt;span class="st">&amp;#39;/\%sudo/ c \%sudo ALL=(ALL) NOPASSWD: ALL&amp;#39;&lt;/span> /etc/sudoers &amp;amp;&amp;amp; usermod -a -G sudo ben \&lt;/span>
+&lt;span id="cb5-14">&lt;a href="#cb5-14" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; mkdir /home/ben/ \&lt;/span>
+&lt;span id="cb5-15">&lt;a href="#cb5-15" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; su ben -c &lt;span class="st">&amp;#39;pip3 install pyelftools -i http://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn&amp;#39;&lt;/span> \&lt;/span>
+&lt;span id="cb5-16">&lt;a href="#cb5-16" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; echo &lt;span class="st">&amp;quot;docker image build complete&amp;quot;&lt;/span> \&lt;/span>
+&lt;span id="cb5-17">&lt;a href="#cb5-17" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; echo &lt;span class="st">&amp;quot;set timezone&amp;quot;&lt;/span> \&lt;/span>
+&lt;span id="cb5-18">&lt;a href="#cb5-18" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \&lt;/span>
+&lt;span id="cb5-19">&lt;a href="#cb5-19" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; echo Asia/Shanghai &amp;gt; /etc/timezone \&lt;/span>
+&lt;span id="cb5-20">&lt;a href="#cb5-20" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; echo &lt;span class="st">&amp;quot;extra dependencies for buildroot&amp;quot;&lt;/span> \&lt;/span>
+&lt;span id="cb5-21">&lt;a href="#cb5-21" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; git clone https://salsa.debian.org/live-team/live-build.git --depth 1 -b debian/1%20230131 \&lt;/span>
+&lt;span id="cb5-22">&lt;a href="#cb5-22" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; rm -rf live-build/manpages/po/* \&lt;/span>
+&lt;span id="cb5-23">&lt;a href="#cb5-23" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; make install -j8 -C live-build \&lt;/span>
+&lt;span id="cb5-24">&lt;a href="#cb5-24" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; rm -rf live-build \&lt;/span>
+&lt;span id="cb5-25">&lt;a href="#cb5-25" aria-hidden="true">&lt;/a>&amp;amp;&amp;amp; apt-get -y autoclean &amp;amp;&amp;amp; apt-get -y autoremove &amp;amp;&amp;amp; rm -rf /var/lib/apt/lists/*&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="use-the-container">use the container&lt;/h4>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode zsh">&lt;code class="sourceCode zsh">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="fu">make_docker_rockchip_run()&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a> &lt;span class="kw">if [&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">$1&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="ot">=&lt;/span> &lt;span class="st">&amp;quot;RK3588&amp;quot;&lt;/span>&lt;span class="kw"> ]&lt;/span> &lt;span class="kw">|| [&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">$1&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="ot">=&lt;/span> &lt;span class="st">&amp;quot;RK3399&amp;quot;&lt;/span>&lt;span class="kw"> ]&lt;/span>;&lt;span class="kw">then&lt;/span>&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a> &lt;span class="ot">platform=&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">$1&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a> &lt;span class="kw">else&lt;/span>&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a> &lt;span class="ot">platform=&lt;/span>&lt;span class="st">&amp;quot;RK3588&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-6">&lt;a href="#cb6-6" aria-hidden="true">&lt;/a> &lt;span class="kw">echo&lt;/span> &lt;span class="st">&amp;quot;use default platform &lt;/span>&lt;span class="ot">$platform&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
+&lt;span id="cb6-7">&lt;a href="#cb6-7" aria-hidden="true">&lt;/a> &lt;span class="kw">fi&lt;/span>&lt;/span>
+&lt;span id="cb6-8">&lt;a href="#cb6-8" aria-hidden="true">&lt;/a> &lt;span class="ot">proxy_server=&lt;/span>&lt;span class="st">&amp;quot;172.17.0.1:8119&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-9">&lt;a href="#cb6-9" aria-hidden="true">&lt;/a> &lt;span class="ot">env_all=(&lt;/span>&lt;span class="st">&amp;quot;USER=ben&amp;quot;&lt;/span> &lt;span class="st">&amp;quot;http_proxy=http://&lt;/span>&lt;span class="ot">$proxy_server&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="st">&amp;quot;https_proxy=http://&lt;/span>&lt;span class="ot">$proxy_server&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">)&lt;/span>&lt;/span>
+&lt;span id="cb6-10">&lt;a href="#cb6-10" aria-hidden="true">&lt;/a> docker run --rm --privileged -it -u ben &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-11">&lt;a href="#cb6-11" aria-hidden="true">&lt;/a> --ulimit &lt;span class="ot">nofile=&lt;/span>1024:524288 &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-12">&lt;a href="#cb6-12" aria-hidden="true">&lt;/a> -v &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">$PWD&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>:/&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">$platform&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>/ &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-13">&lt;a href="#cb6-13" aria-hidden="true">&lt;/a> rockchip_build &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-14">&lt;a href="#cb6-14" aria-hidden="true">&lt;/a> &lt;span class="kw">env&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="ot">${env_all[@]}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> /bin/bash -c &lt;span class="st">&amp;quot;cd &lt;/span>&lt;span class="ot">$platform&lt;/span>&lt;span class="st">; \&lt;/span>&lt;/span>
+&lt;span id="cb6-15">&lt;a href="#cb6-15" aria-hidden="true">&lt;/a>&lt;span class="st"> bash ./remount.sh; \&lt;/span>&lt;/span>
+&lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a>&lt;span class="st"> exec /bin/bash&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-17">&lt;a href="#cb6-17" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode bash">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/bash&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="co"># remount.sh&lt;/span>&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a>&lt;span class="bu">read&lt;/span> -r &lt;span class="va">dev&lt;/span> &lt;span class="va">mount_point&lt;/span> &lt;span class="va">mount_options&lt;/span> &lt;span class="op">&amp;lt;&lt;/span> &lt;span class="op">&amp;lt;(&lt;/span>&lt;span class="fu">mount&lt;/span> -l &lt;span class="kw">|&lt;/span> &lt;span class="fu">grep&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$PWD&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="fu">sed&lt;/span> -n &lt;span class="st">&amp;#39;s/\(.*\) on \(.*\) type .* (\(.*\))/\1 \2 \3/p&amp;#39;&lt;/span> &lt;span class="op">)&lt;/span>&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a>&lt;span class="va">mount_options=&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${mount_options/&lt;/span>nodev,&lt;span class="va">/}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-5">&lt;a href="#cb7-5" aria-hidden="true">&lt;/a>&lt;span class="va">mount_options=&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${mount_options/&lt;/span>noexec,&lt;span class="va">/}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-6">&lt;a href="#cb7-6" aria-hidden="true">&lt;/a>&lt;span class="va">mount_options=&lt;/span>&lt;span class="st">&amp;quot;remount,&amp;quot;&amp;quot;&lt;/span>&lt;span class="va">$mount_options&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-7">&lt;a href="#cb7-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb7-8">&lt;a href="#cb7-8" aria-hidden="true">&lt;/a>&lt;span class="fu">mount&lt;/span> -l &lt;span class="kw">|&lt;/span> &lt;span class="fu">grep&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$PWD&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-9">&lt;a href="#cb7-9" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;mount &lt;/span>&lt;span class="va">$dev&lt;/span>&lt;span class="st"> &lt;/span>&lt;span class="va">$mount_point&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> -o &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$mount_options&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-10">&lt;a href="#cb7-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb7-11">&lt;a href="#cb7-11" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -n &lt;span class="st">&amp;quot;do it? &amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-12">&lt;a href="#cb7-12" aria-hidden="true">&lt;/a>&lt;span class="bu">read&lt;/span> -r &lt;span class="va">doit&lt;/span>&lt;/span>
+&lt;span id="cb7-13">&lt;a href="#cb7-13" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb7-14">&lt;a href="#cb7-14" aria-hidden="true">&lt;/a>&lt;span class="kw">if&lt;/span>&lt;span class="bu"> [&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$doit&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="ot">=&lt;/span> &lt;span class="st">&amp;quot;y&amp;quot;&lt;/span>&lt;span class="bu"> ]&lt;/span>;&lt;span class="kw">then&lt;/span>&lt;/span>
+&lt;span id="cb7-15">&lt;a href="#cb7-15" aria-hidden="true">&lt;/a> &lt;span class="fu">sudo&lt;/span> mount &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$dev&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$mount_point&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> -o &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$mount_options&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-16">&lt;a href="#cb7-16" aria-hidden="true">&lt;/a>&lt;span class="kw">fi&lt;/span>&lt;/span>
+&lt;span id="cb7-17">&lt;a href="#cb7-17" aria-hidden="true">&lt;/a>&lt;span class="fu">mount&lt;/span> -l &lt;span class="kw">|&lt;/span> &lt;span class="fu">grep&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$PWD&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="jetson">Jetson&lt;/h3>
+&lt;p>Arch 中没有 &lt;code>ping6&lt;/code> 这个命令，所以需要做一个，记得添加到 PATH 里&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="co"># /usr/local/bin/ping6&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a>&lt;span class="fu">ping&lt;/span> -6 &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$@&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>有一个 bug: &lt;code>chown root.root "${nfs_dir}"&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="co"># Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func&lt;/span>&lt;/span>
+&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="fu">enable_nfs_for_folder ()&lt;/span>&lt;/span>
+&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb9-4">&lt;a href="#cb9-4" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb9-5">&lt;a href="#cb9-5" aria-hidden="true">&lt;/a> &lt;span class="co">#chown root.root &amp;quot;${nfs_dir}&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb9-6">&lt;a href="#cb9-6" aria-hidden="true">&lt;/a> &lt;span class="fu">chown&lt;/span> root:root &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${nfs_dir}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb9-7">&lt;a href="#cb9-7" aria-hidden="true">&lt;/a> &lt;span class="ex">...&lt;/span>&lt;/span>
+&lt;span id="cb9-8">&lt;a href="#cb9-8" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>nfs-kernel-server&lt;/code> -&amp;gt; &lt;code>nfs-server&lt;/code>&lt;/li>
+&lt;li>&lt;code>service&lt;/code> -&amp;gt; &lt;code>systemctl&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="co"># Linux_for_Tegra/tools/kernel_flash/l4t_network_flash.func&lt;/span>&lt;/span>
+&lt;span id="cb10-2">&lt;a href="#cb10-2" aria-hidden="true">&lt;/a>&lt;span class="fu">network_prerequisite ()&lt;/span>&lt;/span>
+&lt;span id="cb10-3">&lt;a href="#cb10-3" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb10-4">&lt;a href="#cb10-4" aria-hidden="true">&lt;/a> &lt;span class="co">#service nfs-kernel-server restart&lt;/span>&lt;/span>
+&lt;span id="cb10-5">&lt;a href="#cb10-5" aria-hidden="true">&lt;/a> &lt;span class="ex">systemctl&lt;/span> restart nfs-server&lt;/span>
+&lt;span id="cb10-6">&lt;a href="#cb10-6" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>nfs 可能还有一个问题，会报超时，需要重新 export 一下，可以通过 &lt;code>exportfs -s&lt;/code> 查看两个 ipv6 的 share，然后重新 export 一下，我前几次遇到了，后面再次烧录就没遇到了:&lt;/p>
+&lt;div class="sourceCode" id="cb11">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb11-1">&lt;a href="#cb11-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> exportfs -o rw,nohide,insecure,no_subtree_check,async,no_root_squash &lt;span class="st">&amp;#39;[fc00:1:1::/48]:/r35.3.1/Linux_for_Tegra/rootfs&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb11-2">&lt;a href="#cb11-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> exportfs -o rw,nohide,insecure,no_subtree_check,async,no_root_squash &lt;span class="st">&amp;#39;[fc00:1:1::/48]:/r35.3.1/Linux_for_Tegra/tools/kernel_flash&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>

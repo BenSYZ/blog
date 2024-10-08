@@ -1,0 +1,1237 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Linux/</link><description>Recent content in Linux on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 08 May 2024 08:06:33 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Linux/index.xml" rel="self" type="application/rss+xml"/><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>&lt;h2 id="pcie-基础介绍">PCIe 基础介绍&lt;/h2>
+&lt;p>Wikipedia 上对 &lt;a href="https://zh.wikipedia.org/wiki/PCI_Express">PCI_Express&lt;/a> 的介绍 如下：&lt;/p>
+&lt;blockquote>
+&lt;p>Peripheral Component Interconnect Express，简称 PCI-E，官方简称 PCIe，是计算机总线的一个重要分支，它沿用既有的 PCI 编程概念及信号标准，并且构建了更加高速的串行通信系统标准。目前这一标准由 PCI-SIG 组织制定和维护。PCIe 仅应用于内部互连。由于 PCIe 是基于既有的 PCI 系统，所以只需修改物理层而无须修改软件就可将现有 PCI 系统转换为 PCIe。&lt;/p>
+&lt;/blockquote>
+&lt;h3 id="版本传输通道数和速率">版本、传输通道数和速率&lt;/h3>
+&lt;p>我们在买固态硬盘和显卡的时候，经常需要确定 PCIe 的 &lt;strong>版本&lt;/strong> 和 &lt;strong>通道数(x几)&lt;/strong>，那这两个和速率有什么关系？&lt;/p>
+&lt;p>首先，什么是 PCIe 的版本和通道数：&lt;/p>
+&lt;ul>
+&lt;li>版本：无疑就是 PCIe 技术迭代之后，速率有了极大地提升。例如：&lt;code>PCIe 3.0&lt;/code>&lt;/li>
+&lt;li>通道数：lane 数，一条 lane 对应两组“差分信号对”，一组差分信号对用于传输 TX，另一组用于传输 RX。由于 PCIe 是串行传输，多条 lane 的数据传输是由 PCIe 上层应用来自行做 IO 多路复用的。例如：&lt;code>x4&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>其次，上边两个参数和速率有什么关系？同一版本，通道数每增一个速率就翻倍。版本每增一个，速率几乎翻倍（除了 PCIe 1.0 到 PCIe 2.0）&lt;/p>
+&lt;p>不同版本对应的速率关系：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Version&lt;/th>
+&lt;th>Transfer rate per lane(GT/s)&lt;/th>
+&lt;th>Line code&lt;/th>
+&lt;th>Throughput for &lt;code>x1&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>1.0&lt;/td>
+&lt;td>2.5&lt;/td>
+&lt;td>8b/10b&lt;/td>
+&lt;td>&lt;code>2.5 Gib/s*(8b/10b)=2.0 Gib/s=0.250 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>2.0&lt;/td>
+&lt;td>5.0&lt;/td>
+&lt;td>8b/10b&lt;/td>
+&lt;td>&lt;code>5.0 Gib/s*(8b/10b)=4.0 Gib/s=0.500 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>3.0&lt;/td>
+&lt;td>8.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>8.0 Gib/s*(128b/130b)=7.88 Gib/s=0.985 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>4.0&lt;/td>
+&lt;td>16.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>16.0 Gib/s*(128b/130b)=15.753 Gib/s=1.969 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>5.0&lt;/td>
+&lt;td>32.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>32.0 Gib/s*(128b/130b)=31.508 Gib/s=3.938 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>1 GT/s 表示每秒有 1*10^9 次传输，一次传输传输 1 个bit&lt;/li>
+&lt;li>为了避免多个低信号连续传输无法被区分，我们使用 8b/10b 等 Line code 来编码。所以实际传输速率的计算，如最后一列所写：&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>而通道数的增长就非常简单了，直接对应版本的 &lt;code>x1&lt;/code> 的速率上乘几。&lt;/p>
+&lt;h3 id="设备类别">设备类别&lt;/h3>
+&lt;p>PCIe 是一种信号传输协议，信号的传输必有设备，那么，涉及到 PCIe 信号的设备种类有哪些：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>类别&lt;/th>
+&lt;th>类似于&lt;/th>
+&lt;th>上游信号&lt;/th>
+&lt;th>下游信号&lt;/th>
+&lt;th>用途&lt;/th>
+&lt;th>例子/体现在&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>Root Complex&lt;/td>
+&lt;td>PCIe 主设备&lt;/td>
+&lt;td>CPU、内存连接&lt;/td>
+&lt;td>下游收发 PCIe 信号。&lt;/td>
+&lt;td>主机收发 PCIe 信号&lt;/td>
+&lt;td>在主板北桥或 SOC 内部&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Switch&lt;/td>
+&lt;td>PCIe hub&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>用于扩展 PCIe 口&lt;/td>
+&lt;td>在主板北桥&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Endpoint&lt;/td>
+&lt;td>PCIe 从设备&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>下游为其他信号&lt;/td>
+&lt;td>实际功能设备&lt;/td>
+&lt;td>固态硬盘、显卡、RTL8168 网卡芯片&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>Root Complex 中的上游信号: 和 CPU 连接大概是用于发送中断以及 DMA 控制，和内存连接的大概是用于 DMA 数据搬运。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>他们的关系&lt;a href="https://en.wikipedia.org/wiki/Root_complex">如图&lt;/a>：&lt;/p>
+&lt;figure>
+&lt;img src="./figures/Example_PCI_Express_Topology.png" alt="" />&lt;figcaption>Example PCI Express Topology&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="lspci-介绍">&lt;code>lspci&lt;/code> 介绍&lt;/h2>
+&lt;p>正如开头所说， PCIe 相对于 PCI 只是物理层上发生了变动，上层软件完全一样，所以我们可以使用 &lt;code>lspci&lt;/code> 来读取设备上 PCIe 的信息。也就是说虽然 PCIe 没有总线的概念，物理上是点对点协议，但是由于上层软件是兼容的，所以，仍然会有总线的概念。在后面选择设备时会用到总线的概念，但是它只是一个虚的概念。&lt;/p>
+&lt;p>我们将用 &lt;code>lspci&lt;/code> 命令来获取常见的 &lt;code>PCIe&lt;/code> 的信息，主要包括以下几个方面：&lt;/p>
+&lt;ol type="1">
+&lt;li>获取设备的总线号和设备号，用于选择设备&lt;/li>
+&lt;li>获取 PCIe 插槽/设备的 &lt;em>版本号&lt;/em> 和 &lt;em>传输通道数&lt;/em>&lt;/li>
+&lt;/ol>
+&lt;h3 id="常用参数">常用参数&lt;/h3>
+&lt;ul>
+&lt;li>&lt;code>s&lt;/code>: select&lt;/li>
+&lt;li>&lt;code>v&lt;/code>: verbose&lt;/li>
+&lt;li>&lt;code>vv&lt;/code>: more verbose&lt;/li>
+&lt;li>&lt;code>vvv&lt;/code>: even more verbose&lt;/li>
+&lt;li>&lt;code>t&lt;/code>: tree view&lt;/li>
+&lt;/ul>
+&lt;h3 id="选择-pci-设备-lspci--t">选择 PCI 设备（ &lt;code>lspci -t&lt;/code>）&lt;/h3>
+&lt;h4 id="lspci">&lt;code>lspci&lt;/code>&lt;/h4>
+&lt;p>在选择 PCI 设备前，我们先看一下不带任何参数的 &lt;code>lspci&lt;/code>，它的输出如下：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci
+...
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+03:10.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+05:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+05:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+...&lt;/code>&lt;/pre>
+&lt;p>由于 PCIe 借用的 PCI 的软件，因此沿用了 PCI 的这四种属性：&lt;code>domain&lt;/code>, &lt;code>bus&lt;/code>, &lt;code>device&lt;/code>, &lt;code>function&lt;/code> 我们可以通过这四个参数确定或者说选择一个 PCI 设备上的一个功能。他们也就是上述输出中的第一列。其中由于 domain number 基本是一样的，为 &lt;code>0&lt;/code>，所以这里省略了只有当带上 &lt;code>-t&lt;/code> 的时候会看到这个 domain number。完整的定位一个 PCI 设备和功能的格式是：&lt;/p>
+&lt;pre>&lt;code>domain:bus:device.function&lt;/code>&lt;/pre>
+&lt;p>对于下面这个设备&lt;/p>
+&lt;pre>&lt;code>04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+| | |
+| | \- function
+| \--- device
+\------ bus&lt;/code>&lt;/pre>
+&lt;p>它的各个属性如下：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>domain&lt;/code>: 0 ( 被省略了 )&lt;/li>
+&lt;li>&lt;code>bus&lt;/code>: 04&lt;/li>
+&lt;li>&lt;code>device&lt;/code>: 00&lt;/li>
+&lt;li>&lt;code>function&lt;/code>: 0&lt;/li>
+&lt;/ul>
+&lt;h4 id="lspci--s-xx">&lt;code>lspci -s xx&lt;/code>&lt;/h4>
+&lt;p>上一节中说到，可以由这个四个属性确定一个 PCI 设备功能。它有什么用呢？当我们使用 &lt;code>vvv&lt;/code> 显示更多详细信息而不选择特定设备时，&lt;code>lspci&lt;/code> 会反给我们一大串的输出，你会发现太多了，都不知道看哪个，用 &lt;code>-s&lt;/code> 来选择一下会对结果输出有极大的简化。对上面那个设备我们可以用以下命令来选择输出：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci -s 0:03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+$ lspci -s 03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)&lt;/code>&lt;/pre>
+&lt;p>你可以用 &lt;code>-vvv&lt;/code> 来输出更多详细信息。我们会在读取 PCIe 版本和带宽的时候用到这个参数。&lt;/p>
+&lt;h3 id="pcie-树状结构的输出解析确定设备和槽-lspci--t">PCIe 树状结构的输出解析，确定设备和槽（ &lt;code>lspci -t&lt;/code>）&lt;/h3>
+&lt;p>&lt;code>lspci -t&lt;/code> 给出的树状结构表示的是它的物理连接方式（ &lt;code>bus&lt;/code> 是虚拟的含义），我们可以通过它来查询一个 PCIe 外设是插在哪个 PCIe 的槽上，当我们要扩容，或者要替换外设时，我们需要选择版本、通道匹配的 PCI 外设，我们可以通过这个命令来查看 PCIe 槽最大支持的版本和通道数，避免不匹配带来的性能缺失。同时，我们将看到 &lt;code>domain&lt;/code>, &lt;code>bus&lt;/code>, &lt;code>device&lt;/code>, &lt;code>function&lt;/code> 属性在树状结构中的表示。&lt;/p>
+&lt;p>以下是 &lt;code>lspci -tv&lt;/code> 的输出：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci -tv
+-+-[0000:ff]-+-08.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D QPI Link 0
+| +-...
+\-[0000:00]-+-00.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D DMI2
++-01.0-[01]--
++-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| | \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+| \-10.0-[05]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
++-03.0-[06-09]----00.0-[07-09]--+-08.0-[08]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| | \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+| \-10.0-[09]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
++-05.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
++-...&lt;/code>&lt;/pre>
+&lt;p>在 &lt;code>lspci -t&lt;/code> 中，domain 和 bus 被用中括号包裹起来，例如第一行的 &lt;code>[0000:ff]&lt;/code> 表示 domain 为 0000，bus 为 ff。&lt;/p>
+&lt;p>我们来一点一点看一下这棵子树&lt;/p>
+&lt;pre>&lt;code>-+-
+\-[0000:00]-+
++
++-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+\-10.0-[05]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+\-00.1 NVIDIA Corporation GP102 HDMI Audio Controller&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]&lt;/code>:
+&lt;ul>
+&lt;li>domain: 0000&lt;/li>
+&lt;li>bus: 00&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[0000:00]-+-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]-+-02.0-[02-05]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]-+-02.0&lt;/code>
+&lt;ul>
+&lt;li>02 的设备挂在 &lt;code>[0000:00]&lt;/code>，即它的“索引”是 &lt;strong>&lt;code>00:02&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>02.0-[02-05]&lt;/code>
+&lt;ul>
+&lt;li>02-05 (即 02、03、04、05) 这些 bus 挂在 &lt;code>00:02&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[02-05]----00.0-[03-05]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[02-05]----00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>00&lt;/code> 这个设备挂在 bus 02 上，（03-05 bus 号是给后续的桥用的），即它的“索引”是 &lt;strong>&lt;code>02:00&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>00.0-[03-05]&lt;/code>
+&lt;ul>
+&lt;li>03-05 (即 03、04、05) 这些 bus 挂在 &lt;code>02:00&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[03-05]--+-08.0-[04]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[03-05]--+-08.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>08&lt;/code> 这个设备挂在 bus 03 上，（04 05 bus 号是给后续的桥用的），即它的“索引”是 &lt;strong>&lt;code>03:08&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>08.0-[04]&lt;/code>
+&lt;ul>
+&lt;li>04 bus 挂在 &lt;code>03:08&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[04]--+-00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>00&lt;/code> 这个设备挂在 bus 04 上，即它的“索引”是 &lt;strong>&lt;code>04:00&lt;/code>&lt;/strong>，也就是 &lt;code>GP102 [TITAN X]&lt;/code> 显卡&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>00.0&lt;/code> 和 &lt;code>00.1&lt;/code> 是 &lt;code>GP102 [TITAN X]&lt;/code> 显卡的两个 Function&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>为了不让上述的解析过长，我将上述涉及的设备列在这里，可以通过 &lt;code>lspci -s&lt;/code>，来选择输出&lt;/p>
+&lt;pre>&lt;code>00:02.0 PCI bridge: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D PCI Express Root Port 2 (rev 01) -&amp;gt; 它是一个 Root Complex。
+02:00.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) -&amp;gt; 它是一个 switch。
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) -&amp;gt; 它是一个 switch。
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) -&amp;gt; 显卡的 VGA 功能
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1) -&amp;gt; 显卡的 HDMI 功能&lt;/code>&lt;/pre>
+&lt;p>所以回到本节开头的问题，&lt;code>04:00&lt;/code> 的显卡插在哪个 PCIe 槽上呢？&lt;code>03:08.0&lt;/code> 这个 switch 芯片上。&lt;/p>
+&lt;h3 id="获取-pci-设备的详细信息">获取 PCI 设备的详细信息&lt;/h3>
+&lt;p>终于到了获取 PCI 设备速率的时候了，我们将查看 &lt;code>04:00&lt;/code> 显卡和 &lt;code>03:08.0&lt;/code> 插槽，注意 Capabilities 信息需要 root 来读取。以下是 &lt;code>03:08.0&lt;/code> 和 &lt;code>04:00&lt;/code> 的完整输出。&lt;/p>
+&lt;pre class="console">&lt;code># lspci -vvv -s 03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin A routed to IRQ 34
+NUMA node: 0
+Bus: primary=03, secondary=04, subordinate=04, sec-latency=0
+I/O behind bridge: 00006000-00006fff [size=4K]
+Memory behind bridge: c4000000-c50fffff [size=17M]
+Prefetchable memory behind bridge: 0000033fe0000000-0000033ff1ffffff [size=288M]
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;lt;SERR- &amp;lt;PERR-
+BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16+ MAbort- &amp;gt;Reset- FastB2B-
+PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
+Address: 00000000fee00000 Data: 40ef
+Masking: 000000ff Pending: 00000000
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+DevCap: MaxPayload 2048 bytes, PhantFunc 0
+ExtTag- RBE+
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 128 bytes
+DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L1 &amp;lt;4us
+ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
+LnkCtl: ASPM L1 Enabled; Disabled- CommClk-
+ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
+SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+Slot #8, PowerLimit 25.000W; Interlock- NoCompl-
+SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+Changed: MRL- PresDet- LinkState-
+DevCap2: Completion Timeout: Not Supported, TimeoutDis-, NROPrPrP-, LTR+
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-, ARIFwd+
+AtomicOpsCap: Routing+
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+AtomicOpsCtl: EgressBlck-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
+EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
+Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch
+Capabilities: [100 v1] Vendor Specific Information: ID=0000 Rev=0 Len=000 &amp;lt;?&amp;gt;
+Capabilities: [fb4 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 1f, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [138 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [10c v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn-, PerformEqu-
+LaneErrStat: 0
+Capabilities: [148 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=8
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=03 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64+ WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=WRR64 TC/VC=01
+Status: NegoPending- InProgress-
+Port Arbitration Table &amp;lt;?&amp;gt;
+Capabilities: [e00 v1] Multicast
+McastCap: MaxGroups 64, ECRCRegen+
+McastCtl: NumGroups 1, Enable-
+McastBAR: IndexPos 0, BaseAddr 0000000000000000
+McastReceiveVec: 0000000000000000
+McastBlockAllVec: 0000000000000000
+McastBlockUntransVec: 0000000000000000
+McastOverlayBAR: OverlaySize 0 (disabled), BaseAddr 0000000000000000
+Capabilities: [f24 v1] Access Control Services
+ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
+ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 &amp;lt;?&amp;gt;
+Kernel driver in use: pcieport
+# lspci -vvv -s 04:00
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0
+Interrupt: pin A routed to IRQ 103
+NUMA node: 0
+Region 0: Memory at c4000000 (32-bit, non-prefetchable) [size=16M]
+Region 1: Memory at 33fe0000000 (64-bit, prefetchable) [size=256M]
+Region 3: Memory at 33ff0000000 (64-bit, prefetchable) [size=32M]
+Region 5: I/O ports at 6000 [size=128]
+Expansion ROM at c5000000 [virtual] [disabled] [size=512K]
+Capabilities: [60] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [68] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Address: 00000000fee00000 Data: 4022
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 &amp;lt;64us
+ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range AB, TimeoutDis+, NROPrPrP-, LTR-
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-
+AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+AtomicOpsCtl: ReqEn-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
+EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
+Capabilities: [100 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=1
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=Fixed TC/VC=01
+Status: NegoPending- InProgress-
+Capabilities: [128 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [420 v2] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 &amp;lt;?&amp;gt;
+Capabilities: [900 v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn-, PerformEqu-
+LaneErrStat: 0
+Kernel driver in use: nvidia
+Kernel modules: nvidiafb, nouveau, nvidia_drm, nvidia
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin B routed to IRQ 101
+NUMA node: 0
+Region 0: Memory at c5080000 (32-bit, non-prefetchable) [size=16K]
+Capabilities: [60] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+Address: 0000000000000000 Data: 0000
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 &amp;lt;64us
+ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd- ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- CommClk-
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range AB, TimeoutDis+, NROPrPrP-, LTR-
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-, TPHComp-, ExtTPHComp-
+AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+AtomicOpsCtl: ReqEn-
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+Capabilities: [100 v2] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Kernel driver in use: snd_hda_intel
+Kernel modules: snd_hda_intel&lt;/code>&lt;/pre>
+&lt;p>输出有点多，我们先看一层一层来看，第一层的输出：&lt;/p>
+&lt;pre class="console">&lt;code>03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin A routed to IRQ 34
+NUMA node: 0
+Bus: primary=03, secondary=04, subordinate=04, sec-latency=0
+I/O behind bridge: 00006000-00006fff [size=4K]
+Memory behind bridge: c4000000-c50fffff [size=17M]
+Prefetchable memory behind bridge: 0000033fe0000000-0000033ff1ffffff [size=288M]
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;lt;SERR- &amp;lt;PERR-
+BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16+ MAbort- &amp;gt;Reset- FastB2B-
+Capabilities: [40] Power Management version 3
+Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch
+Capabilities: [100 v1] Vendor Specific Information: ID=0000 Rev=0 Len=000 &amp;lt;?&amp;gt;
+Capabilities: [fb4 v1] Advanced Error Reporting
+Capabilities: [138 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [10c v1] Secondary PCI Express
+Capabilities: [148 v1] Virtual Channel
+Capabilities: [e00 v1] Multicast
+Capabilities: [f24 v1] Access Control Services
+Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 &amp;lt;?&amp;gt;
+Kernel driver in use: pcieport
+# lspci -vvv -s 04:00
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0
+Interrupt: pin A routed to IRQ 103
+NUMA node: 0
+Region 0: Memory at c4000000 (32-bit, non-prefetchable) [size=16M]
+Region 1: Memory at 33fe0000000 (64-bit, prefetchable) [size=256M]
+Region 3: Memory at 33ff0000000 (64-bit, prefetchable) [size=32M]
+Region 5: I/O ports at 6000 [size=128]
+Expansion ROM at c5000000 [virtual] [disabled] [size=512K]
+Capabilities: [60] Power Management version 3
+Capabilities: [68] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+Capabilities: [100 v1] Virtual Channel
+Capabilities: [128 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [420 v2] Advanced Error Reporting
+Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 &amp;lt;?&amp;gt;
+Capabilities: [900 v1] Secondary PCI Express
+Kernel driver in use: nvidia
+Kernel modules: nvidiafb, nouveau, nvidia_drm, nvidia
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin B routed to IRQ 101
+NUMA node: 0
+Region 0: Memory at c5080000 (32-bit, non-prefetchable) [size=16K]
+Capabilities: [60] Power Management version 3
+Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+Capabilities: [100 v2] Advanced Error Reporting
+Kernel driver in use: snd_hda_intel
+Kernel modules: snd_hda_intel&lt;/code>&lt;/pre>
+&lt;p>目前我看得懂的，或者说我常用的属性是以下几个：&lt;/p>
+&lt;p>&lt;code>Subsystem&lt;/code>：属于什么子系统 &lt;code>Status&lt;/code>：状态，是否有错 &lt;code>Interrupt&lt;/code>：中断信息 &lt;code>Region&lt;/code>: 内存映射 &lt;code>Capabilities&lt;/code>：能力，包括 MSI，Express &lt;code>Kernel driver in use&lt;/code>：正在使用的驱动 &lt;code>Kernel modules&lt;/code>：可用的驱动&lt;/p>
+&lt;p>其中最有用的 Capabilities，&lt;code>lspci&lt;/code> 毕竟是列出 PCI 设备，那我们如何确定设备是 PCIe 设备呢？看 Capabilities 中是否有 Express，这个 PCI 设备有 Express 的能力，也就是说它是 PCIe 设备。那么我们要查看的速率和版本也在这个属性下面。&lt;/p>
+&lt;h4 id="获取-pcie-设备的版本和传输通道数">获取 PCIe 设备的版本和传输通道数&lt;/h4>
+&lt;p>我们在 &lt;code>Capabilities: Express (v2) Endpoint, MSI 00&lt;/code> 属性下面可以找两个属性：&lt;code>LnkCap&lt;/code> 和 &lt;code>LnkSta&lt;/code>，前者表示该设备支持的能力（Link Capability），后者是这个设备的连接状态（Link State)。我们可以从 &lt;code>LnkCap&lt;/code> 属性上看到下面这两个设备的“单个传输通道数”的速率都是 8GT/s，传输通道数是 &lt;code>x16&lt;/code>，也就是说这两个设备是 &lt;code>PCIe 3.0 x16&lt;/code> 的。&lt;/p>
+&lt;pre>&lt;code># tree view(partial)
+-[0000:00]-+-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+\-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+# verbose output(partial)
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L1 &amp;lt;4us
+ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>Tips：
+&lt;ul>
+&lt;li>我猜测，一个设备的两个功能对应的版本和传输通道数是一样的。（可能插槽会有区别？我不是很确定，或者说，我们需要明确的是 function 是什么东西，TODO）&lt;/li>
+&lt;li>还有一些是 PCIe 设备 training（类似自协商）时会用的属性，例如 &lt;code>LnkCtl2&lt;/code>, &lt;code>LnkSta2&lt;/code>。&lt;/li>
+&lt;li>这些属性本质其实是 PCIe 配置空间内，寄存器的值。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>由于插槽和设备的能力不匹配，实际的连接状态 &lt;code>LnkSta&lt;/code> 和设备的能力 &lt;code>LnkCap&lt;/code> 会不一样。我们可以在 &lt;code>LnkSta&lt;/code> 中查看当前连接状态，可以看到上面这台设备 &lt;code>LnkSta&lt;/code> 中的 Speed 和 Width 和 &lt;code>LnkCap&lt;/code> 中的一样，因此，速率是匹配的，设备的性能可以得到完全发挥，&lt;code>lspci&lt;/code> 也很贴心地标注了两个 &lt;code>ok&lt;/code>。但是下面这台设备，速率就不匹配了我们可以看到固态硬盘（&lt;code>03:00&lt;/code>）设备支持的速率是 &lt;code>8GT/s x4&lt;/code>（&lt;code>PCIe 3.0 x4&lt;/code>），而插槽（&lt;code>00:1d.0&lt;/code>）支持的速率是 &lt;code>8GT/s x2&lt;/code>（&lt;code>PCIe 3.0 x2&lt;/code>），因此，固态硬盘的性能得不到完全的发挥。同时，我们可以看到设备的 &lt;code>LnkSta&lt;/code> 下对应有问题的属性边上标注了 &lt;code>downgraded&lt;/code>。&lt;/p>
+&lt;pre>&lt;code># tree view(partial)
+-[0000:00]-+-1d.0-[03]----00.0 Silicon Motion, Inc. SM2262/SM2262EN SSD Controller
+# verbose output(partial)
+00:1d.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 (rev f1) (prog-if 00 [Normal decode])
+Subsystem: Lenovo Device 505b
+Capabilities: [40] Express (v2) Root Port (Slot+), IntMsgNum 0
+LnkCap: Port #9, Speed 8GT/s, Width x2, ASPM L1, Exit Latency L1 &amp;lt;16us
+ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
+LnkSta: Speed 8GT/s, Width x2
+TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+Kernel driver in use: pcieport
+03:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2262/SM2262EN SSD Controller (rev 03) (prog-if 02 [NVM Express])
+Subsystem: Silicon Motion, Inc. SM2262/SM2262EN SSD Controller
+Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
+LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 &amp;lt;8us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s, Width x2 (downgraded)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-&lt;/code>&lt;/pre>
+&lt;p>至此，我们已经介绍了 PCIe 的基础知识以及如何使用 &lt;code>lspci&lt;/code> 查询 PCIe 设备的属性，快去看看你的 Linux 下的 PCIe 系统吧，看看有什么可以改进和升级的。&lt;/p></description></item><item><title>about rk3588 disk partitions(未完待续) and fdisk, dd</title><link>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</link><pubDate>Wed, 16 Aug 2023 09:28:51 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</guid><description>&lt;p>推荐文档：&lt;/p>
+&lt;p>&lt;code>Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code>&lt;/p>
+&lt;p>以前在 Windows 上 用 &lt;code>RKDevTool_Release.exe&lt;/code> 烧录镜像时一直有个疑惑： &lt;code>miniloader&lt;/code> 和 &lt;code>parameter&lt;/code> 的地址为什么是 &lt;code>0x0&lt;/code>，好像是烧到其他地方去了，并且 &lt;code>lsblk&lt;/code> 也看不到这两个文件所在的分区。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/rk_burn_window.png" alt="" />&lt;figcaption>rk_burn_window&lt;/figcaption>
+&lt;/figure>
+&lt;pre class="console">&lt;code>$ lsblk
+NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+mmcblk0 179:0 0 14.6G 0 disk
+├─mmcblk0p1 179:1 0 4M 0 part
+├─mmcblk0p2 179:2 0 4M 0 part
+├─mmcblk0p3 179:3 0 64M 0 part
+├─mmcblk0p4 179:4 0 128M 0 part
+├─mmcblk0p5 179:5 0 32M 0 part
+├─mmcblk0p6 179:6 0 14G 0 part /
+├─mmcblk0p7 179:7 0 128M 0 part /oem
+└─mmcblk0p8 179:8 0 206M 0 part /userdata
+mmcblk0boot0 179:32 0 4M 1 disk
+mmcblk0boot1 179:64 0 4M 1 disk&lt;/code>&lt;/pre>
+&lt;p>这两天在看 uboot 的文档时，&lt;code>Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code> 看到 &lt;code>2.6 存储布局&lt;/code> 这个疑惑接被解决了。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/partition_tables.png" alt="" />&lt;figcaption>&lt;a href="https://opensource.rock-chips.com/wiki_Partitions">partition_tables&lt;/a>&lt;/figcaption>
+&lt;/figure>
+&lt;p>原来 minloader 被烧录到 mmcblk0p1 前的分区了，parameter.txt 本身就是分区表，应该就是生成了 GPT 分区表。&lt;/p>
+&lt;h2 id="验证">验证&lt;/h2>
+&lt;h3 id="fdisk">&lt;code>fdisk&lt;/code>&lt;/h3>
+&lt;p>来验证一下&lt;/p>
+&lt;pre class="console">&lt;code># fdisk -l /dev/mmcblk0
+Disk /dev/mmcblk0: 14.56 GiB, 15634268160 bytes, 30535680 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 17B18C43-1D24-4484-8883-D0C618E42411
+Device Start End Sectors Size Type
+/dev/mmcblk0p1 16384 24575 8192 4M unknown
+/dev/mmcblk0p2 24576 32767 8192 4M unknown
+/dev/mmcblk0p3 32768 163839 131072 64M unknown
+/dev/mmcblk0p4 163840 425983 262144 128M unknown
+/dev/mmcblk0p5 425984 491519 65536 32M unknown
+/dev/mmcblk0p6 491520 29851647 29360128 14G unknown
+/dev/mmcblk0p7 29851648 30113791 262144 128M unknown
+/dev/mmcblk0p8 30113792 30535646 421855 206M unknown&lt;/code>&lt;/pre>
+&lt;p>&lt;code>fdisk&lt;/code> 的输出很清晰，前三个分区和上图中的加粗项一一对应。之前没主意到的是第一个分区并不是从 &lt;code>2048&lt;/code> 开始的。&lt;/p>
+&lt;h3 id="dd">&lt;code>dd&lt;/code>&lt;/h3>
+&lt;p>在用 &lt;code>dd&lt;/code> 验证之前，需要了解一下 &lt;code>fdisk&lt;/code> 的输出：&lt;/p>
+&lt;p>&lt;code>mmcblk0&lt;/code> 一个 sector 的大小是 512 bytes，第一个分区起始 sector 是 16384，占用 &lt;code>24575 - 16383 = 8192&lt;/code> 个 sector，这里减去 16383 是因为 16384 这个编号的 sector 是第一个分区的第一个 sector，长度是减去不属于第一个分区的最后一个 sector 的编号。再看上面那张图片，整个磁盘的起始 sector 的编号是 0，MBR 占用 1 个 sector；同时，第一个分区前的 sector 的数量是第一个分区的编号。这里说得这么啰嗦是因为后面 &lt;code>dd&lt;/code> 需要这些参数。再回过头来看第一个分区，第一个分区的大小是 &lt;code>8192 * 512 B = 8K * 512 B = 4 MB&lt;/code>。再看磁盘最后的位置：最后一个分区后还有 &lt;code>30535679 - 30535646 = 33&lt;/code> 个分区，也就是 secondary gpt 分区。这里是用 30535679 减，是因为 Disk 那一行中的 30535680 是指长度，由于我们是从 0 开始编号的，所以最后一个分区的编号是 30535679。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/disk_and_part.png" alt="" />&lt;figcaption>disk_and_part&lt;/figcaption>
+&lt;/figure>
+&lt;ol type="1">
+&lt;li>使用 dd 获取第一个分区：&lt;/li>
+&lt;/ol>
+&lt;p>因为第一个分区被分区了，所以我们可以直接设定 &lt;code>if&lt;/code> 为分区&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="fu">dd&lt;/span> if=/dev/mmcblk0p1 of=./uboot.img bs=512&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>由于我们最终是想读取第一个分区前的数据，所以我们这里通过第一个分区来验证和练习一下：&lt;/p>
+&lt;pre class="console">&lt;code># dd if=/dev/mmcblk0 bs=512 skip=16384 count=8192 | sha1sum
+68b4104cad133f08b54a88161fc0ac8c9fdf2a81 -&lt;/code>&lt;/pre>
+&lt;p>同时我们校验一下通过分区读出来的镜像 hex，发现也是一样&lt;/p>
+&lt;pre class="console">&lt;code># sha1sum uboot.img
+68b4104cad133f08b54a88161fc0ac8c9fdf2a81 uboot.img&lt;/code>&lt;/pre>
+&lt;p>由此，我们可以得出以下结论：&lt;/p>
+&lt;p>&lt;code>dd&lt;/code> 中 SKIP 的大小 = 需要忽略的 sector 数量 (count) = 想读区域的起始编号（start index），起始编号也就是 fdisk 中的 Start 列。&lt;/p>
+&lt;ol start="2" type="1">
+&lt;li>使用 dd 获取 miniloader ：&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="fu">dd&lt;/span> if=/dev/mmcblk0 of=./miniloader.img bs=512 skip=64 count=7104&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>呃，有重复部分，但是不是完全一样，需要看一下这两者的区别。（TODO）&lt;/p></description></item><item><title>migrate from ubuntu16.04 to ubuntu20.04</title><link>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</link><pubDate>Thu, 13 Apr 2023 11:13:20 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</guid><description>&lt;p>公司服务器需要升级系统&lt;/p>
+&lt;ol type="1">
+&lt;li>系统升级&lt;/li>
+&lt;li>docker 迁移&lt;/li>
+&lt;/ol>
+&lt;h2 id="系统升级">系统升级&lt;/h2>
+&lt;ol type="1">
+&lt;li>download and extra to new root&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> https://cdimage.ubuntu.com/ubuntu-base/releases/focal/release/ubuntu-base-20.04.5-base-amd64.tar.gz &lt;span class="kw">|&lt;/span> &lt;span class="fu">sudo&lt;/span> tar -xzvf - -C /mnt&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol start="2" type="1">
+&lt;li>update and install grub and other needs&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>&lt;code>grub-efi-amd64&lt;/code> # 可能直接 grub 就好，不知道这种基础组建要怎么一下安装&lt;/li>
+&lt;li>&lt;code>ubuntu-minimal&lt;/code>&lt;/li>
+&lt;li>&lt;code>linux-image-generic&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;ol start="3" type="1">
+&lt;li>然后参考 archlinux wiki installation guide 做些必要的动作，不要忘了 &lt;code>systemd-networkd&lt;/code> 和 &lt;code>sshd&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;p>特别关注 grub&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>grub-install&lt;/code>&lt;/li>
+&lt;li>&lt;code>grub-config&lt;/code>&lt;/li>
+&lt;li>&lt;code>efibootmgr&lt;/code> check 一下&lt;/li>
+&lt;/ul>
+&lt;h2 id="docker-迁移">docker 迁移&lt;/h2>
+&lt;h3 id="rsync">1. &lt;code>rsync&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># https://blog.lilydjwg.me/2013/12/29/rsync-btrfs-dm-crypt-full-backup.42219.html&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">rsync&lt;/span> --archive --one-file-system --inplace --hard-links &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a> &lt;span class="ex">--human-readable&lt;/span> --numeric-ids --delete --delete-excluded &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a> &lt;span class="ex">--acls&lt;/span> --xattrs --sparse &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a> &lt;span class="ex">--itemize-changes&lt;/span> --verbose --progress &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a> &lt;span class="ex">/var/lib/docker&lt;/span> /mnt/var/lib&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>注意最后 不要变成 &lt;code>/mnt/var/lib&lt;/code> 否则就变成 &lt;code>/mnt/var/lib/docker/docker&lt;/code>….&lt;/p>
+&lt;h3 id="docker-复杂的点在-nvidia">2. Docker 复杂的点在 nvidia&lt;/h3>
+&lt;p>Copy /etc/docker/&lt;/p>
+&lt;p>然后 docker 就 起不来了。日志&lt;/p>
+&lt;pre class="log">&lt;code>E: Unable to locate package nvidia-container-toolkit-base&lt;/code>&lt;/pre>
+&lt;p>然后找到这个&lt;/p>
+&lt;p>https://gitlab.com/nvidia/container-toolkit/container-toolkit/-/tree/main/&lt;/p>
+&lt;blockquote>
+&lt;p>The NVIDIA Container Toolkit allows users to build and run GPU accelerated containers. The toolkit includes a container runtime library and utilities to automatically configure containers to leverage NVIDIA GPUs.&lt;/p>
+&lt;/blockquote>
+&lt;p>也就时说 container 要使用 &lt;code>nvidia&lt;/code> 需要装 &lt;code>nvidia-container-toolkit&lt;/code>(也就是 &lt;code>/etc/docker/daemon.json&lt;/code> 中这行的作用 &lt;code>"path": "nvidia-container-runtime"&lt;/code>)&lt;/p>
+&lt;p>安装分两个&lt;/p>
+&lt;ol type="1">
+&lt;li>nvidia driver https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#nvidia-drivers&lt;/li>
+&lt;li>nvidia-container-toolkit https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installation-guide&lt;/li>
+&lt;/ol>
+&lt;p>其实是一篇文档…关于安装 &lt;code>nvidia-container-toolkit&lt;/code> 的&lt;/p>
+&lt;h4 id="安装-nvidia-container-toolkit">安装 &lt;code>nvidia-container-toolkit&lt;/code>&lt;/h4>
+&lt;h5 id="pre-requests">pre-requests&lt;/h5>
+&lt;p>注意左侧目录层次，Pre-Requisites 只包含两个 （我看走眼了 Container Device Interface (CDI) Support 这个不是必须的，这节说要装 &lt;code>nvidia-container-toolkit-base&lt;/code> 不是很明白）&lt;/p>
+&lt;ul>
+&lt;li>NVIDIA Drivers （这个选用包管理器安装的 https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#package-manager , 并且不用管 post-installation steps 这个是 cuda 的，我们这里不需要 cuda，只要 driver)&lt;/li>
+&lt;li>Platform Requirements (默认够了)&lt;/li>
+&lt;/ul>
+&lt;h5 id="nvidia-container-toolkit">&lt;code>nvidia-container-toolkit&lt;/code>&lt;/h5>
+&lt;p>参照 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker&lt;/p>
+&lt;p>这里有一点是 20.04 是指向 18.04 的源，文档里也有说，然后就 ok 了。&lt;/p>
+&lt;p>由于已开始 rsync 那里敲错了，之前的几个 container, image 都没找到，所以怀疑是迁移出了问题，然后就看到了这个。。。如何迁移？删除。。。不过，有可能是提交成一个 image 再新开 container 就可以了，由于我们以前用的是 nvidia-docker 2 的，就没关系了。&lt;/p>
+&lt;p>https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/migrating-from-1.0.html#migration-1-0&lt;/p></description></item><item><title>polkit</title><link>https://bensyz.github.io/blog/blogs/polkit/</link><pubDate>Mon, 06 Jun 2022 08:55:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/polkit/</guid><description>&lt;h1 id="polkit">polkit&lt;/h1>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;h3 id="问题的出现">问题的出现&lt;/h3>
+&lt;p>&lt;code>udisks2&lt;/code> 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 &lt;code>/etc/fstab&lt;/code> 来自动挂载的分区。但由 &lt;code>/etc/fstab&lt;/code> 挂载的分区却不能直接用 &lt;code>udisks2&lt;/code> 卸载。(虽然加上 &lt;code>users&lt;/code> 这个 option 可以不用 sudo 直接 umount，但 &lt;code>udisks2&lt;/code> 限制了这种动作,后面会提到的 &lt;code>org.freedesktop.udisks2.filesystem-unmount-others&lt;/code>)。又由于 File explorer 中点击卸载，使用的是 &lt;code>udisks2&lt;/code>，所以对于前述的情况，便不能通过鼠标点击卸载。&lt;/p>
+&lt;h3 id="about-polkit">about polkit&lt;/h3>
+&lt;p>polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘&lt;/p>
+&lt;p>polkit 配置有两种方式，一种是应用自带的，叫Action，(&lt;code>.policy&lt;/code>)；另一种是类似补丁的形式，叫Authorization rules,(&lt;code>.rules&lt;/code> or &lt;code>.pkla&lt;/code>)&lt;/p>
+&lt;h2 id="action">Action:&lt;/h2>
+&lt;p>policy file 文件位置：&lt;/p>
+&lt;p>&lt;code>/usr/share/polkit-1/actions/*.policy&lt;/code>&lt;/p>
+&lt;p>在 default section 中，有这几个选项:&lt;/p>
+&lt;ul>
+&lt;li>keys:
+&lt;ul>
+&lt;li>&lt;code>allow_any&lt;/code>: 所有&lt;/li>
+&lt;li>&lt;code>allow_inactive&lt;/code>: 远程的 session(ssh vnc, etc.)&lt;/li>
+&lt;li>&lt;code>allow_active&lt;/code>: 本地 tty, X display&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>values:
+&lt;ul>
+&lt;li>&lt;code>no&lt;/code>: 无权限&lt;/li>
+&lt;li>&lt;code>yes&lt;/code>: 有权限&lt;/li>
+&lt;li>&lt;code>auth_self[_keep]&lt;/code>: 对 non-sudoer [keep some minutes] 开放权限&lt;/li>
+&lt;li>&lt;code>auth_admin[_keep]&lt;/code>: sudoer 开放权限&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="authorization-rules">Authorization rules&lt;/h2>
+&lt;p>文件位置：&lt;/p>
+&lt;p>&lt;code>/etc/polkit-1/rules.d/*.rules&lt;/code>&lt;/p>
+&lt;p>Tips:&lt;/p>
+&lt;ul>
+&lt;li>顺序是 &lt;code>00-test.rules&lt;/code> 比 &lt;code>99-test.rules&lt;/code> 更早验证，即，后面的不会覆写前面的。（区别于 &lt;code>/etc/udev/hwdb.d/&lt;/code>）因为这里直接 return 了&lt;/li>
+&lt;li>&lt;code>subject.local: true/false&lt;/code> responding to &lt;code>allow_active&lt;/code>, etc in policy&lt;/li>
+&lt;li>&lt;code>systemctl status polkit&lt;/code> 可以查看 &lt;code>Action name&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h3 id="examples">examples:&lt;/h3>
+&lt;ul>
+&lt;li>&lt;p>&lt;code>addAdminRule()&lt;/code> 需要特权时，使用何种身份验证是否有特权&lt;/p>
+&lt;pre class="rules">&lt;code># wheel 组的用户就可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-group:wheel&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: ben (ben is in wheel)&lt;/code>&lt;/pre>
+&lt;pre class="rules">&lt;code># root 用户才可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-user:root&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: root&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>&lt;code>addRule()&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>&lt;p>change rule&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.gnome.gparted&amp;quot; &amp;amp;&amp;amp;
+subject.isInGroup(&amp;quot;admin&amp;quot;)) {
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>log&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.policykit.exec&amp;quot;) {
+polkit.log(&amp;quot;action=&amp;quot; + action);
+polkit.log(&amp;quot;subject=&amp;quot; + subject);
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="old-authorization-rules">old Authorization rules&lt;/h3>
+&lt;p>&lt;code>pkaction --version&lt;/code>, rules not work for pkaction less then 106&lt;/p>
+&lt;p>&lt;a href="https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect" class="uri">https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect&lt;/a>&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+# section: random name
+# man pklocalauthority(8)
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;p>(似乎 &lt;code>ResultAny&lt;/code> 和 &lt;code>ResultActive&lt;/code> 有优先级，如果这里只设置 &lt;code>ResultAny=yes&lt;/code>，默认的 &lt;code>ResultActive&lt;/code> 还是 &lt;code>no&lt;/code>，还是不生效)&lt;/p>
+&lt;h2 id="问题的解决">问题的解决&lt;/h2>
+&lt;p>&lt;code>pkaction --version&lt;/code> 106 及以上的&lt;/p>
+&lt;pre class="rules">&lt;code>#/etc/polkit-1/rules.d/00-udisk-unmount-others.rules
+polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.udisks2.filesystem-unmount-others&amp;quot; ){
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>
+&lt;p>&lt;code>pkaction --version&lt;/code> 低于 106 的&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;h2 id="refs">refs:&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://wiki.archlinux.org/title/Polkit" class="uri">https://wiki.archlinux.org/title/Polkit&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html" class="uri">https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Shell echo 输出带样式 (style) 的文字</title><link>https://bensyz.github.io/blog/blogs/shell_color/</link><pubDate>Mon, 04 Apr 2022 12:23:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_color/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>好久没明白 Shell 的格式化输出，这次看了一些资料，整理了一下。&lt;/p>
+&lt;h2 id="method-result">Method &amp;amp; Result&lt;/h2>
+&lt;p>我们知道 shell 可以用 &lt;code>-e&lt;/code> 来转义 &lt;code>\n&lt;/code> 这些符号。由于样式输出也是特殊的输出，所以要使用样式输出也要打开这个开关。那如何表示样式的符号是什么呢？基本格式是这样&lt;/p>
+&lt;pre>&lt;code>\033[ + 样式码 + m + &amp;quot;要打印的字符&amp;quot;&lt;/code>&lt;/pre>
+&lt;p>这里的样式码就是一些数字，比如 &lt;code>1&lt;/code> 代表加粗，&lt;code>32&lt;/code> 代表绿色：&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[32mGreen&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold.png" alt="" />&lt;figcaption>bold&lt;/figcaption>
+&lt;/figure>
+&lt;figure>
+&lt;img src="./figures/green.png" alt="" />&lt;figcaption>green&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="样式的分开">样式的分开&lt;/h3>
+&lt;p>由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold&amp;#39;&lt;/span> &lt;span class="st">&amp;#39;\033[32mGreen&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_mixed.png" alt="" />&lt;figcaption>bold_and_green_mixed&lt;/figcaption>
+&lt;/figure>
+&lt;p>所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold\033[0m&amp;#39;&lt;/span> &lt;span class="st">&amp;#39;\033[32mGreen\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_seperated.png" alt="" />&lt;figcaption>bold_and_green_seperated&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="样式的合并">样式的合并&lt;/h3>
+&lt;p>根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1m\033[32mBold and Green\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_together.png" alt="" />&lt;figcaption>bold_and_green_together&lt;/figcaption>
+&lt;/figure>
+&lt;p>它有个简略的写法：用分号 &lt;code>;&lt;/code> 分开两个样式码。比如加粗又加绿:&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1;32mBold and Green\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_together_simpler.png" alt="" />&lt;figcaption>bold_and_green_together_simpler&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="列出-shell-支持的所有样式">列出 Shell 支持的所有样式：&lt;/h3>
+&lt;p>我们可以用一个小的脚本来列出所有样式&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="kw">for&lt;/span> &lt;span class="ex">i&lt;/span> in &lt;span class="va">$(&lt;/span>&lt;span class="fu">seq&lt;/span> 0 109&lt;span class="va">)&lt;/span>&lt;span class="kw">;do&lt;/span>&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[&amp;#39;&lt;/span>&lt;span class="va">$i&lt;/span>&lt;span class="st">&amp;#39;m&amp;#39;&lt;/span>&lt;span class="va">$i&lt;/span>&lt;span class="st">&amp;#39;\033[0m &amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>由于版面有限，我只选取了部分有效段展示：&lt;/p>
+&lt;ul>
+&lt;li>所有颜色：&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/all_styles.png" alt="" />&lt;figcaption>all_styles&lt;/figcaption>
+&lt;/figure>
+&lt;ul>
+&lt;li>反色：&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/all_styles_reverse.png" alt="" />&lt;figcaption>all_styles_reverse&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="tips">Tips&lt;/h3>
+&lt;p>不知发现没有，虽然打印出来好看了，但是脚本却变丑了，很难阅读，因此我们可以把这些样式定义成变量，要用时用变量来格式化输出：&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleNone=&lt;/span>&lt;span class="st">&amp;#39;\033[0m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleGreen=&lt;/span>&lt;span class="st">&amp;#39;\033[33m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleBold=&lt;/span>&lt;span class="st">&amp;#39;\033[1m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-5">&lt;a href="#cb8-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleBold&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>Bold&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleNone&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleGreen&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>Green&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleNone&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>格式化输出：&lt;/p>
+&lt;pre>&lt;code>\033[ + 样式码 + m + &amp;quot;要打印的字符&amp;quot; + \033[ + 无样式码 + m&lt;/code>&lt;/pre>
+&lt;p>叠加多个样式的话，样式码可以用 &lt;code>;&lt;/code> 来分开&lt;/p></description></item><item><title>gpio</title><link>https://bensyz.github.io/blog/blogs/gpio/</link><pubDate>Mon, 04 Oct 2021 13:03:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gpio/</guid><description>&lt;p>Under construction…&lt;/p>
+&lt;!--
+https://stackoverflow.com/help/whats-reputation
+### GNU 系统 vs Linux
+GNU 是一个操作系统，他包含了 GNU/Linux（也就是常说的 Linux 系统） 上所能看到的各种常规文件，各种命令，而 Linux 是一个内核，内核是和硬件打交道的，并提供一些接口给操作系统，然后操作系统可以调用这些借口
+操作系统和内核的区别可以看看 [gnu 的官方说明](https://www.gnu.org/gnu/linux-and-gnu.html)，简单来说 gnu 就是那些各种个样的软件，包括我们最常用的 ls，rm
+--></description></item><item><title>将服务器的 Ubuntu 系统换成 Arch Linux</title><link>https://bensyz.github.io/blog/blogs/vps2arch/</link><pubDate>Thu, 30 Sep 2021 19:13:30 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/vps2arch/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。&lt;/p>
+&lt;p>早就听说了有一个叫 &lt;code>vps2arch&lt;/code> 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#从一个主机运行另一个%20Linux%20发行版">Arch wiki&lt;/a> 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)&lt;/p>
+&lt;p>然而 Arch wiki 在后面&lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#安装提示">安装提示&lt;/a> 那节让我从 &lt;a href="https://wiki.archlinux.org/title/Installation_guide_（简体中文）">Installation Guide&lt;/a> 中的重新分区开始，继续后面的操作，我就这样试了，然后….🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。&lt;/p>
+&lt;p>后来我找到了这篇&lt;a href="https://blog.inkuang.com/2020/114/">博客&lt;/a>，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。&lt;/p>
+&lt;p>写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏&lt;/p>
+&lt;h2 id="原理">原理&lt;/h2>
+&lt;p>通过 &lt;code>chroot&lt;/code> 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 &lt;em>内核&lt;/em> 和 &lt;em>操作系统&lt;/em> 的关系可以看看我的这篇关于 &lt;a href="https://bensyz.github.io/blog/blogs/gpio/">gpio&lt;/a> 的文章。&lt;/p>
+&lt;p>在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 &lt;code>/proc&lt;/code> &lt;code>/sys&lt;/code> &lt;code>/run&lt;/code> 下的各种文件等等，还有设备文件夹 &lt;code>/dev&lt;/code> 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 &lt;code>ls&lt;/code> 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 &lt;code>/bin/ls&lt;/code> 和它所依赖的各种库 （通过 &lt;code>ldd /bin/ls&lt;/code> 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。&lt;/p>
+&lt;h2 id="实验">实验&lt;/h2>
+&lt;p>&lt;strong>注意&lt;/strong>: 记得对当前系统创建快照，因为有可能网不好，而你又还没配置好系统，那就没了….&lt;/p>
+&lt;p>按照 Arch wiki &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_（简体中文）">Install Arch Linux from existing Linux&lt;/a>&lt;/p>
+&lt;h3 id="去这里-挑个镜像网站下-bootstrap-的-tar-包放到-tmp-解压">1. 去&lt;a href="https://archlinux.org/download/">这里&lt;/a> 挑个镜像网站，下 bootstrap 的 tar 包，放到 &lt;code>/tmp&lt;/code> ，解压：&lt;/h3>
+&lt;pre class="shell">&lt;code># tar xzf /tmp/archlinux-bootstrap-...-x86_64.tar.gz&lt;/code>&lt;/pre>
+&lt;h3 id="编辑-mirrorlist">2. 编辑 &lt;code>mirrorlist&lt;/code>&lt;/h3>
+&lt;p>由于 bootstrap 中没有编辑器，你需要先编辑 &lt;code>mirrorlist&lt;/code> ，选一个镜像网站&lt;/p>
+&lt;pre class="shell">&lt;code># vim /tmp/root.x86_64/etc/pacman.d/mirrorlist&lt;/code>&lt;/pre>
+&lt;p>如果忘记了，然后 Ubuntu 系统又删了，可以使用 &lt;code>sed&lt;/code> 或者&lt;code>echo &amp;gt;&amp;gt;&lt;/code>&lt;/p>
+&lt;pre class="shell">&lt;code># sed -i &amp;#39;s/#\(.*ustc.*\)/\1/p&amp;#39; /etc/pacman.d/mirrorlist&lt;/code>&lt;/pre>
+&lt;h3 id="chroot">3. &lt;code>chroot&lt;/code>&lt;/h3>
+&lt;p>将这个目录绑到这个目录，大概率是要这条 &lt;code>mount&lt;/code> 的，应该是意味着这是一个 mount point，这样在 &lt;code>chroot&lt;/code> 的时候不会有警告。并 &lt;code>chroot&lt;/code>&lt;/p>
+&lt;pre class="shell">&lt;code># mount --bind /tmp/root.x86_64 /tmp/root.x86_64&lt;/code>&lt;/pre>
+&lt;pre class="shell">&lt;code># /tmp/root.x86_64/bin/arch-chroot /tmp/root.x86_64/&lt;/code>&lt;/pre>
+&lt;p>&lt;code>arch-chroot&lt;/code> 相对于 &lt;code>chroot&lt;/code> 的区别在于，它把一些内核空间的目录挂载到了 &lt;code>chroot&lt;/code> 环境中，可以看 Arch wiki 的 &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_（简体中文）#安装提示">方法一：使用 Bootstrap 镜像&lt;/a>节&lt;/p>
+&lt;h3 id="初始化-pacman-密钥">4. 初始化 &lt;code>pacman&lt;/code> 密钥&lt;/h3>
+&lt;pre class="shell">&lt;code># pacman-key --init
+# pacman-key --populate archlinux&lt;/code>&lt;/pre>
+&lt;h3 id="把分区再挂到-chroot-的-mnt-下">5. 把分区再挂到 &lt;code>chroot&lt;/code> 的 &lt;code>/mnt&lt;/code> 下&lt;/h3>
+&lt;p>我们这个时候可以看一下分区表：&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>$ &lt;span class="ex">lsblk&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="ex">NAME&lt;/span> MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a>&lt;span class="ex">sr0&lt;/span> 11:0 1 145.7M 0 rom&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a>&lt;span class="ex">vda&lt;/span> 254:0 0 80G 0 disk&lt;/span>
+&lt;span id="cb7-5">&lt;a href="#cb7-5" aria-hidden="true">&lt;/a>&lt;span class="kw">|&lt;/span>&lt;span class="ex">-vda1&lt;/span> 254:1 0 1M 0 part&lt;/span>
+&lt;span id="cb7-6">&lt;a href="#cb7-6" aria-hidden="true">&lt;/a>└&lt;span class="ex">-vda2&lt;/span> 254:2 0 80G 0 part /etc/resolv.conf&lt;/span>
+&lt;span id="cb7-7">&lt;a href="#cb7-7" aria-hidden="true">&lt;/a> &lt;span class="ex">/mnt&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;code>/etc/resolve.conf&lt;/code> 是 &lt;code>arch-chroot&lt;/code> 导致的，这里的 &lt;code>/mnt&lt;/code> 就是 Installation guide 中的 &lt;code>/mnt&lt;/code> 了。&lt;/p>
+&lt;h3 id="删-ubuntu-的系统文件">6. 删 Ubuntu 的系统文件&lt;/h3>
+&lt;p>现在可以删除 Ubuntu 的系统文件了。(Ubuntu 也是 GNU 系统的一种） 但要注意不要删掉 &lt;code>/tmp&lt;/code> , &lt;code>/dev&lt;/code> , &lt;code>/proc&lt;/code> , &lt;code>/run&lt;/code> , &lt;code>/sys&lt;/code> 。因为 &lt;code>/tmp&lt;/code> 里有 bootstrap 解压后的文件，也就是我们现在在使用的 Arch Linux 的系统文件，后面 4 个是内核映射到文件系统的文件，也不能删，你也可以保留你的 &lt;code>/home&lt;/code> 目录，如果需要保留其他根目录下的配置文件，记得备份，因为 arch 在安装的过程中也会覆盖。&lt;/p>
+&lt;p>当然你也可以不删，安装好之后再用 &lt;a href="https://wiki.archlinux.org/title/Pacman/Tips_and_tricks#Identify_files_not_owned_by_any_package">pacman 列出来&lt;/a>，不要在改了配置之后再删哦，有些类似 &lt;code>/etc/hostname&lt;/code> 是不被 &lt;code>pacman&lt;/code> 跟踪的&lt;/p>
+&lt;pre class="shell">&lt;code># find /etc /usr /opt | LC_ALL=C pacman -Qqo - 2&amp;gt;&amp;amp;1 &amp;gt;&amp;amp;- &amp;gt;/dev/null | cut -d &amp;#39; &amp;#39; -f 5-&lt;/code>&lt;/pre>
+&lt;h3 id="按照-installation-guide安装-arch-linux">7. 按照 &lt;a href="https://wiki.archlinux.org/title/Installation_guide_（简体中文）#安装">Installation guide&lt;/a>，安装 Arch Linux。&lt;/h3>
+&lt;p>这里只是提一下需要哪些&lt;/p>
+&lt;ol type="1">
+&lt;li>&lt;p>安装：&lt;code>pacstrap /mnt base linux linux-firmware&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>分区：&lt;code>genfstab -U /mnt &amp;gt;&amp;gt; /mnt/etc/fstab&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;code>arc:chroot /mnt&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>时区：&lt;code>ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime&lt;/code> , &lt;code>hwclock --systohc&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>文字编码：&lt;code>/etc/locale.gen&lt;/code> &lt;code>locale-gen&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>grub:&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="ex">pacman&lt;/span> -s intel-ucode&lt;/span>
+&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="ex">grub-install&lt;/span> --target=i386-pc /dev/vda&lt;/span>
+&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a>&lt;span class="ex">grub-mkconfig&lt;/span> -o /boot/grub/grub.cfg&lt;span class="kw">`&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol start="6" type="1">
+&lt;li>网络：&lt;code>/etc/hostname&lt;/code> , &lt;code>/etc/hosts&lt;/code> , &lt;code>/etc/systemd/network/en.network&lt;/code> ，enable it&lt;/li>
+&lt;/ol>
+&lt;pre class="conf">&lt;code>[Match]
+Name=en*
+# arch 是 ens5 这种的
+# Ubuntu 的网卡名还是 eth0
+# 不放心可以用 e*
+[Network]
+DHCP=ipv4&lt;/code>&lt;/pre>
+&lt;ol start="8" type="1">
+&lt;li>&lt;p>&lt;code>pacman -S neovim openssh sudo&lt;/code> , enable ssh&lt;/p>&lt;/li>
+&lt;li>&lt;p>用户、密码、 &lt;code>sudo&lt;/code> : &lt;code>passwd&lt;/code> , &lt;code>useradd -a -G wheel ben&lt;/code> , &lt;code>passwd ben&lt;/code> , &lt;code>visudo&lt;/code>&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;h3 id="重启">7. 重启&lt;/h3>
+&lt;p>如果启动失败可以通过 VNC 的方式登录，可以看到 grub 等界面&lt;/p></description></item><item><title>管理从源码安装的应用的link——stow</title><link>https://bensyz.github.io/blog/blogs/stow_introduction/</link><pubDate>Thu, 30 Jul 2020 13:15:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/stow_introduction/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;p>Know from &lt;a href="https://www.ostechnix.com/an-easy-way-to-remove-programs-installed-from-source-in-linux/">here&lt;/a>&lt;/p>
+&lt;h2 id="install-positiontake-neovim-as-example">Install Position(take &lt;code>neovim&lt;/code> as example)&lt;/h2>
+&lt;pre>&lt;code>/usr/local/stow/nvim/&lt;/code>&lt;/pre>
+&lt;h2 id="make-symbolic-link">Make Symbolic Link&lt;/h2>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="bu">cd&lt;/span> /usr/local/stow/&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> stow nvim&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>This command will make some link files at &lt;code>/usr/local/bin/&lt;/code>, pointing to all the files in &lt;code>/usr/local/stow/nvim/bin&lt;/code> and &lt;code>/usr/local/share/&lt;/code>, pointing to all the files in &lt;code>/usr/local/stow/nvim/share&lt;/code> and so on.&lt;/p>
+&lt;h3 id="example">Example&lt;/h3>
+&lt;p>For example, After &lt;code>make install&lt;/code>, there will be &lt;code>nvim&lt;/code> in &lt;code>/usr/local/stow/nvim/bin/&lt;/code>, you could &lt;a href="https://blog.csdn.net/BenSYZ/article/details/98105357">make a link file&lt;/a> (like &lt;code>vim&lt;/code>) in this directory, like following,&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/stow/nvim/bin&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a> &lt;span class="ex">total&lt;/span> 16M&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 5 root staff 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;span class="ex">-rwxr-xr-x&lt;/span> 1 root staff 16M xxx xx xx:xx nvim&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root staff 4 xxx xx xx:xx vim -&lt;span class="op">&amp;gt;&lt;/span> nvim&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/stow/nvim/share&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 28K&lt;/span>
+&lt;span id="cb3-10">&lt;a href="#cb3-10" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 7 root staff 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb3-11">&lt;a href="#cb3-11" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 5 root staff 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb3-12">&lt;a href="#cb3-12" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx applications&lt;/span>
+&lt;span id="cb3-13">&lt;a href="#cb3-13" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 31 root staff 4.0K xxx xx xx:xx locale&lt;/span>
+&lt;span id="cb3-14">&lt;a href="#cb3-14" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 3 root staff 4.0K xxx xx xx:xx man&lt;/span>
+&lt;span id="cb3-15">&lt;a href="#cb3-15" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 3 root staff 4.0K xxx xx xx:xx nvim&lt;/span>
+&lt;span id="cb3-16">&lt;a href="#cb3-16" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx pixmaps&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>and then &lt;code>stow&lt;/code> it&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/bin&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 8.0K&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 11 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 21 xxx xx xx:xx nvim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/bin/nvim&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 20 xxx xx xx:xx vim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/bin/vim&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/share&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 24K&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 6 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 11 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 31 xxx xx xx:xx applications -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/applications&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 25 xxx xx xx:xx locale -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/locale&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx man&lt;/span>
+&lt;span id="cb4-15">&lt;a href="#cb4-15" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 23 xxx xx xx:xx nvim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/nvim&lt;/span>
+&lt;span id="cb4-16">&lt;a href="#cb4-16" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 26 xxx xx xx:xx pixmaps -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/pixmaps&lt;/span>
+&lt;span id="cb4-17">&lt;a href="#cb4-17" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-18">&lt;a href="#cb4-18" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/share/man&lt;/span>
+&lt;span id="cb4-19">&lt;a href="#cb4-19" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 8.0K&lt;/span>
+&lt;span id="cb4-20">&lt;a href="#cb4-20" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-21">&lt;a href="#cb4-21" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 6 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-22">&lt;a href="#cb4-22" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 30 xxx xx xx:xx man1 -&lt;span class="op">&amp;gt;&lt;/span> ../../stow/nvim/share/man/man1&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="remove-symbolic-link">Remove Symbolic Link&lt;/h2>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> stow --delete neovim&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Linux开机自动连接网络</title><link>https://bensyz.github.io/blog/blogs/connect_wifi_on_startup/</link><pubDate>Wed, 26 Feb 2020 10:26:09 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/connect_wifi_on_startup/</guid><description>&lt;p>整合自: https://bbs.archlinux.org/viewtopic.php?id=178625&lt;/p>
+&lt;p>上一篇&lt;a href="../connect_wifi_command">文章&lt;/a>讲到如何用命令行连接wifi，大家可以去看看。&lt;/p>
+&lt;p>本文参考 &lt;a href="https://bbs.archlinux.org/viewtopic.php?id=178625">https://bbs.archlinux.org/viewtopic.php?id=178625&lt;/a> ## TL,DR&lt;/p>
+&lt;h3 id="wpa_supplicant">&lt;code>wpa_supplicant&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># config wpa_supplicant&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="co">#/etc/wpa_supplicant/wpa_supplicant-wlp5s0.conf&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="co"># enable wpa_supplicant&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> enable wpa_supplicant@wlp5s0&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="config-systemd-network">&lt;code>config systemd-network&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># config systemd-network&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/systemd/network/00-wireless-dhcp.network&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>[&lt;span class="ex">Match&lt;/span>]&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="va">Name=&lt;/span>wlp5s0&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a>[&lt;span class="ex">Network&lt;/span>]&lt;/span>
+&lt;span id="cb2-7">&lt;a href="#cb2-7" aria-hidden="true">&lt;/a>&lt;span class="va">DHCP=&lt;/span>yes&lt;/span>
+&lt;span id="cb2-8">&lt;a href="#cb2-8" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-9">&lt;a href="#cb2-9" aria-hidden="true">&lt;/a>&lt;span class="co"># enable systemd-networkd.service&lt;/span>&lt;/span>
+&lt;span id="cb2-10">&lt;a href="#cb2-10" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> enable systemd-networkd.service&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="需要工具">需要工具&lt;/h2>
+&lt;ol type="1">
+&lt;li>&lt;code>wpa_supplicant&lt;/code>&lt;/li>
+&lt;li>&lt;code>dhcpcd&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="配置文件">配置文件&lt;/h2>
+&lt;ol type="1">
+&lt;li>&lt;p>&lt;code>/etc/wpa_supplicant/wpa_supplicant-网卡名.conf&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;code>/etc/systemd/network/00-wireless-dhcp.network&lt;/code>&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;h2 id="步骤">步骤&lt;/h2>
+&lt;h3 id="wpa_supplicant-1">1. &lt;code>wpa_supplicant&lt;/code>&lt;/h3>
+&lt;h4 id="查看网卡名字">1.1 查看网卡名字&lt;/h4>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="ex">ip&lt;/span> link&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="co"># 1: lo&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="co"># 2: enp4s0&lt;/span>&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="co"># 3: wlp5s0&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol type="1">
+&lt;li>lo 是loop设备&lt;/li>
+&lt;li>enp4s0 是有线设备&lt;/li>
+&lt;li>wlp5s0 是无线设备&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>注意我的网卡名是 &lt;code>wlp5s0&lt;/code>，下文中的&lt;code>wlp5s0&lt;/code> 都需替换成你的&lt;/strong>&lt;/p>
+&lt;h4 id="生成-wpa_supplicant.conf文件">1.2 生成 &lt;code>wpa_supplicant.conf&lt;/code>文件&lt;/h4>
+&lt;p>将生成的&lt;code>wpa_supplicant.conf&lt;/code> 放到&lt;code>/etc/wpa_supplicant/&lt;/code>文件夹下，并重命名，格式为：&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">wpa_supplicant-&lt;/span>网卡名.conf&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>例如我的就是：&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="ex">wpa_supplicant-wlp5s0.conf&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h5 id="通过修改原始配置文件">通过修改原始配置文件&lt;/h5>
+&lt;p>&lt;code>man wpa_supplicant.conf&lt;/code> 知道原始配置文件在&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="ex">/usr/share/doc/wpa_supplicant/wpa_supplicant.conf&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h5 id="通过wpa_passphrase生成配置文件">通过&lt;code>wpa_passphrase&lt;/code>生成配置文件&lt;/h5>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co"># wpa_passphrase MyNetwork SuperSecretPassphrase &amp;gt; /etc/wpa_supplicant/wpa_supplicant-wlp5s0.conf&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h5 id="通过下面的格式">通过下面的格式&lt;/h5>
+&lt;p>&lt;code>priority&lt;/code> 越大优先级越高&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="va">country=&lt;/span>CN&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="va">update_config=&lt;/span>1&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-5">&lt;a href="#cb8-5" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb8-7">&lt;a href="#cb8-7" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>9&lt;/span>
+&lt;span id="cb8-8">&lt;a href="#cb8-8" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-9">&lt;a href="#cb8-9" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>
+&lt;span id="cb8-10">&lt;a href="#cb8-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb8-11">&lt;a href="#cb8-11" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb8-12">&lt;a href="#cb8-12" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-13">&lt;a href="#cb8-13" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-14">&lt;a href="#cb8-14" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb8-15">&lt;a href="#cb8-15" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>8&lt;/span>
+&lt;span id="cb8-16">&lt;a href="#cb8-16" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb8-17">&lt;a href="#cb8-17" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="用systemctl启动wpa_supplicant服务">1.3 用&lt;code>systemctl&lt;/code>启动&lt;code>wpa_supplicant&lt;/code>服务&lt;/h4>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> enable wpa_supplicant@wlp5s0&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;strong>注意arch bbs 原回答多写了&lt;code>.conf&lt;/code>&lt;/strong>，后面也有跟帖指出了这个问题。&lt;/p>
+&lt;h3 id="systemd-networkd">2. &lt;code>systemd-networkd&lt;/code>&lt;/h3>
+&lt;h4 id="配置systemd-network的配置文件">2.1 配置systemd-network的&lt;a href="https://www.centos.bz/2018/05/systemd-%E7%9A%84%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86/">配置文件&lt;/a>&lt;/h4>
+&lt;p>创建&lt;code>/etc/systemd/network/00-wireless-dhcp.network&lt;/code>，archbbs中说这个名字随意。&lt;/p>
+&lt;pre>&lt;code>[Match]
+Name=wlp5s0
+[Network]
+DHCP=yes&lt;/code>&lt;/pre>
+&lt;h4 id="用systemctl设置启动服务systemd-networkd.service">2.2 用&lt;code>systemctl&lt;/code>设置启动服务&lt;code>systemd-networkd.service&lt;/code>&lt;/h4>
+&lt;div class="sourceCode" id="cb11">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb11-1">&lt;a href="#cb11-1" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> enable systemd-networkd.service&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="回顾">回顾&lt;/h2>
+&lt;p>在&lt;a href="#1.3">1.3&lt;/a>的&lt;code>systemctl enable wpa_supplicant@wlp5s0&lt;/code>中，我们看到：&lt;/p>
+&lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="ex">Created&lt;/span> symlink /etc/systemd/system/multi-user.target.wants/wpa_supplicant@wlp5s0.service → /usr/lib/systemd/system/wpa_supplicant@.service.&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>查看&lt;code>/usr/lib/systemd/system/wpa_supplicant@.service&lt;/code>，其中有一行：&lt;/p>
+&lt;div class="sourceCode" id="cb13">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb13-1">&lt;a href="#cb13-1" aria-hidden="true">&lt;/a>&lt;span class="va">ExecStart=&lt;/span>/usr/bin/wpa_supplicant &lt;span class="ex">-c/etc/wpa_supplicant/wpa_supplicant-%I.conf&lt;/span> -i%I&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>这里的&lt;code>%I&lt;/code> 就是&lt;code>systemctl enable wpa_supplicant@wlp5s0&lt;/code>中的&lt;code>wlp5s0&lt;/code>，它通过&lt;code>%I&lt;/code>来传递设备名，所以我们也就知道之前为什么要把配置文件这样命名了&lt;/p>
+&lt;div class="sourceCode" id="cb14">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb14-1">&lt;a href="#cb14-1" aria-hidden="true">&lt;/a>&lt;span class="ex">/etc/wpa_supplicant&lt;/span>/&lt;span class="ex">wpa_supplicant-&lt;/span>网卡名.conf&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>通过命令行连接 WiFi</title><link>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</link><pubDate>Wed, 26 Feb 2020 10:15:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="检查是哪一个接口来支持无线连接的">检查是哪一个接口来支持无线连接的：&lt;/h2>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">iwconfig&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>假定是wlan0，我的是wlp5s0&lt;/p>
+&lt;h2 id="启动接口服务">启动接口服务&lt;/h2>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> ip link set wlan0 up&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="扫描附近的无线网络了">扫描附近的无线网络了：&lt;/h2>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 scan &lt;span class="kw">|&lt;/span> &lt;span class="fu">less&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="连接">连接&lt;/h2>
+&lt;h3 id="没有加密">没有加密：&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 connect [网络 SSID]&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>也可以通过&lt;code>wpa_supplicant&lt;/code> 连接，见‘WPA or WPA2’。&lt;/p>
+&lt;h3 id="wep-加密的">WEP 加密的：&lt;/h3>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 connect [网络 SSID] key 0:[WEP 密钥]&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="wpa-or-wpa2">WPA or WPA2&lt;/h3>
+&lt;ol type="1">
+&lt;li>&lt;code>/etc/wpasupplicant/wpa_supplicant.conf&lt;/code> 文件，增加如下行：&lt;/li>
+&lt;/ol>
+&lt;p>network={ ssid=“[网络 ssid]” psk=“[密码]” priority=1}&lt;/p>
+&lt;p>&lt;code>/etc/wpasupplicant/wpa_supplicant.conf&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="va">country=&lt;/span>CN&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="va">update_config=&lt;/span>1&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-6">&lt;a href="#cb6-6" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb6-7">&lt;a href="#cb6-7" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>9&lt;/span>
+&lt;span id="cb6-8">&lt;a href="#cb6-8" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-9">&lt;a href="#cb6-9" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>
+&lt;span id="cb6-10">&lt;a href="#cb6-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-11">&lt;a href="#cb6-11" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-12">&lt;a href="#cb6-12" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-13">&lt;a href="#cb6-13" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-14">&lt;a href="#cb6-14" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb6-15">&lt;a href="#cb6-15" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>8&lt;/span>
+&lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-17">&lt;a href="#cb6-17" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>
+&lt;span id="cb6-18">&lt;a href="#cb6-18" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-19">&lt;a href="#cb6-19" aria-hidden="true">&lt;/a>&lt;span class="co"># open wifi&lt;/span>&lt;/span>
+&lt;span id="cb6-20">&lt;a href="#cb6-20" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-21">&lt;a href="#cb6-21" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-22">&lt;a href="#cb6-22" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>NONE&lt;/span>
+&lt;span id="cb6-23">&lt;a href="#cb6-23" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>1&lt;/span>
+&lt;span id="cb6-24">&lt;a href="#cb6-24" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-25">&lt;a href="#cb6-25" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol start="2" type="1">
+&lt;li>&lt;code>sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="通过-dhcp-获取ip">通过 DHCP 获取IP&lt;/h2>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dhcpcd wlan0&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;hr />
+&lt;p>推荐阅读： &lt;a href="https://blog.csdn.net/BenSYZ/article/details/104522084">archlinux 开机自动连接wifi&lt;/a>&lt;/p></description></item><item><title>统一Linux Windows 时区</title><link>https://bensyz.github.io/blog/blogs/timezone_win_linux/</link><pubDate>Wed, 26 Feb 2020 10:05:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/timezone_win_linux/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="思路">思路&lt;/h2>
+&lt;p>把硬件时间修改为UTC，system的修改为local time。&lt;/p>
+&lt;h2 id="windows">windows&lt;/h2>
+&lt;p>参考&lt;a href="https://blog.csdn.net/qq_40197828/article/details/79334158">https://blog.csdn.net/qq_40197828/article/details/79334158&lt;/a> ### 打开注册表编辑器&lt;/p>
+&lt;pre class="cmd">&lt;code>regedit&lt;/code>&lt;/pre>
+&lt;h3 id="新建表项">新建表项&lt;/h3>
+&lt;p>在 &lt;code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation&lt;/code>中新建&lt;code>RealTimeIsUniversal&lt;/code>项目&lt;/p>
+&lt;ul>
+&lt;li>64 位系统，“QWORD（64位）值”。&lt;/li>
+&lt;li>32 位系统，“DWORD（32位）值”。&lt;/li>
+&lt;/ul>
+&lt;p>它的大体意思是，硬件时间被作为全球统一时间。&lt;/p>
+&lt;h3 id="修改表项值">修改表项值&lt;/h3>
+&lt;p>然后双击这一条目，弹出“编辑 QWORD（64位）值”的对话框，确保选中了“十六进制”，然后将“数值数据”改为“1”。最后点击“确定”。&lt;/p>
+&lt;h3 id="可以备份下次直接注入注册表即可">可以备份下次直接注入注册表即可&lt;/h3>
+&lt;h2 id="linux">&lt;a href="https://wiki.archlinux.org/index.php/Installation_guide">linux&lt;/a>&lt;/h2>
+&lt;p>按照官方的操作，好像市区还是有点问题。具体是那个命令我忘记了就是搞着搞着就可以了，大家如果知道是哪个还请在评论区告诉我&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ls&lt;/span> -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localetime&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> hwclock --systohc&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> set-local-rtc false&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> set-timezone Asia/Shanghai&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;span class="ex">timedatectl&lt;/span> status&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>后来发现其实windows和arch linux 没必要设置时区，因为它们都是把硬件时间当作当地时间，但是ubuntu就不一样了。&lt;/p></description></item><item><title>Linux 停转机械硬盘来省电</title><link>https://bensyz.github.io/blog/blogs/archlinux_stop_hdd_spin/</link><pubDate>Wed, 26 Feb 2020 09:32:00 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/archlinux_stop_hdd_spin/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h1 id="hdd-stop-spin">hdd stop spin&lt;/h1>
+&lt;h2 id="automatic-by-tlp">automatic, by &lt;code>tlp&lt;/code>&lt;/h2>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/tlp.conf&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="co"># 具体可以看这个文件，下面两行只是我的设置，你的配置要自己修改&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="va">DISK_SPINDOWN_TIMEOUT_ON_AC=&lt;/span>&lt;span class="st">&amp;quot;0 12&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="va">DISK_SPINDOWN_TIMEOUT_ON_BAT=&lt;/span>&lt;span class="st">&amp;quot;0 12&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a>&lt;span class="co"># 设置开机启动&lt;/span>&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> enable tlp&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="manual-by-hdparm">manual, by &lt;code>hdparm&lt;/code>&lt;/h2>
+&lt;p>&lt;a href="https://blog.csdn.net/magaiou/article/details/92770845">https://blog.csdn.net/magaiou/article/details/92770845&lt;/a>&lt;/p>
+&lt;p>从 &lt;code>man hdparm&lt;/code> 可知：&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># -S 从1到240的值指定5秒的倍数，从而产生5秒到20分钟的超时。从241到251的值指定30分钟的1到11个单位，从而产生30分钟到5.5小时的超时。值252表示超时21分钟。&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="ex">hdparm&lt;/span> -S[num] /dev/hd*&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="co"># -y 强制IDE驱动器立即进入低功耗待机模式，通常会导致其降速。&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;span class="ex">hdparm&lt;/span> -y /dev/hd*&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-7">&lt;a href="#cb2-7" aria-hidden="true">&lt;/a>&lt;span class="co"># -Y 强制IDE驱动器立即进入最低功耗睡眠模式，导致其完全关闭。&lt;/span>&lt;/span>
+&lt;span id="cb2-8">&lt;a href="#cb2-8" aria-hidden="true">&lt;/a>&lt;span class="ex">hdparm&lt;/span> -Y /dev/hd*&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>所以可以通过在&lt;code>.zshrc&lt;/code>(或&lt;code>.bashrc&lt;/code>) 中添加&lt;code>alias&lt;/code> 来快速手动停转硬盘。&lt;/p></description></item><item><title>为 Linux colemak 修改键</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</link><pubDate>Wed, 26 Feb 2020 09:17:44 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="change-keyboard-layout-as-colemak-and-esc-with-capslock">Change keyboard layout as colemak, and &lt;code>&amp;lt;Esc&amp;gt;&lt;/code> with &lt;code>&amp;lt;CapsLock&amp;gt;&lt;/code>&lt;/h2>
+&lt;p>For Windows check &lt;a href="../keyboard_map_windows">here&lt;/a>&lt;/p>
+&lt;h3 id="tldr">TLDR&lt;/h3>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/vconsole.conf&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="ex">KEYMAP&lt;/span> = colemak&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="co"># or&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="fu">loadkeys&lt;/span> colemak&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;span class="co"># graphic&lt;/span>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="change-to-colemak">change to colemak&lt;/h3>
+&lt;h4 id="temporary">Temporary&lt;/h4>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">loadkeys&lt;/span> colemak&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="co"># graphic&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;a href="https://www.cnblogs.com/BlackStorm/p/Ubuntu-Switch-Keyboard-Layouts-Such-As-Colemak-Workman-Norman.html">参考&lt;/a>&lt;/p>
+&lt;h4 id="permanet">Permanet&lt;/h4>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty (include graphic)&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/vconsole.conf &lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">KEYMAP&lt;/span> = colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>The above way may not work for Ubuntu, so adding &lt;code>setxkbmap us -variant colemak&lt;/code> in &lt;code>~/.xinitrc&lt;/code> may worked. If not see the next section.&lt;/p>
+&lt;h3 id="map-esc-with-capslock">Map &lt;code>Esc&lt;/code> with &lt;code>CapsLock&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="fu">xmodmap&lt;/span> -pke &lt;span class="op">&amp;gt;&lt;/span> .xmodmap&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>A small tip: show the key code by &lt;code>xev&lt;/code>&lt;/p>
+&lt;p>Then exchange the key codes of &lt;code>&amp;lt;esc&amp;gt;&lt;/code> and &lt;code>&amp;lt;capslock&amp;gt;&lt;/code> in &lt;code>.xmodmap&lt;/code> file.&lt;/p>
+&lt;h4 id="temporary-1">Temporary&lt;/h4>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">xmodmap&lt;/span> ./.xmodmap&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="permanet-1">Permanet&lt;/h4>
+&lt;h5 id="i3-wm">i3-wm&lt;/h5>
+&lt;p>In &lt;code>~/.config/i3/config&lt;/code>&lt;/p>
+&lt;pre class="config">&lt;code>exec_always sleep 1; xmodmap ~/.xmodmap&lt;/code>&lt;/pre>
+&lt;h5 id="others-include-i3-wm">Others include i3-wm&lt;/h5>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co"># /usr/share/X11/xkb/keycodes/evdev&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="co"># exchange the keycodes of &amp;lt;esc&amp;gt; and &amp;lt;capslock&amp;gt;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>For ubuntu, you could try the following, I forget exactly&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dpkg-reconfigure keyboard-configuration&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>超级用户su没有权限修改所属</title><link>https://bensyz.github.io/blog/blogs/su_no_perm/</link><pubDate>Tue, 16 Jul 2019 14:07:27 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/su_no_perm/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="两种情况">两种情况&lt;/h2>
+&lt;h3 id="lsatter-chattr">1. &lt;a href="https://blog.csdn.net/FightingOning/article/details/88684618">lsatter &amp;amp;chattr&lt;/a>&lt;/h3>
+&lt;p>lsatter: 查看文件隐藏属性 chatter: 设置文件的隐藏属性&lt;/p>
+&lt;h3 id="分区文件格式">2.分区文件格式&lt;/h3>
+&lt;p>我自己是上面两个命令都报错:&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">lsattr&lt;/span>: 对设备不适当的 ioctl 操作 读取 File 的标志时&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="ex">chattr&lt;/span>: 对设备不适当的 ioctl 操作 读取 File 的标志时&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="ex">or&lt;/span>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="ex">lsattr&lt;/span>: Inappropriate ioctl for device while reading flags on File&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="ex">chattr&lt;/span>: Inappropriate ioctl for device while reading flags on File&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>后来尝试将文件从fat32格式移动到ext4(Linux 根目录下的分区)，再直接换所属(chown)，发现就可以了。&lt;/p></description></item></channel></rss>

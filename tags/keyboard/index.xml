@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>keyboard on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/keyboard/</link><description>Recent content in keyboard on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 30 Jul 2020 14:55:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/keyboard/index.xml" rel="self" type="application/rss+xml"/><item><title>通过修改注册表修改Windows键位为colemak</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</link><pubDate>Thu, 30 Jul 2020 14:55:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="tl-dr">TL; DR&lt;/h2>
+&lt;h3 id="转-colemak">1. 转 colemak&lt;/h3>
+&lt;pre class="reg">&lt;code>Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+&amp;quot;Scancode Map&amp;quot;=hex:00,00,00,00,00,00,00,00,14,00,00,00,3a,00,01,00,01,00,3a,00,\
+21,00,12,00,19,00,13,00,22,00,14,00,24,00,15,00,26,00,16,00,16,00,17,00,15,\
+00,18,00,27,00,19,00,13,00,1f,00,1f,00,20,00,14,00,21,00,20,00,22,00,31,00,\
+24,00,12,00,25,00,17,00,26,00,18,00,27,00,25,00,31,00,00,00,00,00&lt;/code>&lt;/pre>
+&lt;h3 id="esc-caps-lock-互换">2. &lt;code>&amp;lt;Esc&amp;gt;&lt;/code> &lt;code>&amp;lt;Caps Lock&amp;gt;&lt;/code> 互换&lt;/h3>
+&lt;pre class="reg">&lt;code>Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+&amp;quot;Scancode Map&amp;quot;=hex:00,00,00,00,00,00,00,00,03,00,00,00,3a,00,01,00,01,00,3a,00,00,00,00,00,00&lt;/code>&lt;/pre>
+&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>&lt;a href="../keyboard_map_linux">在Linux中修改键盘为colemak键盘很容易&lt;/a>：&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 暂时&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant workman&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant norman&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a>&lt;span class="co"># Ubuntu&lt;/span>&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dpkg-reconfigure keyboard-configuration&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a>&lt;span class="co"># Arch&lt;/span>&lt;/span>
+&lt;span id="cb3-10">&lt;a href="#cb3-10" aria-hidden="true">&lt;/a>&lt;span class="fu">loadkeys&lt;/span> colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>但是在Windows中就很麻烦了，有推荐在&lt;a href="https://colemak.com/Windows">这里&lt;/a>下载安装，然后修改这一项注册表&lt;code>\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000804&lt;/code> 但是我的使用体验并不好，所以直接修改注册表来映射。&lt;/p>
+&lt;h2 id="解决">解决&lt;/h2>
+&lt;p>新建一个txt文档，填入下面内容后，修改扩展名为&lt;code>reg&lt;/code>，然后双击，也可以手动添加项。&lt;/p>
+&lt;pre class="reg">&lt;code>Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+&amp;quot;Scancode Map&amp;quot;=hex:00,00,00,00,00,00,00,00,14,00,00,00,3a,00,01,00,01,00,3a,00,\
+21,00,12,00,19,00,13,00,22,00,14,00,24,00,15,00,26,00,16,00,16,00,17,00,15,\
+00,18,00,27,00,19,00,13,00,1f,00,1f,00,20,00,14,00,21,00,20,00,22,00,31,00,\
+24,00,12,00,25,00,17,00,26,00,18,00,27,00,25,00,31,00,00,00,00,00&lt;/code>&lt;/pre>
+&lt;p>上面这段注册表的作用是在&lt;code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout&lt;/code>项中新建了一个二进制值&lt;code>Scancode Map&lt;/code>，它的值为等号后面的。具体格式请见 Old_Driver_Lee的&lt;a href="https://blog.csdn.net/Ace_Shiyuan/article/details/81283065">博客&lt;/a>。需要注意的是一开始的&lt;code>14&lt;/code>是16进制，代表下面有20行。&lt;/p>
+&lt;p>另外键位码请看 古城月雨细的&lt;a href="https://blog.csdn.net/lhdalhd1996/article/details/90741092">博客&lt;/a>，在第二篇文章中也提到了作者提供的键位码是要把高低字节交换一下，就比方说作者提供的&lt;code>Caps Lock 00 3A&lt;/code>，在修改注册表时需要写成&lt;code>3A 00&lt;/code>。另外那篇文章只介绍了两个键位互换，所以会分不清楚，哪个是原来的码，哪个是实际要输入的码，经过尝试，发现后面的是原来的键位，前面的是我实际想要的输出的码。举个例子：&lt;/p>
+&lt;pre class="reg">&lt;code>3a,00,01,00&lt;/code>&lt;/pre>
+&lt;p>这串是指，按的是&lt;code>01 00&lt;/code>键，实际输出的是&lt;code>3a 00&lt;/code>, 也就是按下&lt;code>Escape&lt;/code> 输出的是&lt;code>Caps Lock&lt;/code> 键&lt;/p>
+&lt;h2 id="esc-caps-lock-互换-1">&lt;code>&amp;lt;Esc&amp;gt;&lt;/code> &lt;code>&amp;lt;Caps Lock&amp;gt;&lt;/code> 互换&lt;/h2>
+&lt;pre class="reg">&lt;code>Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+&amp;quot;Scancode Map&amp;quot;=hex:00,00,00,00,00,00,00,00,03,00,00,00,3a,00,01,00,01,00,3a,00,00,00,00,00,00&lt;/code>&lt;/pre>
+&lt;pre class="reg">&lt;code>00,00,00,00,
+00,00,00,00,
+14,00,00,00,
+3a,00,01,00,
+01,00,3a,00,
+21,00,12,00,
+19,00,13,00,
+22,00,14,00,
+24,00,15,00,
+26,00,16,00,
+16,00,17,00,
+15,00,18,00,
+27,00,19,00,
+13,00,1f,00,
+1f,00,20,00,
+14,00,21,00,
+20,00,22,00,
+31,00,24,00,
+12,00,25,00,
+17,00,26,00,
+18,00,27,00,
+25,00,31,00,
+00,00,00,00
+# 换过顺序的
+A 1E 00
+B 30 00
+C 2E 00
+D 20 00
+E 12 00
+F 21 00
+G 22 00
+H 23 00
+I 17 00
+J 24 00
+K 25 00
+L 26 00
+M 32 00
+N 31 00
+O 18 00
+P 19 00
+Q 10 00
+R 13 00
+S 1F 00
+T 14 00
+U 16 00
+V 2F 00
+W 11 00
+X 2D 00
+Y 15 00
+Z 2C 00 &lt;/code>&lt;/pre>
+&lt;h2 id="恢复">恢复&lt;/h2>
+&lt;p>删除此注册表项&lt;/p></description></item><item><title>为 Linux colemak 修改键</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</link><pubDate>Wed, 26 Feb 2020 09:17:44 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="change-keyboard-layout-as-colemak-and-esc-with-capslock">Change keyboard layout as colemak, and &lt;code>&amp;lt;Esc&amp;gt;&lt;/code> with &lt;code>&amp;lt;CapsLock&amp;gt;&lt;/code>&lt;/h2>
+&lt;p>For Windows check &lt;a href="../keyboard_map_windows">here&lt;/a>&lt;/p>
+&lt;h3 id="tldr">TLDR&lt;/h3>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/vconsole.conf&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="ex">KEYMAP&lt;/span> = colemak&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="co"># or&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="fu">loadkeys&lt;/span> colemak&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;span class="co"># graphic&lt;/span>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="change-to-colemak">change to colemak&lt;/h3>
+&lt;h4 id="temporary">Temporary&lt;/h4>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">loadkeys&lt;/span> colemak&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>&lt;span class="co"># graphic&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;a href="https://www.cnblogs.com/BlackStorm/p/Ubuntu-Switch-Keyboard-Layouts-Such-As-Colemak-Workman-Norman.html">参考&lt;/a>&lt;/p>
+&lt;h4 id="permanet">Permanet&lt;/h4>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co"># tty (include graphic)&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/vconsole.conf &lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">KEYMAP&lt;/span> = colemak&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>The above way may not work for Ubuntu, so adding &lt;code>setxkbmap us -variant colemak&lt;/code> in &lt;code>~/.xinitrc&lt;/code> may worked. If not see the next section.&lt;/p>
+&lt;h3 id="map-esc-with-capslock">Map &lt;code>Esc&lt;/code> with &lt;code>CapsLock&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">setxkbmap&lt;/span> us -variant colemak&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="fu">xmodmap&lt;/span> -pke &lt;span class="op">&amp;gt;&lt;/span> .xmodmap&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>A small tip: show the key code by &lt;code>xev&lt;/code>&lt;/p>
+&lt;p>Then exchange the key codes of &lt;code>&amp;lt;esc&amp;gt;&lt;/code> and &lt;code>&amp;lt;capslock&amp;gt;&lt;/code> in &lt;code>.xmodmap&lt;/code> file.&lt;/p>
+&lt;h4 id="temporary-1">Temporary&lt;/h4>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">xmodmap&lt;/span> ./.xmodmap&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="permanet-1">Permanet&lt;/h4>
+&lt;h5 id="i3-wm">i3-wm&lt;/h5>
+&lt;p>In &lt;code>~/.config/i3/config&lt;/code>&lt;/p>
+&lt;pre class="config">&lt;code>exec_always sleep 1; xmodmap ~/.xmodmap&lt;/code>&lt;/pre>
+&lt;h5 id="others-include-i3-wm">Others include i3-wm&lt;/h5>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co"># /usr/share/X11/xkb/keycodes/evdev&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="co"># exchange the keycodes of &amp;lt;esc&amp;gt; and &amp;lt;capslock&amp;gt;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>For ubuntu, you could try the following, I forget exactly&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dpkg-reconfigure keyboard-configuration&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>

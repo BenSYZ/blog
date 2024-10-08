@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>formula on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/formula/</link><description>Recent content in formula on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:18:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/formula/index.xml" rel="self" type="application/rss+xml"/><item><title>about effective voltage and rms</title><link>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</link><pubDate>Fri, 21 Apr 2023 15:18:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</guid><description>&lt;h2 id="effective-voltage-of-sinusoidal">Effective voltage of sinusoidal&lt;/h2>
+&lt;p>In alternating current, to simplify the calculation, we often use effective voltage or current.&lt;/p>
+&lt;p>Since I haven’t touched these knowledge points for a long time. I almost forgot how to get the effective voltage and what’s the relation of effective voltage with rms (root mean square). So this is about the derivation of effective voltage.&lt;/p>
+&lt;p>Effective voltage is always used in calculating power or energy during a time. So we start from the expression of power, because voltage and current change with time, we first calculate the energy in time &lt;span class="math inline">\(dt\)&lt;/span>, then integrate.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P(t) = U(t)^2 / R
+\]&lt;/span>&lt;/p>
+&lt;p>Energy expose in &lt;span class="math inline">\(dt\)&lt;/span> is&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P(t) dt = \frac{1}{R} U(t)^2dt
+\]&lt;/span>&lt;/p>
+&lt;p>Integrate it:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+E_\text{one period} = \int_{0}^{T} \frac{1}{R} U(t)^2 dt
+\]&lt;/span>&lt;/p>
+&lt;p>While &lt;span class="math inline">\(U(t)\)&lt;/span> is sinusoidal function in A.C we assume it to be &lt;span class="math inline">\(U(t) = U_\text{m}\sin(2\pi/T \times t)\)&lt;/span>(when &lt;span class="math inline">\(t=T\)&lt;/span>, sine goes to its end of one period &lt;span class="math inline">\(2\pi\)&lt;/span>), in which &lt;span class="math inline">\(U_\text{m}\)&lt;/span> is maximum voltage, or we can call it amplitude, thus,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+E_\text{one period}
+&amp;amp;= \frac{U_\text{m}^2}{R} \int_{0}^{T} \sin^2(\frac{2\pi}{T}t) dt \\
+&amp;amp;= \frac{U_\text{m}^2}{R} \times \frac{1}{2} \int_{0}^{T} (1-\cos(2\frac{2\pi}{T}t)) dt \\
+&amp;amp;= \frac{U_\text{m}^2}{2R}\left(T-0 + \frac{T}{4\pi} \sin(\frac{4\pi}{T} \times T) -0\right) \\
+&amp;amp;=\frac{U_\text{m}^2}{2R} \times T
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>What is a effective voltage? With this we can treat AC as DC, thus&lt;/p>
+&lt;p>&lt;span class="math display">\[
+E_\text{one period} = U_\text{eff}^2 / R \times T
+\]&lt;/span>&lt;/p>
+&lt;p>Thus for a sinusoidal voltage,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{R \frac{U_\text{m}^2}{2R} \times T /T}
+= \frac{1}{\sqrt{2}} U_m
+\]&lt;/span>&lt;/p>
+&lt;h3 id="rms">RMS&lt;/h3>
+&lt;p>If we not introduce sinusoidal, the effective U is &lt;span class="math display">\[
+U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{\frac{1}{T} \int_{0}^{T}U(t)^2dt}
+\]&lt;/span>&lt;/p>
+&lt;p>which happens to be the root mean square:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{rms} \equiv \sqrt{\frac{\sum U^2}{n}}
+\]&lt;/span>&lt;/p>
+&lt;p>or&lt;/p>
+&lt;p>&lt;span class="math display">\[
+U_\text{rms} \equiv \sqrt{ \frac{1}{T} \int_{0}^{T} U(t)^2 dt }
+\]&lt;/span>&lt;/p>
+&lt;p>So in general, if we want to calculate a quantity which is related to square periodic quantity, we can use the rms as its “average”(effective) variable to simplify it.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+z \propto Y(x)^2
+\]&lt;/span>&lt;/p>
+&lt;p>where &lt;span class="math inline">\(z\)&lt;/span> is a quantity we want to get, &lt;span class="math inline">\(Y(x)\)&lt;/span> is periodic, we can use its rms which does not vary with &lt;span class="math inline">\(x\)&lt;/span>, to simplify the calculation.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+z \propto Y_\text{rms}^2
+\]&lt;/span>&lt;/p>
+&lt;p>I feel that we’ve been talk rms is very useful, but now I cannot find it…&lt;/p></description></item></channel></rss>
