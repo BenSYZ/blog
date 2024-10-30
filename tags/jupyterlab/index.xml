@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>jupyterlab on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/jupyterlab/</link><description>Recent content in jupyterlab on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 03 Aug 2020 23:09:45 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/jupyterlab/index.xml" rel="self" type="application/rss+xml"/><item><title>jupyter-lab里的vim，colemak 配置</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;p>&lt;a href="../jupyterlab_colemak">上一篇文章&lt;/a> 介绍了 &lt;code>jupyter-notebook&lt;/code> 怎样 &lt;code>map&lt;/code>。&lt;code>jupyterlab&lt;/code> 是新一代的 &lt;code>jupyter-notebook，&lt;/code> 有点像&lt;code>R-Studio&lt;/code>, 有更多的功能了。&lt;/p>
+&lt;h2 id="tl-dr">TL; DR&lt;/h2>
+&lt;ul>
+&lt;li>install&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># For jupyterlab 2.0&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="ex">jupyter-labextension&lt;/span> install @axlair/jupyterlab_vim&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="co"># vimrc&lt;/span>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="ex">jupyter-labextension&lt;/span> install jupyterlab-vimrc&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ul>
+&lt;li>config&lt;/li>
+&lt;/ul>
+&lt;pre class="json5">&lt;code> &amp;quot;nmap&amp;quot;: [
+[&amp;quot;n&amp;quot;,&amp;quot;j&amp;quot;],
+[&amp;quot;e&amp;quot;,&amp;quot;k&amp;quot;]
+],&lt;/code>&lt;/pre>
+&lt;hr />
+&lt;h2 id="安装jupyterlab">安装&lt;code>jupyterlab&lt;/code>&lt;/h2>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="ex">pip&lt;/span> install --user jupyterlab&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="co"># or&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">conda&lt;/span> activate &lt;span class="op">&amp;lt;&lt;/span>env&lt;span class="op">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="ex">conda&lt;/span> install jupyterlab&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="安装-extension">安装 extension&lt;/h2>
+&lt;h3 id="vim-binding">1. vim binding&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="co"># jupyterlab 1.0&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="ex">jupyter&lt;/span> labextension install jupyterlab_vim&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="co"># jupyterlab 2.0&lt;/span>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="ex">jupyter-labextension&lt;/span> install @axlair/jupyterlab_vim&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="vim-keymap">2. vim keymap&lt;/h3>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="ex">jupyter-labextension&lt;/span> install jupyterlab-vimrc&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="配置">配置&lt;/h4>
+&lt;ol type="1">
+&lt;li>&lt;img src="https://img-blog.csdnimg.cn/20200803225854570.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JlblNZWg==,size_16,color_FFFFFF,t_70#pic_center%20=200x" title="fig:" alt="在这里插入图片描述" />&lt;/li>
+&lt;li>&lt;img src="https://img-blog.csdnimg.cn/20200803225927188.png#pic_center" title="fig:" alt="在这里插入图片描述" />&lt;/li>
+&lt;li>仅供参考&lt;/li>
+&lt;/ol>
+&lt;pre class="json5">&lt;code>{
+// vimrc
+// jupyterlab-vimrc:vimrc
+// Settings to be applied to codemirror vim mode
+// *********************************************
+// imap commands
+// [lhs, rhs] - e.g. &amp;quot;imap&amp;quot;: [[&amp;quot;ii&amp;quot;, &amp;quot;&amp;lt;Esc&amp;gt;&amp;quot;]]
+&amp;quot;imap&amp;quot;: [
+],
+// inoremap commands
+// [lhs, rhs]
+&amp;quot;inoremap&amp;quot;: [
+[]
+],
+// nmap commands
+// [lhs, rhs]
+&amp;quot;nmap&amp;quot;: [
+[&amp;quot;n&amp;quot;,&amp;quot;j&amp;quot;],
+[&amp;quot;e&amp;quot;,&amp;quot;k&amp;quot;]
+],
+// nnoremap commands
+// [lhs, rhs]
+&amp;quot;nnoremap&amp;quot;: [
+[&amp;quot;i&amp;quot;,&amp;quot;l&amp;quot;],
+[&amp;quot;m&amp;quot;,&amp;quot;n&amp;quot;],
+[&amp;quot;k&amp;quot;,&amp;quot;m&amp;quot;],
+[&amp;quot;f&amp;quot;,&amp;quot;e&amp;quot;],
+[&amp;quot;t&amp;quot;,&amp;quot;f&amp;quot;],
+[&amp;quot;l&amp;quot;,&amp;quot;u&amp;quot;],
+[&amp;quot;u&amp;quot;,&amp;quot;i&amp;quot;],
+[&amp;quot;N&amp;quot;,&amp;quot;J&amp;quot;],
+[&amp;quot;E&amp;quot;,&amp;quot;K&amp;quot;],
+[&amp;quot;I&amp;quot;,&amp;quot;L&amp;quot;],
+[&amp;quot;M&amp;quot;,&amp;quot;N&amp;quot;],
+[&amp;quot;K&amp;quot;,&amp;quot;M&amp;quot;],
+[&amp;quot;F&amp;quot;,&amp;quot;E&amp;quot;],
+[&amp;quot;T&amp;quot;,&amp;quot;F&amp;quot;],
+[&amp;quot;L&amp;quot;,&amp;quot;U&amp;quot;],
+[&amp;quot;U&amp;quot;,&amp;quot;I&amp;quot;],
+[&amp;quot;\&amp;#39;&amp;quot;,&amp;quot;&amp;#39;&amp;quot;]
+],
+// vmap commands
+// [lhs, rhs]
+&amp;quot;vmap&amp;quot;: [
+],
+// vnoremap commands
+// [lhs, rhs]
+&amp;quot;vnoremap&amp;quot;: [
+[&amp;quot;n&amp;quot;,&amp;quot;j&amp;quot;],
+[&amp;quot;e&amp;quot;,&amp;quot;k&amp;quot;],
+[&amp;quot;i&amp;quot;,&amp;quot;l&amp;quot;],
+[&amp;quot;k&amp;quot;,&amp;quot;n&amp;quot;],
+[&amp;quot;f&amp;quot;,&amp;quot;e&amp;quot;],
+[&amp;quot;t&amp;quot;,&amp;quot;f&amp;quot;],
+[&amp;quot;l&amp;quot;,&amp;quot;u&amp;quot;],
+[&amp;quot;u&amp;quot;,&amp;quot;i&amp;quot;],
+[&amp;quot;N&amp;quot;,&amp;quot;J&amp;quot;],
+[&amp;quot;E&amp;quot;,&amp;quot;K&amp;quot;],
+[&amp;quot;I&amp;quot;,&amp;quot;L&amp;quot;],
+[&amp;quot;K&amp;quot;,&amp;quot;N&amp;quot;],
+[&amp;quot;F&amp;quot;,&amp;quot;E&amp;quot;],
+[&amp;quot;T&amp;quot;,&amp;quot;F&amp;quot;],
+[&amp;quot;L&amp;quot;,&amp;quot;U&amp;quot;],
+[&amp;quot;U&amp;quot;,&amp;quot;I&amp;quot;],
+[&amp;quot;\&amp;#39;&amp;quot;,&amp;quot;:&amp;quot;]
+]
+}&lt;/code>&lt;/pre>
+&lt;p>其中需要&lt;strong>注意&lt;/strong>的是&lt;/p>
+&lt;pre class="json5">&lt;code> &amp;quot;nmap&amp;quot;: [
+[&amp;quot;n&amp;quot;,&amp;quot;j&amp;quot;],
+[&amp;quot;e&amp;quot;,&amp;quot;k&amp;quot;]
+],&lt;/code>&lt;/pre>
+&lt;p>可能是因为 &lt;code>jupyterlab_vim&lt;/code>, 会涉及到cell之间的跳转，所以需要使用&lt;code>nmap&lt;/code>&lt;/p></description></item><item><title>vim+colemak(keymap)+jupyterlab</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;p>推荐使用 jupyter-lab, &lt;a href="https://blog.csdn.net/BenSYZ/article/details/107775517">见此&lt;/a> ## TL, DR 1. install this extension, and change the &lt;code>vim .jupyter/custom/custom.js&lt;/code>, map &lt;code>n&lt;/code> and &lt;code>e&lt;/code>. Reason is that this extension can help you jump from cells to cells.&lt;/p>
+&lt;ol start="2" type="1">
+&lt;li>change the codemirror in notebook package.&lt;/li>
+&lt;/ol>
+&lt;pre>&lt;code>~/.local/lib/python3.8/site-packages/notebook/static/components/codemirror/keymap/vim.js&lt;/code>&lt;/pre>
+&lt;p>My example is &lt;a href="https://github.com/BenSYZ/jupyter-vim-binding-colemak/tree/master/colemak">here&lt;/a> ## Essay Vimer 很多，所以有作者开发了&lt;a href="jupyter-vim-binding">jupyter-vim-binding&lt;/a>。 colemaker 很少，而上面的 jupyter-vim-binding 的作者只提供了移动的API，不能做到映射全部的键位。&lt;/p>
+&lt;p>我本想修改这个插件来扩展它的功能。从 &lt;a href="https://codemirror.net/">codemirror&lt;/a> 官网下下了 codemirror 的代码，对照了jupyter-vim-binding 对&lt;code>hi&lt;/code>(qwert: &lt;code>hl&lt;/code>)方向的修改成功了，但是 colemak 向下是&lt;code>n&lt;/code>键，所以还需把搜索键引入进来，同样的方法试了一下不行，发现源码中涉及的函数太多，只会照猫画虎。&lt;/p>
+&lt;p>弄了一天，终于搜对了关键字 “jupyter notebook 自定义 codemirror”， 谷歌对中文的支持不好，英文搜出来的修改的手段也太官方了，所以一直解决不了，百度搜到了&lt;a href="https://www.cnblogs.com/ZhangHT97/p/13336975.html">Jupyter Notebook 更改字体、字体大小、行高&lt;/a>。&lt;/p>
+&lt;p>nb! 直接修改 codemirror 在 jupyter 中的源码&lt;/p>
+&lt;pre>&lt;code>~/.local/lib/python3.8/site-packages/notebook/static/components/codemirror/keymap/vim.js&lt;/code>&lt;/pre>
+&lt;p>（写这篇文章的时候想到，其实早该想到 jupyter 没有把 codemirror 当作插件，既然这么无从下手，那说明 codemirror 必定是随着 jupyter 一起装的）&lt;/p>
+&lt;p>到这里事情差不多解决了，突然想到既然这样，jupyter-vim-binding 就没有用了呀。事实告诉我的确如此。然而问题是按&lt;code>n&lt;/code>(&lt;code>j&lt;/code>)不能跳到下一个cell，想到jupyter-vim-binding 不是有这部份吗（在之前想扩展它的功能时看到的）再次启用这个插件，这次我使用了原版的插件。把我自己的部分去掉了。这次问题是真的解决了，啊，完美！！！&lt;/p>
+&lt;p>现在回想起来这个插件的作者不是不想继续扩展而是没必要啊。&lt;/p></description></item></channel></rss>

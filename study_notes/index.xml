@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Study Notes on Ben's Blog</title><link>https://bensyz.github.io/blog/study_notes/</link><description>Recent content in Study Notes on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 09 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/study_notes/index.xml" rel="self" type="application/rss+xml"/><item><title>Electrostatic 2</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link><pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</guid><description>&lt;h2 id="maxwells-equation">Maxwell’s equation&lt;/h2>
+&lt;h3 id="gausss-law">Gauss’s Law&lt;/h3>
+&lt;p>Charge &amp;lt;-&amp;gt; Electric field Flux&lt;/p>
+&lt;p>一个体积内的电荷 vs 这个体积表面的通量&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \cdot E = \frac{\rho}{\epsilon_0}
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>点电荷 &lt;span class="math display">\[
+\rho = Q \delta(r)
+\]&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math display">\[
+\int_V (\nabla \cdot E) dV = \int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV = \frac{Q}{\epsilon_0}
+\]&lt;/span> ???&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+LS= E \cdot R^2 dr d\theta
+\]&lt;/span> &lt;span class="math display">\[
+RS = \int \frac{Q \delta(r)}{\epsilon_0} dV
+\]&lt;/span>&lt;/p>
+&lt;p>…&lt;/p>
+&lt;hr />
+&lt;p>&lt;span class="math display">\[
+dq = \ldots
+\]&lt;/span> …&lt;/p>
+&lt;hr />
+&lt;p>Q1. Find the electric potential distribution due to a sphere, a cylinder, and a film with uniform charge density &lt;span class="math inline">\(\rho\)&lt;/span>&lt;/p>
+&lt;ol type="1">
+&lt;li>sphere &lt;span class="math display">\[
+\int E \cdot dS = \frac{q}{\epsilon_0}
+\]&lt;/span>&lt;/li>
+&lt;/ol>
+&lt;p>&lt;span class="math display">\[
+\int E dS = E \int r^2 d\Omega
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>球外 &lt;span class="math display">\[
+\frac{q}{\epsilon_0}=\frac{\frac{4}{3}\pi R^3 \rho}{\epsilon_0}
+\]&lt;/span>&lt;/li>
+&lt;li>球内 &lt;span class="math display">\[
+\frac{q}{\epsilon_0}=\frac{\frac{4}{3}\pi r^3 \rho}{\epsilon_0}
+\]&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>球壳，外面的电荷：&lt;/p>
+&lt;ol type="1">
+&lt;li>外面不会有 非径向，旋度&lt;/li>
+&lt;li>径向 积分为0&lt;/li>
+&lt;/ol>
+&lt;p>非均匀的带电体，内部画个圆的圆面上的&lt;span class="math inline">\(\int E dS\)&lt;/span>,&lt;span class="math inline">\(E\)&lt;/span> 提不出来&lt;/p>
+&lt;ol start="2" type="1">
+&lt;li>cylinder&lt;/li>
+&lt;li>film ….&lt;/li>
+&lt;/ol>
+&lt;hr />
+&lt;h3 id="surface-charges-and-discontinuous">Surface Charges and Discontinuous&lt;/h3>
+&lt;p>&lt;span class="math display">\[
+\hat{n} \times (E_{+}-E_-) = 0
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+E_+ = E_{||} + E_{\perp}
+\]&lt;/span> means: &lt;span class="math inline">\(E_{||}\)&lt;/span> 在表面是0&lt;/p>
+&lt;h3 id="electrostatic-equilibrium">Electrostatic Equilibrium&lt;/h3>
+&lt;p>Can we have a stable electrostatic system by only using a set of charges?&lt;/p>
+&lt;p>Argument:&lt;/p>
+&lt;p>&lt;img src="./figures/electrostatic_equilibrium.svg" alt="electrostatic_equilibrium.svg">&lt;/p>
+&lt;p>背景场产生的电场指向中心，使得稳定，所以圈内有电荷，矛盾&lt;/p>
+&lt;p>Thompson, Putting&lt;/p>
+&lt;ol type="1">
+&lt;li>静电荷不能稳定&lt;/li>
+&lt;li>电子动要辐射&lt;/li>
+&lt;/ol>
+&lt;p>所以就说负电荷粘在一个正电荷的 pudding,至于正电荷如何稳定不管&lt;/p></description></item><item><title>210916</title><link>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</link><pubDate>Thu, 16 Sep 2021 12:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</guid><description>&lt;h2 id="review">Review&lt;/h2>
+&lt;p>&lt;span class="math inline">\(F=ma\)&lt;/span> 推出一些东西 动量定理…&lt;/p>
+&lt;p>最小做用量原理，路径积分&lt;/p>
+&lt;h2 id="variational-method变分法">Variational Method(变分法)&lt;/h2>
+&lt;p>differential calculus (&lt;span class="math inline">\(d\)&lt;/span>,微分) &lt;span class="math inline">\(\to\)&lt;/span> variational calculus(&lt;span class="math inline">\(\delta\)&lt;/span>,变分)&lt;/p>
+&lt;p>泛函，把函数变一点，区别于之前的微分是&lt;span class="math inline">\(x+\delta x\)&lt;/span>&lt;/p>
+&lt;p>微分 &lt;span class="math display">\[
+f(x+\delta x) = (x+\delta x)^2 = x^2 +2 \delta x x + (\delta x)^2
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{dx^2}{dx} =2x
+\]&lt;/span>&lt;/p>
+&lt;p>变分： 函数变化，basis change, eg. Laplace and zeta 作基底&lt;/p>
+&lt;p>Define: &lt;span class="math inline">\(\tilde{f}(x) = f(x)+\alpha \eta(x)\)&lt;/span> as &lt;strong>a set of function&lt;/strong>(泛函)&lt;/p>
+&lt;p>&lt;span class="math inline">\(f(x)\)&lt;/span> change little can be written as: &lt;span class="math display">\[
+f(x) + \delta \eta(x)
+\]&lt;/span> * treat &lt;span class="math inline">\(f(x)\)&lt;/span> as variable, &lt;span class="math inline">\(f(x)\)&lt;/span> self-increasing&lt;/p>
+&lt;!--
+$$
+\delta \tilde{f}(x) = (f+d \alpha \eta)(x) - f(x) = d \alpha \eta(x) \equiv \delta f d \alpha
+$$
+-->
+&lt;p>&lt;span class="math display">\[
+\delta \tilde{f}(x) = (f+d \alpha \eta)(x) - f(x) = d \alpha \eta(x) \equiv \frac{\partial \tilde{f}}{ \partial x} d \alpha
+\]&lt;/span>&lt;/p>
+&lt;p>??? 有些问题，看一下讲义&lt;span class="math inline">\(f\)&lt;/span> 自增然后呢？&lt;/p>
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(f(x)\)&lt;/span> change a little along the “direction” of function &lt;span class="math inline">\(\eta(x)\)&lt;/span>
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(f(x)=x^2\)&lt;/span>, &lt;span class="math inline">\(\eta(x)=x^3-x^2\)&lt;/span>, the form of &lt;span class="math inline">\(f(x)\)&lt;/span> is closing to &lt;span class="math inline">\(x^3\)&lt;/span>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;h3 id="partial-derivative">Partial derivative:&lt;/h3>
+&lt;p>differential: &lt;span class="math display">\[
+df(x,y) = \frac{\partial f}{ \partial x} dx + \frac{\partial f}{ \partial y} dy
+\]&lt;/span>&lt;/p>
+&lt;p>variational, &lt;span class="math inline">\(F(x,\tilde{y})\)&lt;/span>:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+F(x,y+d \alpha\eta) = F(x,y) + \frac{\partial F}{ \partial \tilde{y}} d \alpha \eta = F(x,y) + \frac{\partial F}{ \partial \tilde{y}} \delta \tilde{y}
+\]&lt;/span>&lt;/p>
+&lt;p>so we can write:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\delta F(x,\tilde{y}) = F(x,y+d \alpha \eta) - F(x,y) = \frac{\partial F}{ \partial \tilde{y}} \delta \tilde{y}
+\]&lt;/span>&lt;/p>
+&lt;p>???&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Note&lt;/strong>: 微分变的是自变量x，自增，但是变分变的是函数的形式，&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;h3 id="application">Application:&lt;/h3>
+&lt;p>Some problems:&lt;/p>
+&lt;ul>
+&lt;li>Brathistochrone curve 最速降线&lt;/li>
+&lt;li>等时降落问题&lt;/li>
+&lt;li>Plateau 问题 肥皂泡&lt;/li>
+&lt;li>等周长&lt;/li>
+&lt;li>测地线&lt;/li>
+&lt;li>费马原理&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;h4 id="brachistochrone-curve最速曲线">brachistochrone curve(最速曲线)&lt;/h4>
+&lt;p>two points(0,0), and &lt;span class="math inline">\((x_0,y_0)\)&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>any block length = &lt;span class="math inline">\(dS=\sqrt{dx^2 + dy^2}\)&lt;/span>&lt;/li>
+&lt;li>speed through this is &lt;span class="math inline">\(v=\sqrt{2gy}\)&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math display">\[
+T=\int dt = \int \frac{dS(y)}{v(y)} = \int_{0}^{x_0} \frac{\sqrt{1+y&amp;#39;^2}}{\sqrt{2gy}} dx
+\]&lt;/span>&lt;/p>
+&lt;p>同除以&lt;span class="math inline">\(dx\)&lt;/span>&lt;/p>
+&lt;p>What to do next is get the extreme value of the T.&lt;/p>
+&lt;p>we don’t know the functions formula, so we change the value of function f, and to see if time will change or not.&lt;/p>
+&lt;p>Assume &lt;span class="math inline">\(F(y,y&amp;#39;)=\sqrt{\frac{1+y&amp;#39;^2}{2gy}}\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\delta T = \int_{0}^{x_0} \left[\frac{\partial F}{ \partial y} \delta y + \frac{\partial F}{ \partial y&amp;#39;} \delta y&amp;#39;\right] dx
+\]&lt;/span>&lt;/p>
+&lt;p>把第二项拆了，分部积分&lt;/p>
+&lt;hr />
+&lt;p>分部积分： &lt;span class="math display">\[
+\int f(x) g&amp;#39;(x) dx = \int f(x) dg(x) = g(x)f(x) - \int g(x) f&amp;#39;(x)dx
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;p>&lt;span class="math display">\[
+\delta T = \left[\frac{\partial F}{ \partial y&amp;#39;}\delta y \right]_{0}^{x_0} +
+\int_{0}^{x_0 }\left[ \frac{\partial F}{ \partial y} - \frac{d}{dx}\left(\frac{\partial F}{ \partial y&amp;#39;}\right)\right] \delta y dx
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>第一项是0，原因&lt;span class="math inline">\(\delta y|_0=0\)&lt;/span>, &lt;span class="math inline">\(\delta y|_{x_0}=0\)&lt;/span>。而&lt;span class="math inline">\(\delta y\)&lt;/span>指的是新函数和原函数的差值，而我们的要求是初末相同，找中间的路径最优解。&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/delta_xy0.svg" alt="" />&lt;figcaption>delta_xy0&lt;/figcaption>
+&lt;/figure>
+&lt;p>So formula in &lt;span class="math inline">\([...]\)&lt;/span> is 0, which is &lt;strong>Euler formula&lt;/strong>(1st )(Euler Lagrange Formula)&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{\partial F}{ \partial y} - \frac{d}{dx}\left(\frac{\partial F}{ \partial y&amp;#39;}\right) = 0
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>时间积分to 位置积分&lt;/li>
+&lt;li>变分变微分&lt;/li>
+&lt;/ul>
+&lt;p>稍微变一下，&lt;strong>Euler formula&lt;/strong>(2nd )&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{\partial F}{ \partial x} - \frac{d}{dx} \left(F-y&amp;#39;\frac{\partial F}{ \partial y&amp;#39;} \right) = 0
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>当&lt;span class="math inline">\(F\)&lt;/span> 不显含&lt;span class="math inline">\(x\)&lt;/span>，括号里的那项是常数。&lt;/li>
+&lt;/ul>
+&lt;p>由于，&lt;span class="math inline">\(F(y,y&amp;#39;) = \sqrt{\frac{1+y^2}{2gy}}\)&lt;/span> and &lt;span class="math inline">\(\frac{\partial F}{ \partial y} - \frac{d}{dx} \left(F-y&amp;#39;\frac{\partial F}{ \partial y&amp;#39;} \right)=0\)&lt;/span>.&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\left(F-y&amp;#39;\frac{\partial F}{ \partial y&amp;#39;} \right)=C=\sqrt{\frac{1+y&amp;#39;^2}{2gy}}\left(1-y&amp;#39;\frac{y&amp;#39;}{1+y&amp;#39;^2}\right) \\
+\Rightarrow y(1+y&amp;#39;^2) = c&amp;#39;
+\]&lt;/span>&lt;/p>
+&lt;p>Assume, &lt;span class="math inline">\(y&amp;#39;= \cot \alpha\)&lt;/span>, &lt;span class="math inline">\(2\alpha=\theta\)&lt;/span>, we have&lt;/p>
+&lt;p>&lt;span class="math display">\[
+x=k(\theta - \sin \theta)\\
+y=k(1-\cos\theta)
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+(x,y) = k(\theta,1) - k(\sin\theta,\cos\theta)
+\]&lt;/span>&lt;/p>
+&lt;p>一个圆在直线上的无摩擦滚动，旋轮线、最速曲线，等时线(球放在任意位置，落到底部的时间相同)，是真正的摆线&lt;/p>
+&lt;hr />
+&lt;h2 id="the-principle-of-least-action最小做用量原理">The Principle of Least Action(最小做用量原理)&lt;/h2>
+&lt;h3 id="from-newton-to-lagrange">From Newton to Lagrange&lt;/h3>
+&lt;ul>
+&lt;li>&lt;p>Newton mechanisms:&lt;/p>
+&lt;ul>
+&lt;li>2 particles position 1D: two lines&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;!--
+, we don't know what will happen in the next time
+2 positions, with extra $(x',y')$
+-->
+&lt;ul>
+&lt;li>&lt;p>Lagrange mechanisms:&lt;/p>
+&lt;ul>
+&lt;li>two particles 1 line, to show their position change&lt;/li>
+&lt;li>&lt;em>configuration space&lt;/em>&lt;/li>
+&lt;li>High dimension to see such system&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>(Hamilton: &lt;em>phase space&lt;/em>)&lt;/p>
+&lt;p>&lt;span class="math inline">\(N\)&lt;/span> particles with 3 coordinates &lt;span class="math inline">\(\rightarrow\)&lt;/span> 1 point with &lt;span class="math inline">\(3N\)&lt;/span> coordinates&lt;/p>
+&lt;h4 id="lagranges-equation">Lagrange’s equation&lt;/h4>
+&lt;p>Define the &lt;strong>Lagrangian(拉格朗日量)&lt;/strong> &lt;span class="math inline">\(\mathcal{L}\)&lt;/span> and &lt;strong>action(做用量)&lt;/strong> &lt;span class="math inline">\(\mathcal{S}\)&lt;/span> as &lt;span class="math display">\[
+\mathcal{L}(x^{A},\dot{x}^{A}) = T(\dot{x}^{A}) - V(x^{A})
+\]&lt;/span> * 动能减势能&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\mathcal{S}[x^{A}(t)] = \int_{t_i}^{t_f}\mathcal{L}(x^{A}(t),\dot{x}^{A}(t))dt
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>&lt;p>之前是求&lt;span class="math inline">\(F\)&lt;/span>，然后求我们关心的&lt;span class="math inline">\(T\)&lt;/span>，从&lt;span class="math inline">\(0\)&lt;/span> to &lt;span class="math inline">\(t_1\)&lt;/span>，使 &lt;span class="math inline">\(T\)&lt;/span> 取极值(&lt;span class="math inline">\(\delta T=0\)&lt;/span>)，以使 &lt;span class="math inline">\(F\)&lt;/span> 是最优解&lt;/p>&lt;/li>
+&lt;li>&lt;p>x - t&lt;/p>&lt;/li>
+&lt;li>&lt;p>T - &lt;span class="math inline">\(\mathcal{S}\)&lt;/span>&lt;/p>&lt;/li>
+&lt;li>&lt;/li>
+&lt;/ul></description></item><item><title>Vector Analysis 2</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</link><pubDate>Thu, 16 Sep 2021 00:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/2/</guid><description>&lt;!--
+*
+-->
+&lt;p>Q1: Derive the formula for the volume of a sphere&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+V &amp;amp;=\int dV \\
+&amp;amp;= \int r^2\sin\theta dr d\theta d\phi\\
+&amp;amp;=\frac{1}{3} r^3|_{0}^{r} \times (-\cos\theta)|_{0}^{\pi}\times 2\pi\\
+&amp;amp;=\frac{4}{3}r^3
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math inline">\(r^2\sin\theta\)&lt;/span>: it can also be derivative form Jacobi formula.&lt;/p>
+&lt;hr />
+&lt;h2 id="curvilinear-coordinates">Curvilinear Coordinates&lt;/h2>
+&lt;h3 id="spherical-polar-coordinates-spc">Spherical polar coordinates (SPC):&lt;/h3>
+&lt;h4 id="review">review&lt;/h4>
+&lt;ul>
+&lt;li>4 types integrate&lt;/li>
+&lt;li>Curvilinear Coordinates&lt;/li>
+&lt;li>&lt;span class="math inline">\(dl\)&lt;/span>, &lt;span class="math inline">\(dl_\theta\)&lt;/span>, &lt;span class="math inline">\(dl_\phi\)&lt;/span> 对球坐标和柱坐标&lt;/li>
+&lt;/ul>
+&lt;h4 id="derivatives-in-spc">Derivatives in SPC&lt;/h4>
+&lt;h5 id="gradient-in-the-spc">1. Gradient in the SPC&lt;/h5>
+&lt;p>Definition of the gradient:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+df \equiv \frac{\partial f}{ \partial r} dr+ \frac{\partial f}{ \partial \theta} d\theta + \frac{\partial f}{ \partial \phi } d\phi
+\]&lt;/span>&lt;/p>
+&lt;p>We define &lt;span class="math inline">\(\nabla f\)&lt;/span> as&lt;/p>
+&lt;p>&lt;span class="math display">\[
+df = \nabla f \cdot d\bold{l} = \nabla f \cdot ( dl_r \hat{r} + dl_\theta \hat{\theta} + dl_\phi \hat{\phi})
+\]&lt;/span>&lt;/p>
+&lt;p>because &lt;span class="math inline">\(dl\)&lt;/span> defined as &lt;span class="math display">\[
+d\bold{l} \equiv dl_r \hat{r} + dl_\theta \hat{\theta} + dl_\phi \hat{\phi} = \hat{r} dr + \hat{\theta}\sin\theta d\theta + \hat{\phi} r\sin\theta d\phi
+\]&lt;/span>&lt;/p>
+&lt;p>To meet the definition of &lt;span class="math inline">\(df\)&lt;/span>,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla f = \frac{\partial f}{ \partial r} \hat{r}+ \frac{1}{r}\frac{\partial f}{ \partial \theta} \hat{\theta} + \frac{1}{r\sin\theta} \frac{\partial f}{ \partial \phi} \hat{\phi}\\
+= \frac{1}{h_1} dr + \frac{1}{h_2}d\theta + \frac{1}{h_3}d\phi
+\]&lt;/span>&lt;/p>
+&lt;h5 id="divergence-in-the-spc">2. Divergence in the SPC&lt;/h5>
+&lt;p>To get &lt;span class="math display">\[
+\nabla \cdot \bold{A}
+\]&lt;/span>&lt;/p>
+&lt;p>We need start from: &lt;span class="math inline">\(\int (\nabla \cdot \bold{A}) dV = \int_{\partial V} \bold{A} \cdot d\bold{S}\)&lt;/span>&lt;/p>
+&lt;hr />
+&lt;ul>
+&lt;li>&lt;p>&lt;span class="math inline">\(dS_z=\hat{x}dx \times \hat{y} dy=dxdy\hat{z}\)&lt;/span>&lt;/p>&lt;/li>
+&lt;li>&lt;p>So for a small cubic: &lt;span class="math inline">\(dS=dl_\phi dl_\theta\hat{r}+dl_r dl_\phi \hat{\theta} + dl_r dl_\theta\phi\)&lt;/span>&lt;/p>&lt;/li>
+&lt;/ul>
+&lt;p>From the &lt;span class="math inline">\(\int \nabla \cdot \bold{A} dV = \int \bold{A} \cdot d\bold{S}\)&lt;/span>, we get &lt;span class="math inline">\(\nabla \cdot \bold{A} = \frac{1}{dV}(\bold{A} \cdot d\bold{S})\)&lt;/span>&lt;/p>
+&lt;ol type="1">
+&lt;li>&lt;span class="math display">\[
+\nabla \cdot \bold{A} dV \equiv \nabla \cdot \bold{A} h_1 h_2 h_3 dr d\theta d\phi
+\]&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math display">\[
+\bold{A} \cdot d\bold{S} = \Delta_r(A_r dl_\theta dl_\phi) + \Delta_\theta(A_\theta dl_r dl_\phi) + \Delta_\phi (A_\phi dl_\theta dl_r)
+\]&lt;/span>&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>第一项是穿过&lt;span class="math inline">\(\theta \phi\)&lt;/span> 面的通量&lt;/li>
+&lt;/ul>
+&lt;p>Then &lt;span class="math display">\[
+\nabla \cdot \bold{A} = \frac{1}{h_1h_2h_3} \left[\frac{\partial (A_r h_2 h_3)}{ \partial r} +\frac{\partial (A_\theta h_1 h_3)}{ \partial \theta} + \frac{\partial (A_\phi h_1h_2)}{ \partial \phi} \right]
+\]&lt;/span>&lt;/p>
+&lt;p>Eg. &lt;span class="math display">\[
+\frac{1}{h_1h_2h_3} \frac{\partial A_rh_2h_3}{ \partial r} = \frac{1}{r^2\sin\theta} \frac{\partial \frac{1}{r^2} r^2\sin\theta}{ \partial r}
+=\frac{1}{r^2} \frac{\partial A_r r^2}{ \partial r}
+\]&lt;/span>&lt;/p>
+&lt;h5 id="curl-in-the-spc">3. Curl in the SPC&lt;/h5>
+&lt;p>矢量场中一个方向的分量和另外两个坐标有关，和标量场不同。比方说，沿着&lt;span class="math inline">\(y\)&lt;/span> 轴向上，只有&lt;span class="math inline">\(y\)&lt;/span> 在变，而此时，&lt;span class="math inline">\(x\)&lt;/span> 方向的电场会变小。&lt;/p>
+&lt;p>To get &lt;span class="math inline">\(\nabla \times \bold{A}\)&lt;/span>, we start from&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int (\nabla \times \bold{A}) \cdot d\bold{S} = \oint_{\partial S} \bold{A} \cdot d\bold{l}
+\]&lt;/span>&lt;/p>
+&lt;p>我们先只写 &lt;span class="math inline">\(r\)&lt;/span> 方向的分量：&lt;/p>
+&lt;p>&lt;img src="./figures/curl_in_SPC.svg" alt="curl_in_SPC" width=500>&lt;/p>
+&lt;ol type="1">
+&lt;li>&lt;p>&lt;span class="math display">\[
+\nabla \times A \cdot d\bold{S}_r = \nabla \times A \ h_2h_3 d\theta d\phi \ \hat{\theta} \times \hat{\phi}
+=(\nabla \times A)_r \ h_2h_3 d\theta d\phi
+\]&lt;/span>&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;span class="math display">\[
+\bold{A}_r \cdot d\bold{l}_r = - \Delta_\phi(A_\theta h_2d\theta) + \Delta_\theta(A_\phi h_3 d\phi)
+\]&lt;/span>&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;hr />
+&lt;p>&lt;span class="math display">\[
+(\nabla \times \bold{A})_r = \frac{\bold{A}\cdot d\bold{l}}{dS}=- \frac{\Delta_\phi(A_\theta h_2) }{h_2h_3d\phi} + \frac{\Delta_\theta(A_\phi h_3)}{h_2h_3d\theta}
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>here the &lt;span class="math inline">\(dS=h_2h_3 d\theta d\phi\)&lt;/span>, which is a scalar.&lt;/li>
+&lt;/ul>
+&lt;p>So, curl in SPC&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \times \bold{A} = \frac{1}{h_1h_2h_3}
+\begin{pmatrix}
+h_1\hat{r} &amp;amp; h_2\hat{\theta} &amp;amp; h_3\hat{\phi}\\
+\partial_r &amp;amp; \partial_\theta &amp;amp; \partial_\phi\\
+h_1A_r &amp;amp; h_2A_\theta &amp;amp; h_3A_\phi
+\end{pmatrix}
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;p>Q2: Find the formula of curl in the &lt;strong>spherical polar coordinate&lt;/strong> &lt;span class="math display">\[
+\nabla \times A =
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;h2 id="dirac-delta-function">Dirac Delta Function&lt;/h2>
+&lt;p>Consider the vector function &lt;span class="math inline">\(v=\frac{1}{r^2} \hat{r}\)&lt;/span>, from the very begin (problem 1.16): &lt;span class="math display">\[
+\begin{aligned}
+\nabla \cdot \bold{v} &amp;amp;= \frac{\partial }{ \partial x} \left(\frac{x}{r^3}\right)
++ \frac{\partial }{ \partial y} \left(\frac{y}{r^3}\right)
++ \frac{\partial }{ \partial z} \left(\frac{z}{r^3}\right)\\
+&amp;amp;=\frac{\partial }{ \partial x} \left[x(x^2+y^2+z^2)^{-\frac{3}{2}}\right]
++\frac{\partial }{ \partial y} \left[y(x^2+y^2+z^2)^{-\frac{3}{2}}\right]
++\frac{\partial }{ \partial z} \left[z(x^2+y^2+z^2)^{-\frac{3}{2}}\right]\\
+&amp;amp;=()^{-\frac{3}{2}} + x(-\frac{3}{2})()^{-\frac{5}{2}}2x
++()^{-\frac{3}{2}} + y(-\frac{3}{2})()^{-\frac{5}{2}}2y
++()^{-\frac{3}{2}} + z(-\frac{3}{2})()^{-\frac{5}{2}}2z\\
+&amp;amp;=3r^{-3}-3r^{-5}(x^2+y^2+z^2)=3r^{-3}-3r^{-3}=0
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>or&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \cdot \bold{v} = \frac{1}{r^2} \frac{\partial }{ \partial r} \left(r^2 \frac{1}{r^2}\right) = 0
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;p>But&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\oint \bold{v} \cdot d\bold{S} = \int_{0}^{R} \left(\frac{1}{r^2}\hat{r}\right) \cdot (R^2 \sin \theta d \theta d\phi \hat{r}) = 4\pi
+\]&lt;/span> where, &lt;span class="math display">\[
+d\bold{S}=dl_\theta \hat{\theta} \times dl_\phi \hat{\phi} = R d\theta R \sin \theta d\phi \hat{r}
+\]&lt;/span>&lt;/p>
+&lt;p>The contradiction comes from the point &lt;span class="math inline">\(r = 0\)&lt;/span>, where &lt;span class="math inline">\(\frac{1}{r^2}\)&lt;/span> blows up. So the point &lt;span class="math inline">\(r = 0\)&lt;/span> contributes to the integration, giving the &lt;span class="math inline">\(4\pi\)&lt;/span> result.&lt;/p>
+&lt;p>The &lt;strong>Answer&lt;/strong> is that &lt;span class="math inline">\(\nabla \cdot \bold{v} =0\)&lt;/span> everywhere &lt;em>except&lt;/em> at the origin. The calculation of &lt;span class="math inline">\(\frac{\partial }{ \partial x} \left(\frac{x}{r^2}\right)\)&lt;/span> at origin doesn’t work. (or &lt;span class="math inline">\(\frac{\partial }{ \partial r} \left(r^2 \frac{1}{r^2}\right)\)&lt;/span> not work at origin &lt;span class="math inline">\(\frac{0}{0}\)&lt;/span>).&lt;/p>
+&lt;hr />
+&lt;ul>
+&lt;li>空间角&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math display">\[
+d\Omega \equiv \sin\theta d \theta d\phi
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>来源：当r取R时，上面那个式子没有&lt;span class="math inline">\(r\)&lt;/span>了，就变成&lt;span class="math inline">\(\int d\Omega\)&lt;/span>了，或者说这个式子本身和&lt;span class="math inline">\(r\)&lt;/span> 无关，或者说可以用在求flux上。&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;h3 id="define-dirac-function">Define Dirac function&lt;/h3>
+&lt;h4 id="d">1D:&lt;/h4>
+&lt;p>&lt;span class="math display">\[
+\delta (x-a) =
+\begin{cases}
+0, &amp;amp;\text{ if } x\neq a \\
+\infty &amp;amp;\text{ if }x = a \\
+\end{cases}
+\text{ and}
+\int_{-\infty}^{+\infty} \delta(x-a)dx=1
+\]&lt;/span>&lt;/p>
+&lt;h4 id="d-1">3D&lt;/h4>
+&lt;p>&lt;span class="math display">\[
+\nabla \cdot \left(\frac{1}{r^2}\hat{\bold{r}}\right) \equiv \frac{1}{4\pi}\delta(r)
+\]&lt;/span>&lt;/p>
+&lt;h4 id="性质">性质：&lt;/h4>
+&lt;p>&lt;span class="math display">\[
+\int_{-\infty}^{+\infty} f(x) \delta(x-a) dx =f(a)
+\]&lt;/span> &lt;span class="math display">\[
+\delta(kx) = \frac{1}{|k|} \delta(x)
+\]&lt;/span>&lt;/p>
+&lt;p>LS变瘦了,原来的&lt;span class="math inline">\(1\)&lt;/span>，现在&lt;span class="math inline">\(\frac{1}{k}\)&lt;/span> 就够了&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_{a}^{b} f(x) \delta[ g(x) - g(x_0) ] dx = f(x_j) / \left|\frac{dg}{dx}\right||_{x=x_j}
+\]&lt;/span>&lt;/p>
+&lt;h2 id="the-theory-of-vector-fields">The Theory of Vector Fields&lt;/h2>
+&lt;h3 id="helmholtzs-theorem">Helmholtz’s Theorem:&lt;/h3>
+&lt;p>Maxwell reduce the &lt;span class="math inline">\(E\)&lt;/span> and &lt;span class="math inline">\(B\)&lt;/span> into four equations, and this four equations are all about the divergence and the curl of &lt;span class="math inline">\(\bold{E}\)&lt;/span> and &lt;span class="math inline">\(\bold{B}\)&lt;/span>. So here raise an important mathematical question: To what extent is a vector function determined by its divergence and curl?(一个向量函数在多大程度上是由它的散度和卷度决定的), 即给一个向量函数的散度和旋度，是否能得到这个向量函数。&lt;/p>
+&lt;p>事实上，是不行的，需要一个边界条件，Helmholtz theorem 告诉说给一些边界条件之后可以唯一确定这个函数。&lt;/p>
+&lt;hr />
+&lt;p>数学的表示： the &lt;em>divergence&lt;/em> of &lt;span class="math inline">\(\bold{F}\)&lt;/span> (which stands for &lt;span class="math inline">\(\bold{E}\)&lt;/span> or &lt;span class="math inline">\(\bold{B}\)&lt;/span>) is a specified (scalar) function D, &lt;span class="math display">\[
+\nabla \cdot \bold{F} = D
+\]&lt;/span>&lt;/p>
+&lt;p>and the curl of &lt;span class="math inline">\(\bold{F}\)&lt;/span> is a specified (vector) function &lt;span class="math inline">\(\bold{C}\)&lt;/span>,&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \times \bold{F}=\bold{C}
+\]&lt;/span>&lt;/p>
+&lt;p>当然 &lt;span class="math inline">\(\bold{C}\)&lt;/span> must be divergenceless, &lt;span class="math inline">\(\nabla \cdot \bold{C}=0\)&lt;/span>，旋度的散度为&lt;span class="math inline">\(0\)&lt;/span>&lt;/p>
+&lt;hr />
+&lt;p>Eg: divergence =0 , curl = 0, 的解：&lt;span class="math inline">\(\bold{F}=\bold{0}\)&lt;/span> &lt;span class="math inline">\(F=yz \hat{\bold{x}} + zx \hat{\bold{y}} + xy \hat{\bold{z}}\)&lt;/span> &lt;span class="math inline">\(F=\sin x\cosh y \hat{\bold{x}} - \cos x \sinh \hat{\bold{y}}\)&lt;/span>&lt;/p>
+&lt;hr />
+&lt;h3 id="potentials">Potentials&lt;/h3>
+&lt;h4 id="curl-less-field">Curl-less field&lt;/h4>
+&lt;p>If the curl of a vector field(&lt;span class="math inline">\(\bold{F}\)&lt;/span>) vanishes(everywhere), then &lt;span class="math inline">\(\bold{F}\)&lt;/span> can be written as gradient of a &lt;strong>Scalar potential&lt;/strong>(&lt;span class="math inline">\(V\)&lt;/span>):&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \times \bold{F} = 0\Leftrightarrow \bold{F} = - \nabla V.
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>Theorem 1 &lt;strong>Curl-less&lt;/strong> (“&lt;strong>irrotational&lt;/strong>”) &lt;strong>fields&lt;/strong>:(保守场)
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(\nabla \times \bold{F} = 0\)&lt;/span> everywhere&lt;/li>
+&lt;li>&lt;span class="math inline">\(\int_a^{b} \bold{F} \cdot d\bold{l}\)&lt;/span> is independent of path, for any given end points.&lt;/li>
+&lt;li>&lt;span class="math inline">\(\oint\bold{F} \cdot d\bold{l} =0\)&lt;/span> for any closed loop&lt;/li>
+&lt;li>&lt;span class="math inline">\(\bold{F}\)&lt;/span> is gradient of some scalar, &lt;span class="math inline">\(\bold{F} = -\nabla V\)&lt;/span>(+ any constant)&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h4 id="divergence-less-field">Divergence-less field&lt;/h4>
+&lt;p>If the divergence of a vector field (&lt;span class="math inline">\(\bold{F}\)&lt;/span>) vanishes(everywhere), then &lt;span class="math inline">\(\bold{F}\)&lt;/span> can be expressed as the curl of &lt;strong>Vector potential&lt;/strong>(&lt;strong>A&lt;/strong>): &lt;span class="math display">\[
+\nabla \cdot \bold{F} =0 \Leftrightarrow \bold{F} = \nabla \times \bold{A}
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>Theorem 2 &lt;strong>Divergence-less&lt;/strong> (or “&lt;strong>solenoidal&lt;/strong>”) &lt;strong>fields&lt;/strong>:
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(\nabla \cdot \bold{F} = 0\)&lt;/span> everywhere&lt;/li>
+&lt;li>&lt;span class="math inline">\(\int \bold{F} \cdot d\bold{a}\)&lt;/span> is independent of surface, for any given bound.&lt;/li>
+&lt;li>&lt;span class="math inline">\(\oint\bold{F} \cdot d\bold{a} =0\)&lt;/span> for any closed surface&lt;/li>
+&lt;li>&lt;span class="math inline">\(\bold{F}\)&lt;/span> is curl of some scalar, &lt;span class="math inline">\(\bold{F} = -\nabla \times \bold{A}\)&lt;/span>(+gradient of any scalar function)&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>Any vector field &lt;span class="math inline">\(\bold{F}\)&lt;/span> can be written as gradient of a scalar of a scalar plus the curl of a vector: &lt;span class="math display">\[
+\bold{F} = -\nabla V + \nabla \times A
+\]&lt;/span>&lt;/p>
+&lt;p>Any vector field resolved into curl-free vector field and divergence-free vector field&lt;/p>
+&lt;ul>
+&lt;li>curl free: &lt;span class="math inline">\(\nabla \times (\nabla \phi) = 0\)&lt;/span>&lt;/li>
+&lt;li>divergence free: &lt;span class="math inline">\(\nabla \cdot (\nabla \times \vec{A}) = 0\)&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(\nabla \cdot F= D\)&lt;/span> and &lt;span class="math inline">\(\nabla \times F = C\)&lt;/span>&lt;/li>
+&lt;li>physical: &lt;span class="math inline">\(\nabla \cdot (\nabla \phi) =\nabla \cdot E\)&lt;/span> and &lt;span class="math inline">\(\nabla \times A = \vec{B}\)&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;p>Q3: In the following, &lt;span class="math inline">\(p\)&lt;/span> is a constant vector, and &lt;span class="math inline">\(r=x\hat{x}+y\hat{y}+z\hat{z}\)&lt;/span> &lt;span class="math display">\[
+\begin{aligned}
+\nabla \cdot r\\
+\nabla(r \cdot r)\\
+\end{aligned}
+\]&lt;/span> and &lt;span class="math display">\[
+\begin{aligned}
+\nabla p \cdot r\\
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>Solve: &lt;span class="math display">\[
+\nabla \cdot r =\nabla \cdot r = 3
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla(r \cdot r) = 2x\hat{x} +2y \hat{y} +2z \hat{z} = 2 r
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla p \cdot r = \nabla (p_1x + p_2y+p_3z) = p_1
+\]&lt;/span>&lt;/p></description></item><item><title>Vector Analysis 1</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</link><pubDate>Tue, 14 Sep 2021 00:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/electrodynamics/1.vector_analysis/1/</guid><description>&lt;h2 id="vector-analysis">Vector Analysis&lt;/h2>
+&lt;p>Review Triple product&lt;/p>
+&lt;ul>
+&lt;li>Vector triple product &lt;span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - C (A \cdot B)
+\]&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>Proved by expand &lt;span class="math inline">\(ABC\)&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>Scalar triple product &lt;span class="math display">\[
+A \cdot (B \times C) = B \cdot(C \times A)
+\]&lt;/span>&lt;/li>
+&lt;li>轮换&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;p>Q1. Show that &lt;span class="math display">\[
+(a \times b) \times (a\times c) = (a \cdot(b\times c))a
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+(a \times b) \cdot (c\times d) = (a \cdot c)(b \cdot d) - (a \cdot d)(b \cdot c)
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;ul>
+&lt;li>Relation of divergences &lt;span class="math display">\[
+\nabla \cdot (fA) = (\nabla f) \cdot A + f(\nabla \cdot A)
+\]&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math inline">\(\nabla\)&lt;/span> operate on f, that’s gradient, from the gradient definition.&lt;/p>
+&lt;ul>
+&lt;li>Relation of curls &lt;span class="math display">\[
+\nabla \times (fA) = (\nabla f) \times A + f(\nabla \times A)
+\]&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math inline">\(\nabla\)&lt;/span> operate on f, that’s still gradient&lt;/p>
+&lt;h3 id="second-derivatives">Second derivatives&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 50%" />
+&lt;col style="width: 50%" />
+&lt;/colgroup>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>div grad f &lt;br> curl grad f&lt;/td>
+&lt;td>&lt;span class="math inline">\(\nabla \cdot (\nabla f) = \nabla^2 f = \Delta f\)&lt;/span> &lt;br> &lt;span class="math inline">\(\nabla \times (\nabla f) =0\)&lt;/span> (可以看成两个相同的矢量相乘）&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>grad div A&lt;/td>
+&lt;td>&lt;span class="math inline">\(\nabla (\nabla \cdot A)\)&lt;/span>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>div curl A &lt;br> curl curl A&lt;/td>
+&lt;td>&lt;span class="math inline">\(\nabla \cdot (\nabla \times A) =0\)&lt;/span> &lt;br> &lt;span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)&lt;/span>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)&lt;/span>的证明似乎也要展开，而不能使用&lt;span class="math inline">\(A \times(B \times C)\)&lt;/span>?不是的， &lt;span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - C (A \cdot B)
+\]&lt;/span> 也可以写成&lt;/p>
+&lt;p>&lt;span class="math display">\[
+A \times (B\times C) = B(A \cdot C) - (A \cdot B) C
+\]&lt;/span>&lt;/p>
+&lt;p>当&lt;span class="math inline">\(A \cdot B\)&lt;/span> 是数的时候，两个可以互换，但当他们是算符的时候就会丧失一定的一般性。&lt;/p>
+&lt;p>有二重导可以想想上面几个公式。&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Note&lt;/strong>: Extra for Laplace,&lt;span class="math inline">\(\nabla^2\)&lt;/span>:&lt;/li>
+&lt;li>scalar: &lt;span class="math inline">\(\nabla^2f = \nabla \cdot (\nabla f)\)&lt;/span>&lt;/li>
+&lt;li>vector: &lt;span class="math inline">\(\nabla^2 A \equiv (\nabla \cdot \nabla)A = \nabla (\nabla \cdot A) - \nabla \times (\nabla \times A)\)&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;p>Q2. From Maxwell’s equations &lt;span class="math display">\[
+\left\{\begin{matrix}
+\nabla \cdot E = 0; \nabla \times E = - \frac{\partial B}{\partial t} \\
+\nabla \cdot B = 0; \nabla \times B = \mu_0 \epsilon_0 \frac{\partial E}{\partial t} \\
+\end{matrix}\right.
+\]&lt;/span>&lt;/p>
+&lt;p>Derive the wave equations: &lt;span class="math display">\[
+\begin{matrix}
+\nabla^2 E = \mu_0\epsilon_0\frac{\partial^2 E}{\partial^2 t} \\
+\nabla^2 B = \mu_0\epsilon_0\frac{\partial^2 B}{\partial^2 t} \\
+\end{matrix}
+\]&lt;/span>&lt;/p>
+&lt;p>Solve:&lt;/p>
+&lt;p>Cross product to dot product: &lt;span class="math inline">\(\nabla \times (\nabla \times A) = \nabla(\nabla \cdot A) - \nabla^2 A\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla \times (\nabla \times E)=-\mu_0 \epsilon_0 \frac{\partial^2 E}{ \partial t^2}
+\]&lt;/span>&lt;/p>
+&lt;p>So&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\nabla^2E= \mu_0 \epsilon_0 \frac{\partial^2 E}{ \partial t^2} + \nabla(\nabla \cdot E)
+\]&lt;/span>&lt;/p>
+&lt;p>While the divergence of &lt;span class="math inline">\(E\)&lt;/span> is &lt;span class="math inline">\(0\)&lt;/span>, because:&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+\nabla \times \frac{\hat{r}}{r^2} &amp;amp;= \nabla \times \frac{\bold{r}}{r^3} \\
+&amp;amp;=\nabla \times \left(\nabla \frac{1}{r}\right)\\
+&amp;amp;=0
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>NOTE&lt;/strong>: How to understand &lt;span class="math inline">\(\nabla^2 A\)&lt;/span>? &lt;span class="math inline">\(\Rightarrow\)&lt;/span> &lt;span class="math inline">\((\nabla \cdot \nabla)E\)&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;h2 id="integral-calculus">Integral Calculus&lt;/h2>
+&lt;p>Newton-Leibniz formula: 1D&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_{x_1}^{x_2} f(x) dx = F(x)|_{x_1}^{x_2}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;strong>Meaning&lt;/strong>: Only care about the value on two side point. What about 3D? &lt;span class="math display">\[
+\int_{?}^{?}f(x,y,z)?dxdydz
+\]&lt;/span>&lt;/p>
+&lt;p>In 3D, three types of integrals&lt;/p>
+&lt;ul>
+&lt;li>Line (or path) integrals&lt;/li>
+&lt;li>Surface integrals (or flux)&lt;/li>
+&lt;li>Volume integrals&lt;/li>
+&lt;/ul>
+&lt;h3 id="line-integrals">line integrals&lt;/h3>
+&lt;p>&lt;span class="math display">\[
+\int_{a \mathcal{P}}^{b}v \cdot dl
+\]&lt;/span>&lt;/p>
+&lt;p>For a closed loop: &lt;span class="math display">\[
+\oint_\mathcal{P} \bold{v} \cdot d \bold{l} = 0
+\]&lt;/span>&lt;/p>
+&lt;p>Conservative(保守场): &lt;span class="math display">\[
+\int_{a \mathcal{P}}^b \bold{v} \cdot d \bold{l}
+=\int_{a \mathcal{P&amp;#39;}}^b \bold{v} \cdot d \bold{l}
+\]&lt;/span>&lt;/p>
+&lt;p>不同路径的值是一样的&lt;/p>
+&lt;h3 id="surface-integral">Surface Integral&lt;/h3>
+&lt;p>&lt;span class="math display">\[
+\int_{\mathcal{S}} v \cdot dS
+\]&lt;/span>&lt;/p>
+&lt;p>Flux&lt;/p>
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(dS\)&lt;/span> surface define a direction&lt;/li>
+&lt;li>&lt;span class="math inline">\(v\)&lt;/span> or &lt;span class="math inline">\(E\)&lt;/span> has a direction&lt;/li>
+&lt;/ul>
+&lt;p>Surface integral for a closed surface &lt;span class="math display">\[
+\oint_{\mathcal{S}} \bold{v}\cdot d\bold{S}
+\]&lt;/span>&lt;/p>
+&lt;h3 id="volume-integrals">Volume Integrals&lt;/h3>
+&lt;p>&lt;span class="math display">\[
+\int_{\mathcal{V}}TdV
+\]&lt;/span>&lt;/p>
+&lt;h3 id="fundamental-theorem-of-gradient-divergence-and-curl">Fundamental theorem of gradient, divergence and curl&lt;/h3>
+&lt;p>Like Newton-Leibniz equation, we only cares about the two side of, and there is no need to care about things in.&lt;/p>
+&lt;p>Meaning: 降维&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_{aP}^{b}\nabla f \cdot d\bold{l}=f(b)-f(a)
+\]&lt;/span> &lt;span class="math display">\[
+\oint_{P} \nabla \mathcal{f} \cdot d\bold{l}=0
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_\mathcal{V}(\nabla \cdot \bold{v} )dV = \oint_\mathcal{S} \bold{v} \cdot d \bold{S}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\int_{\mathcal{S}} (\nabla \times \bold{v}) \cdot d \mathcal{S} = \oint_{\mathcal{P}} \bold{v} \cdot d \bold{l}
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;h3 id="proofs">Proofs:&lt;/h3>
+&lt;h4 id="fundamental-theorem-of-gradient">Fundamental theorem of gradient:&lt;/h4>
+&lt;p>From the beginning &lt;span class="math inline">\(\nabla f \cdot dl \equiv df\)&lt;/span> &lt;span class="math display">\[
+\begin{aligned}
+\int df \cdot dl =&amp;amp; \int_{r(x,y,z)}^{r&amp;#39;(x,y,z)} \frac{\partial f}{ \partial x} dx + \frac{\partial f}{ \partial y} dy + \frac{\partial f}{ \partial z} dz\\
+=&amp;amp; \int \frac{\partial f}{ \partial x} dx + \ldots \\
+=&amp;amp; f(x_1,y_0,z_0) - f(x_0,y_0,z_0) \\
+&amp;amp;+f(x_1,y_1,z_0) - f(x_1,y_0,z_0)\\
+&amp;amp;+ f(x_1,y_1,z_1)-f(x_1,y_0,z_0)\\
+=&amp;amp; f(x_1,y_1,z_1) - f(x_0,y_0,z_0)
+\end{aligned}
+\]&lt;/span> 最后一步的图像类似：&lt;/p>
+&lt;p>&lt;img src="figures/全微分.jpg" width=200 height=200 alt="全微分">&lt;/p>
+&lt;hr />
+&lt;h4 id="fundamental-theorem-of-divergence">Fundamental theorem of divergence:&lt;/h4>
+&lt;p>&lt;span class="math display">\[
+\int_\mathcal{V}(\nabla \cdot \bold{v} )dV = \oint_\mathcal{S} \bold{v} \cdot d \bold{S}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;img alt="fundamental_theorem_of_divergence" src="./figures/fundamental_theorem_of_divergence.png" width=200>&lt;/p>
+&lt;p>先看通量，右边&lt;/p>
+&lt;ul>
+&lt;li>对一个面&lt;span class="math inline">\(v\)&lt;/span> has 3 values
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(v_x(x,y,z)\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(v_y(x,y,z)\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(v_z(x,y,z)\)&lt;/span>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>Surface vector points out forward of a small volume&lt;/li>
+&lt;/ul>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+\bold{v} \cdot d\bold{S} &amp;amp;= [v_x(x_2) - v_x(x_1)]dydz\\
+&amp;amp;+ [v_y(y_2) -v_y(y_1)] dxdz\\
+&amp;amp;+ [v_z(z_2) -v_z(z_1)] dxdy\\
+&amp;amp;= \left[\frac{\partial v_x}{ \partial x} + \frac{\partial v_y}{ \partial y} + \frac{\partial v_z}{ \partial z}\right] dxdydz\\
+&amp;amp;= \nabla v \cdot dV
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>这也是&lt;strong>散度&lt;/strong>这么定义的来源&lt;/p>
+&lt;p>Why &lt;span class="math inline">\(v(x)\)&lt;/span> from left to right: &lt;span class="math display">\[
+v = v_x \hat{x} + v_y\hat{y} + v_z\hat{z}
+\]&lt;/span>&lt;/p>
+&lt;h4 id="fundamental-theorem-of-curl">Fundamental theorem of curl:&lt;/h4>
+&lt;p>&lt;span class="math display">\[
+\int_\mathcal{S} (\nabla \times \bold{v}) \cdot d \bold{S} = \oint_P \bold{v} \cdot d \bold{l}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;img alt="fundamental_theorem_of_curl" src="./figures/fundamental_theorem_of_curl.png " width=200>&lt;/p>
+&lt;p>同样从右边看，看一个小的环路的积分，微元加起来，重复的边界 cancel 掉了&lt;/p>
+&lt;h2 id="curvilinear-coordinates">Curvilinear Coordinates&lt;/h2>
+&lt;h3 id="spherical-polar-coordinates-spc">Spherical polar coordinates (SPC):&lt;/h3>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+x &amp;amp;= r\sin \theta \cos \phi\\
+y &amp;amp;= r \sin \theta \sin\phi\\
+z &amp;amp;= r \cos \theta
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;img alt="spherical_polar_coordinates" src="./figures/spherical_polar_coordinates.png" width="200">&lt;/p>
+&lt;p>Direction of &lt;span class="math inline">\(\theta\)&lt;/span> is increase of theta&lt;/p>
+&lt;p>Unlike Descartes(笛卡尔) coordinates, the SPC coordinates changes with &lt;span class="math inline">\(r\)&lt;/span> ,&lt;span class="math inline">\(\theta\)&lt;/span> &lt;span class="math inline">\(\phi\)&lt;/span>,坐标轴会变。&lt;/p>
+&lt;p>If we want to calculate the value of infinite small volume, because &lt;span class="math inline">\(\theta\)&lt;/span> &lt;span class="math inline">\(\phi\)&lt;/span> are not length, we need to 要算体积微元, &lt;span class="math inline">\(dl\)&lt;/span> &lt;span class="math inline">\(dl_\theta\)&lt;/span> &lt;span class="math inline">\(dl_\phi\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+dl_r &amp;amp;= dr = h_1 dr\\
+dl_\theta &amp;amp;= r d\theta =h_2 d\theta\\
+dl_\phi &amp;amp;= r \sin \theta d \phi = h_3 d\phi
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>Here &lt;span class="math inline">\(h_1,h_2,h_3\)&lt;/span> are geometrical factors&lt;/p>
+&lt;p>For Cylindrical coordinates:&lt;/p>
+&lt;ul>
+&lt;li>和&lt;span class="math inline">\(x\)&lt;/span> 夹角&lt;span class="math inline">\(\phi\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(r\)&lt;/span>投影到&lt;span class="math inline">\(x-y\)&lt;/span> 平面长度&lt;/li>
+&lt;li>z &lt;span class="math display">\[
+\begin{aligned}
+dl_s &amp;amp;= ds = h_1 ds\\
+dl_\phi &amp;amp;= s d\phi =h_2 d\phi\\
+dl_z &amp;amp;= d z = h_3 dz
+\end{aligned}
+\]&lt;/span>&lt;/li>
+&lt;/ul></description></item></channel></rss>

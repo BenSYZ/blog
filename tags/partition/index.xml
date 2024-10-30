@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>partition on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/partition/</link><description>Recent content in partition on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 16 Aug 2023 09:28:51 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/partition/index.xml" rel="self" type="application/rss+xml"/><item><title>about rk3588 disk partitions(未完待续) and fdisk, dd</title><link>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</link><pubDate>Wed, 16 Aug 2023 09:28:51 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</guid><description>&lt;p>推荐文档：&lt;/p>
+&lt;p>&lt;code>Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code>&lt;/p>
+&lt;p>以前在 Windows 上 用 &lt;code>RKDevTool_Release.exe&lt;/code> 烧录镜像时一直有个疑惑： &lt;code>miniloader&lt;/code> 和 &lt;code>parameter&lt;/code> 的地址为什么是 &lt;code>0x0&lt;/code>，好像是烧到其他地方去了，并且 &lt;code>lsblk&lt;/code> 也看不到这两个文件所在的分区。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/rk_burn_window.png" alt="" />&lt;figcaption>rk_burn_window&lt;/figcaption>
+&lt;/figure>
+&lt;pre class="console">&lt;code>$ lsblk
+NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+mmcblk0 179:0 0 14.6G 0 disk
+├─mmcblk0p1 179:1 0 4M 0 part
+├─mmcblk0p2 179:2 0 4M 0 part
+├─mmcblk0p3 179:3 0 64M 0 part
+├─mmcblk0p4 179:4 0 128M 0 part
+├─mmcblk0p5 179:5 0 32M 0 part
+├─mmcblk0p6 179:6 0 14G 0 part /
+├─mmcblk0p7 179:7 0 128M 0 part /oem
+└─mmcblk0p8 179:8 0 206M 0 part /userdata
+mmcblk0boot0 179:32 0 4M 1 disk
+mmcblk0boot1 179:64 0 4M 1 disk&lt;/code>&lt;/pre>
+&lt;p>这两天在看 uboot 的文档时，&lt;code>Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code> 看到 &lt;code>2.6 存储布局&lt;/code> 这个疑惑接被解决了。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/partition_tables.png" alt="" />&lt;figcaption>&lt;a href="https://opensource.rock-chips.com/wiki_Partitions">partition_tables&lt;/a>&lt;/figcaption>
+&lt;/figure>
+&lt;p>原来 minloader 被烧录到 mmcblk0p1 前的分区了，parameter.txt 本身就是分区表，应该就是生成了 GPT 分区表。&lt;/p>
+&lt;h2 id="验证">验证&lt;/h2>
+&lt;h3 id="fdisk">&lt;code>fdisk&lt;/code>&lt;/h3>
+&lt;p>来验证一下&lt;/p>
+&lt;pre class="console">&lt;code># fdisk -l /dev/mmcblk0
+Disk /dev/mmcblk0: 14.56 GiB, 15634268160 bytes, 30535680 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 17B18C43-1D24-4484-8883-D0C618E42411
+Device Start End Sectors Size Type
+/dev/mmcblk0p1 16384 24575 8192 4M unknown
+/dev/mmcblk0p2 24576 32767 8192 4M unknown
+/dev/mmcblk0p3 32768 163839 131072 64M unknown
+/dev/mmcblk0p4 163840 425983 262144 128M unknown
+/dev/mmcblk0p5 425984 491519 65536 32M unknown
+/dev/mmcblk0p6 491520 29851647 29360128 14G unknown
+/dev/mmcblk0p7 29851648 30113791 262144 128M unknown
+/dev/mmcblk0p8 30113792 30535646 421855 206M unknown&lt;/code>&lt;/pre>
+&lt;p>&lt;code>fdisk&lt;/code> 的输出很清晰，前三个分区和上图中的加粗项一一对应。之前没主意到的是第一个分区并不是从 &lt;code>2048&lt;/code> 开始的。&lt;/p>
+&lt;h3 id="dd">&lt;code>dd&lt;/code>&lt;/h3>
+&lt;p>在用 &lt;code>dd&lt;/code> 验证之前，需要了解一下 &lt;code>fdisk&lt;/code> 的输出：&lt;/p>
+&lt;p>&lt;code>mmcblk0&lt;/code> 一个 sector 的大小是 512 bytes，第一个分区起始 sector 是 16384，占用 &lt;code>24575 - 16383 = 8192&lt;/code> 个 sector，这里减去 16383 是因为 16384 这个编号的 sector 是第一个分区的第一个 sector，长度是减去不属于第一个分区的最后一个 sector 的编号。再看上面那张图片，整个磁盘的起始 sector 的编号是 0，MBR 占用 1 个 sector；同时，第一个分区前的 sector 的数量是第一个分区的编号。这里说得这么啰嗦是因为后面 &lt;code>dd&lt;/code> 需要这些参数。再回过头来看第一个分区，第一个分区的大小是 &lt;code>8192 * 512 B = 8K * 512 B = 4 MB&lt;/code>。再看磁盘最后的位置：最后一个分区后还有 &lt;code>30535679 - 30535646 = 33&lt;/code> 个分区，也就是 secondary gpt 分区。这里是用 30535679 减，是因为 Disk 那一行中的 30535680 是指长度，由于我们是从 0 开始编号的，所以最后一个分区的编号是 30535679。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/disk_and_part.png" alt="" />&lt;figcaption>disk_and_part&lt;/figcaption>
+&lt;/figure>
+&lt;ol type="1">
+&lt;li>使用 dd 获取第一个分区：&lt;/li>
+&lt;/ol>
+&lt;p>因为第一个分区被分区了，所以我们可以直接设定 &lt;code>if&lt;/code> 为分区&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="fu">dd&lt;/span> if=/dev/mmcblk0p1 of=./uboot.img bs=512&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>由于我们最终是想读取第一个分区前的数据，所以我们这里通过第一个分区来验证和练习一下：&lt;/p>
+&lt;pre class="console">&lt;code># dd if=/dev/mmcblk0 bs=512 skip=16384 count=8192 | sha1sum
+68b4104cad133f08b54a88161fc0ac8c9fdf2a81 -&lt;/code>&lt;/pre>
+&lt;p>同时我们校验一下通过分区读出来的镜像 hex，发现也是一样&lt;/p>
+&lt;pre class="console">&lt;code># sha1sum uboot.img
+68b4104cad133f08b54a88161fc0ac8c9fdf2a81 uboot.img&lt;/code>&lt;/pre>
+&lt;p>由此，我们可以得出以下结论：&lt;/p>
+&lt;p>&lt;code>dd&lt;/code> 中 SKIP 的大小 = 需要忽略的 sector 数量 (count) = 想读区域的起始编号（start index），起始编号也就是 fdisk 中的 Start 列。&lt;/p>
+&lt;ol start="2" type="1">
+&lt;li>使用 dd 获取 miniloader ：&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="fu">dd&lt;/span> if=/dev/mmcblk0 of=./miniloader.img bs=512 skip=64 count=7104&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>呃，有重复部分，但是不是完全一样，需要看一下这两者的区别。（TODO）&lt;/p></description></item></channel></rss>

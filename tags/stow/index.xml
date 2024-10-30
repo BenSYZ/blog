@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>stow on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/stow/</link><description>Recent content in stow on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 30 Jul 2020 13:15:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/stow/index.xml" rel="self" type="application/rss+xml"/><item><title>管理从源码安装的应用的link——stow</title><link>https://bensyz.github.io/blog/blogs/stow_introduction/</link><pubDate>Thu, 30 Jul 2020 13:15:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/stow_introduction/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;p>Know from &lt;a href="https://www.ostechnix.com/an-easy-way-to-remove-programs-installed-from-source-in-linux/">here&lt;/a>&lt;/p>
+&lt;h2 id="install-positiontake-neovim-as-example">Install Position(take &lt;code>neovim&lt;/code> as example)&lt;/h2>
+&lt;pre>&lt;code>/usr/local/stow/nvim/&lt;/code>&lt;/pre>
+&lt;h2 id="make-symbolic-link">Make Symbolic Link&lt;/h2>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="bu">cd&lt;/span> /usr/local/stow/&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> stow nvim&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>This command will make some link files at &lt;code>/usr/local/bin/&lt;/code>, pointing to all the files in &lt;code>/usr/local/stow/nvim/bin&lt;/code> and &lt;code>/usr/local/share/&lt;/code>, pointing to all the files in &lt;code>/usr/local/stow/nvim/share&lt;/code> and so on.&lt;/p>
+&lt;h3 id="example">Example&lt;/h3>
+&lt;p>For example, After &lt;code>make install&lt;/code>, there will be &lt;code>nvim&lt;/code> in &lt;code>/usr/local/stow/nvim/bin/&lt;/code>, you could &lt;a href="https://blog.csdn.net/BenSYZ/article/details/98105357">make a link file&lt;/a> (like &lt;code>vim&lt;/code>) in this directory, like following,&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/stow/nvim/bin&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a> &lt;span class="ex">total&lt;/span> 16M&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 5 root staff 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;span class="ex">-rwxr-xr-x&lt;/span> 1 root staff 16M xxx xx xx:xx nvim&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root staff 4 xxx xx xx:xx vim -&lt;span class="op">&amp;gt;&lt;/span> nvim&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/stow/nvim/share&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 28K&lt;/span>
+&lt;span id="cb3-10">&lt;a href="#cb3-10" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 7 root staff 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb3-11">&lt;a href="#cb3-11" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 5 root staff 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb3-12">&lt;a href="#cb3-12" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx applications&lt;/span>
+&lt;span id="cb3-13">&lt;a href="#cb3-13" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 31 root staff 4.0K xxx xx xx:xx locale&lt;/span>
+&lt;span id="cb3-14">&lt;a href="#cb3-14" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 3 root staff 4.0K xxx xx xx:xx man&lt;/span>
+&lt;span id="cb3-15">&lt;a href="#cb3-15" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 3 root staff 4.0K xxx xx xx:xx nvim&lt;/span>
+&lt;span id="cb3-16">&lt;a href="#cb3-16" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-sr-x&lt;/span> 2 root staff 4.0K xxx xx xx:xx pixmaps&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>and then &lt;code>stow&lt;/code> it&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/bin&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 8.0K&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 11 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 21 xxx xx xx:xx nvim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/bin/nvim&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 20 xxx xx xx:xx vim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/bin/vim&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/share&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 24K&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 6 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 11 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 31 xxx xx xx:xx applications -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/applications&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 25 xxx xx xx:xx locale -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/locale&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx man&lt;/span>
+&lt;span id="cb4-15">&lt;a href="#cb4-15" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 23 xxx xx xx:xx nvim -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/nvim&lt;/span>
+&lt;span id="cb4-16">&lt;a href="#cb4-16" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 26 xxx xx xx:xx pixmaps -&lt;span class="op">&amp;gt;&lt;/span> ../stow/nvim/share/pixmaps&lt;/span>
+&lt;span id="cb4-17">&lt;a href="#cb4-17" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-18">&lt;a href="#cb4-18" aria-hidden="true">&lt;/a> ➜ &lt;span class="ex">ll&lt;/span> /usr/local/share/man&lt;/span>
+&lt;span id="cb4-19">&lt;a href="#cb4-19" aria-hidden="true">&lt;/a>&lt;span class="ex">total&lt;/span> 8.0K&lt;/span>
+&lt;span id="cb4-20">&lt;a href="#cb4-20" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 2 root root 4.0K xxx xx xx:xx .&lt;/span>
+&lt;span id="cb4-21">&lt;a href="#cb4-21" aria-hidden="true">&lt;/a>&lt;span class="ex">drwxr-xr-x&lt;/span> 6 root root 4.0K xxx xx xx:xx ..&lt;/span>
+&lt;span id="cb4-22">&lt;a href="#cb4-22" aria-hidden="true">&lt;/a>&lt;span class="ex">lrwxrwxrwx&lt;/span> 1 root root 30 xxx xx xx:xx man1 -&lt;span class="op">&amp;gt;&lt;/span> ../../stow/nvim/share/man/man1&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="remove-symbolic-link">Remove Symbolic Link&lt;/h2>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> stow --delete neovim&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>benchmark on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/benchmark/</link><description>Recent content in benchmark on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 30 Oct 2024 10:07:54 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/benchmark/index.xml" rel="self" type="application/rss+xml"/><item><title>7zr CPU 性能测试结果解析</title><link>https://bensyz.github.io/blog/blogs/7zr_CPU_benchmark_result_parse/</link><pubDate>Wed, 30 Oct 2024 10:07:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/7zr_CPU_benchmark_result_parse/</guid><description>&lt;h2 id="tldr">TL;DR&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>Speed(KiB/s) = 解压大小(B) * 重复次数(#)/time(s) /1024(B/KiB)&lt;/code>&lt;/li>
+&lt;li>&lt;code>usage(%) ≈ 程序占用 CPU 时间/程序开始到现在为止总耗时*100%&lt;/code>&lt;/li>
+&lt;li>&lt;code>R/U(MIPS) ≈ 产生的指令数(MI)/占用 CPU 的时间&lt;/code>&lt;/li>
+&lt;li>&lt;code>Rating(MIPS) ≈ 产生的指令数(MI)/程序耗时(s)&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>7zr b -mmt1&lt;/code>&lt;/p>
+&lt;pre>&lt;code> Compressing | Decompressing
+Dict Speed Usage R/U Rating | Speed Usage R/U Rating
+KiB/s % MIPS MIPS | KiB/s % MIPS MIPS
+22: 4515 100 4403 4393 | 51373 100 4395 4386
+23: 3883 100 3966 3956 | 50676 100 4395 4387
+24: 3724 100 4014 4004 | 48750 100 4292 4280
+25: 3520 100 4032 4020 | 48064 100 4293 4278
+---------------------------------- | ------------------------------
+Avr: 100 4104 4093 | 100 4344 4333
+Tot: 100 4224 4213&lt;/code>&lt;/pre>
+&lt;h2 id="speed">Speed&lt;/h2>
+&lt;p>这段打印在&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co">//p7zip-17.05/CPP/7zip/UI/Common/Bench.cpp&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="at">static&lt;/span> &lt;span class="dt">void&lt;/span> PrintResults(IBenchPrintCallback *f,&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a> &lt;span class="at">const&lt;/span> CBenchInfo &amp;amp;info,&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a> &lt;span class="dt">unsigned&lt;/span> weight,&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a> UInt64 rating,&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a> &lt;span class="dt">bool&lt;/span> showFreq, UInt64 cpuFreq,&lt;/span>
+&lt;span id="cb2-7">&lt;a href="#cb2-7" aria-hidden="true">&lt;/a> CTotalBenchRes *res)&lt;/span>
+&lt;span id="cb2-8">&lt;a href="#cb2-8" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb2-9">&lt;a href="#cb2-9" aria-hidden="true">&lt;/a> UInt64 speed = info.GetSpeed(info.UnpackSize * info.NumIterations);&lt;/span>
+&lt;span id="cb2-10">&lt;a href="#cb2-10" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (f)&lt;/span>
+&lt;span id="cb2-11">&lt;a href="#cb2-11" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb2-12">&lt;a href="#cb2-12" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (speed != &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb2-13">&lt;a href="#cb2-13" aria-hidden="true">&lt;/a> PrintNumber(*f, speed / &lt;span class="dv">1024&lt;/span>, kFieldSize_Speed);&lt;/span>
+&lt;span id="cb2-14">&lt;a href="#cb2-14" aria-hidden="true">&lt;/a> &lt;span class="cf">else&lt;/span>&lt;/span>
+&lt;span id="cb2-15">&lt;a href="#cb2-15" aria-hidden="true">&lt;/a> PrintSpaces(*f, &lt;span class="dv">1&lt;/span> + kFieldSize_Speed);&lt;/span>
+&lt;span id="cb2-16">&lt;a href="#cb2-16" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb2-17">&lt;a href="#cb2-17" aria-hidden="true">&lt;/a> UInt64 usage = info.GetUsage();&lt;/span>
+&lt;span id="cb2-18">&lt;a href="#cb2-18" aria-hidden="true">&lt;/a> UInt64 rpu = info.GetRatingPerUsage(rating);&lt;/span>
+&lt;span id="cb2-19">&lt;a href="#cb2-19" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (f)&lt;/span>
+&lt;span id="cb2-20">&lt;a href="#cb2-20" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb2-21">&lt;a href="#cb2-21" aria-hidden="true">&lt;/a> PrintResults(*f, usage, rpu, rating, showFreq, cpuFreq);&lt;/span>
+&lt;span id="cb2-22">&lt;a href="#cb2-22" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb2-23">&lt;a href="#cb2-23" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb2-24">&lt;a href="#cb2-24" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (res)&lt;/span>
+&lt;span id="cb2-25">&lt;a href="#cb2-25" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb2-26">&lt;a href="#cb2-26" aria-hidden="true">&lt;/a> &lt;span class="co">// res-&amp;gt;NumIterations1++;&lt;/span>&lt;/span>
+&lt;span id="cb2-27">&lt;a href="#cb2-27" aria-hidden="true">&lt;/a> res-&amp;gt;NumIterations2 += weight;&lt;/span>
+&lt;span id="cb2-28">&lt;a href="#cb2-28" aria-hidden="true">&lt;/a> res-&amp;gt;RPU += (rpu * weight);&lt;/span>
+&lt;span id="cb2-29">&lt;a href="#cb2-29" aria-hidden="true">&lt;/a> res-&amp;gt;Rating += (rating * weight);&lt;/span>
+&lt;span id="cb2-30">&lt;a href="#cb2-30" aria-hidden="true">&lt;/a> res-&amp;gt;Usage += (usage * weight);&lt;/span>
+&lt;span id="cb2-31">&lt;a href="#cb2-31" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb2-32">&lt;a href="#cb2-32" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>其中 &lt;code>info.GetSpeed()&lt;/code> 如下：&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co">//p7zip-17.05/CPP/7zip/UI/Common/Bench.cpp&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="at">static&lt;/span> UInt64 MyMultDiv64(UInt64 value, UInt64 elapsedTime, UInt64 freq)&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a> UInt64 elTime = elapsedTime;&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a> NormalizeVals(freq, elTime);&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (elTime == &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a> elTime = &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> value * freq / elTime;&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a> &lt;span class="co">/*&lt;/span>&lt;/span>
+&lt;span id="cb3-10">&lt;a href="#cb3-10" aria-hidden="true">&lt;/a>&lt;span class="co"> * 原始公式： value /(elTime/freq)&lt;/span>&lt;/span>
+&lt;span id="cb3-11">&lt;a href="#cb3-11" aria-hidden="true">&lt;/a>&lt;span class="co"> * 各个变量对应的单位，其中：&lt;/span>&lt;/span>
+&lt;span id="cb3-12">&lt;a href="#cb3-12" aria-hidden="true">&lt;/a>&lt;span class="co"> * * value: number&lt;/span>&lt;/span>
+&lt;span id="cb3-13">&lt;a href="#cb3-13" aria-hidden="true">&lt;/a>&lt;span class="co"> * * elTime: ms&lt;/span>&lt;/span>
+&lt;span id="cb3-14">&lt;a href="#cb3-14" aria-hidden="true">&lt;/a>&lt;span class="co"> * * freq: ms/s ( or to say: 一秒内有多少个 ms event )&lt;/span>&lt;/span>
+&lt;span id="cb3-15">&lt;a href="#cb3-15" aria-hidden="true">&lt;/a>&lt;span class="co"> */&lt;/span>&lt;/span>
+&lt;span id="cb3-16">&lt;a href="#cb3-16" aria-hidden="true">&lt;/a>}&lt;/span>
+&lt;span id="cb3-17">&lt;a href="#cb3-17" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-18">&lt;a href="#cb3-18" aria-hidden="true">&lt;/a>UInt64 CBenchInfo::GetSpeed(UInt64 numCommands) &lt;span class="at">const&lt;/span>&lt;/span>
+&lt;span id="cb3-19">&lt;a href="#cb3-19" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb3-20">&lt;a href="#cb3-20" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> MyMultDiv64(numCommands, GlobalTime, GlobalFreq);&lt;/span>
+&lt;span id="cb3-21">&lt;a href="#cb3-21" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们可以知道变量 speed 的定义如下：&lt;/p>
+&lt;pre>&lt;code>speed(B/s) = 解压大小(B) * info.NumIterations(#)/time(s)&lt;/code>&lt;/pre>
+&lt;p>所以 Speed 列就是 &lt;code>Speed(KiB/s)=speed(B/s)/1024(B/KiB)&lt;/code> 。即 &lt;code>Speed(KiB/s)=解压大小(B) * 重复次数(#)/time(s) /1024(B/KiB)&lt;/code>&lt;/p>
+&lt;h2 id="usage-ru-rating">Usage, R/U, Rating&lt;/h2>
+&lt;p>继续看剩下三列的定义：Usage, R/U, Rating&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co">//p7zip-17.05/CPP/7zip/UI/Common/Bench.cpp&lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="at">static&lt;/span> &lt;span class="dt">void&lt;/span> PrintResults(IBenchPrintCallback &amp;amp;f, UInt64 usage, UInt64 rpu, UInt64 rating, &lt;span class="dt">bool&lt;/span> showFreq, UInt64 cpuFreq)&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a> PrintNumber(f, (usage + &lt;span class="dv">5000&lt;/span>) / &lt;span class="dv">10000&lt;/span>, kFieldSize_Usage);&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a> PrintRating(f, rpu, kFieldSize_RU);&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a> PrintRating(f, rating, kFieldSize_Rating);&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (showFreq)&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb5-9">&lt;a href="#cb5-9" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (cpuFreq == &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb5-10">&lt;a href="#cb5-10" aria-hidden="true">&lt;/a> PrintSpaces(f, kFieldSize_EUAndEffec);&lt;/span>
+&lt;span id="cb5-11">&lt;a href="#cb5-11" aria-hidden="true">&lt;/a> &lt;span class="cf">else&lt;/span>&lt;/span>
+&lt;span id="cb5-12">&lt;a href="#cb5-12" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb5-13">&lt;a href="#cb5-13" aria-hidden="true">&lt;/a> UInt64 ddd = cpuFreq * usage / &lt;span class="dv">100&lt;/span>;&lt;/span>
+&lt;span id="cb5-14">&lt;a href="#cb5-14" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (ddd == &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb5-15">&lt;a href="#cb5-15" aria-hidden="true">&lt;/a> ddd = &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb5-16">&lt;a href="#cb5-16" aria-hidden="true">&lt;/a> PrintPercents(f, (rating * &lt;span class="dv">10000&lt;/span>), ddd, kFieldSize_EU);&lt;/span>
+&lt;span id="cb5-17">&lt;a href="#cb5-17" aria-hidden="true">&lt;/a> PrintPercents(f, rating, cpuFreq, kFieldSize_Effec);&lt;/span>
+&lt;span id="cb5-18">&lt;a href="#cb5-18" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb5-19">&lt;a href="#cb5-19" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb5-20">&lt;a href="#cb5-20" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="usage">Usage&lt;/h3>
+&lt;p>&lt;code>usage&lt;/code> 是从上一级 &lt;code>PrintResults&lt;/code> 中通过 &lt;code>info.GetUsage()&lt;/code> 取到的。简单跟踪之后可知：&lt;/p>
+&lt;pre>&lt;code>usage = 程序占用 CPU 时间/程序开始到现在为止总耗时 * 10^6&lt;/code>&lt;/pre>
+&lt;p>其中 &lt;code>10^6&lt;/code> 会在后续被除以 &lt;code>10000&lt;/code> 规整为百分比。&lt;/p>
+&lt;p>本级的 &lt;code>PrintResults&lt;/code> 中打印了 Usage 列，打印的时间是：&lt;code>(usage + 5000) / 10000&lt;/code>，除以 &lt;code>10000&lt;/code> 就是上面说的“规整为百分比”，而加的 50% 大概是其他消耗占程序的 50%。总之，&lt;code>Usage&lt;/code> 列大概指的是压缩测试占用 CPU 的百分比。即：&lt;code>usage(%) ≈ 程序占用 CPU 时间/程序开始到现在为止总耗时*100%&lt;/code>&lt;/p>
+&lt;h3 id="rating">Rating&lt;/h3>
+&lt;p>&lt;code>rating&lt;/code> 是从以下代码得来的：&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>UInt64 CBenchProps::GetCompressRating(UInt32 dictSize, UInt64 elapsedTime, UInt64 freq, UInt64 size)&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (dictSize &amp;lt; (&lt;span class="dv">1&lt;/span> &amp;lt;&amp;lt; kBenchMinDicLogSize))&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a> dictSize = (&lt;span class="dv">1&lt;/span> &amp;lt;&amp;lt; kBenchMinDicLogSize);&lt;/span>
+&lt;span id="cb7-5">&lt;a href="#cb7-5" aria-hidden="true">&lt;/a> UInt64 encComplex = EncComplex;&lt;/span>
+&lt;span id="cb7-6">&lt;a href="#cb7-6" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (LzmaRatingMode)&lt;/span>
+&lt;span id="cb7-7">&lt;a href="#cb7-7" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb7-8">&lt;a href="#cb7-8" aria-hidden="true">&lt;/a> UInt64 t = GetLogSize(dictSize) - (kBenchMinDicLogSize &amp;lt;&amp;lt; kSubBits);&lt;/span>
+&lt;span id="cb7-9">&lt;a href="#cb7-9" aria-hidden="true">&lt;/a> encComplex = &lt;span class="dv">870&lt;/span> + ((t * t * &lt;span class="dv">5&lt;/span>) &amp;gt;&amp;gt; (&lt;span class="dv">2&lt;/span> * kSubBits));&lt;/span>
+&lt;span id="cb7-10">&lt;a href="#cb7-10" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb7-11">&lt;a href="#cb7-11" aria-hidden="true">&lt;/a> UInt64 numCommands = (UInt64)size * encComplex;&lt;/span>
+&lt;span id="cb7-12">&lt;a href="#cb7-12" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb7-13">&lt;a href="#cb7-13" aria-hidden="true">&lt;/a> &lt;span class="co">/*&lt;/span>&lt;/span>
+&lt;span id="cb7-14">&lt;a href="#cb7-14" aria-hidden="true">&lt;/a>&lt;span class="co"> * 和计算 Usage 时差不多，大概意思是：&lt;/span>&lt;/span>
+&lt;span id="cb7-15">&lt;a href="#cb7-15" aria-hidden="true">&lt;/a>&lt;span class="co"> * numCommands/elapsedTime&lt;/span>&lt;/span>
+&lt;span id="cb7-16">&lt;a href="#cb7-16" aria-hidden="true">&lt;/a>&lt;span class="co"> * 通过各种 size 估算出计算的 command 的数量是多少，单位是 Million Instruction （因为后面没见到除以 1,000,000）&lt;/span>&lt;/span>
+&lt;span id="cb7-17">&lt;a href="#cb7-17" aria-hidden="true">&lt;/a>&lt;span class="co"> */&lt;/span>&lt;/span>
+&lt;span id="cb7-18">&lt;a href="#cb7-18" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> MyMultDiv64(numCommands, elapsedTime, freq);&lt;/span>
+&lt;span id="cb7-19">&lt;a href="#cb7-19" aria-hidden="true">&lt;/a>}&lt;/span>
+&lt;span id="cb7-20">&lt;a href="#cb7-20" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb7-21">&lt;a href="#cb7-21" aria-hidden="true">&lt;/a>HRESULT CBenchCallbackToPrint::SetEncodeResult(&lt;span class="at">const&lt;/span> CBenchInfo &amp;amp;info, &lt;span class="dt">bool&lt;/span> &lt;span class="kw">final&lt;/span>)&lt;/span>
+&lt;span id="cb7-22">&lt;a href="#cb7-22" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb7-23">&lt;a href="#cb7-23" aria-hidden="true">&lt;/a> RINOK(_file-&amp;gt;CheckBreak());&lt;/span>
+&lt;span id="cb7-24">&lt;a href="#cb7-24" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (&lt;span class="kw">final&lt;/span>)&lt;/span>
+&lt;span id="cb7-25">&lt;a href="#cb7-25" aria-hidden="true">&lt;/a> {&lt;/span>
+&lt;span id="cb7-26">&lt;a href="#cb7-26" aria-hidden="true">&lt;/a> UInt64 rating = BenchProps.GetCompressRating(DictSize, info.GlobalTime, info.GlobalFreq, info.UnpackSize * info.NumIterations);&lt;/span>
+&lt;span id="cb7-27">&lt;a href="#cb7-27" aria-hidden="true">&lt;/a> PrintResults(_file, info,&lt;/span>
+&lt;span id="cb7-28">&lt;a href="#cb7-28" aria-hidden="true">&lt;/a> EncodeWeight, rating,&lt;/span>
+&lt;span id="cb7-29">&lt;a href="#cb7-29" aria-hidden="true">&lt;/a> ShowFreq, CpuFreq, &amp;amp;EncodeRes);&lt;/span>
+&lt;span id="cb7-30">&lt;a href="#cb7-30" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (!Use2Columns)&lt;/span>
+&lt;span id="cb7-31">&lt;a href="#cb7-31" aria-hidden="true">&lt;/a> _file-&amp;gt;NewLine();&lt;/span>
+&lt;span id="cb7-32">&lt;a href="#cb7-32" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb7-33">&lt;a href="#cb7-33" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> S_OK;&lt;/span>
+&lt;span id="cb7-34">&lt;a href="#cb7-34" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>所以 Rating 就是在“程序耗时”（&lt;code>Eltime&lt;/code>）期间，产生的指令数，单位：（MI/s) 即 &lt;code>MIPS&lt;/code>。即 &lt;code>R/U(MIPS) ≈ 产生的指令数(MI)/占用 CPU 的时间&lt;/code>&lt;/p>
+&lt;h3 id="ru">R/U&lt;/h3>
+&lt;p>（这也是我找这段代码的关键字）&lt;/p>
+&lt;p>可以看到 &lt;code>R/U&lt;/code> 列来自变量 &lt;code>rpu&lt;/code>，&lt;code>rpu&lt;/code> 来自变量 &lt;code>rating&lt;/code>，&lt;/p>
+&lt;p>简单跟踪之后发现，它和 &lt;code>Rating&lt;/code> 的区别在于，将耗时改成了“占用 CPU 的时间”，所以也可以猜出 &lt;code>rpu&lt;/code> 的缩写是 rating per usage，它的单位一样是（MI/s) 即 &lt;code>MIPS&lt;/code>。即 &lt;code>Rating(MIPS) ≈ 产生的指令数(MI)/程序耗时(s)&lt;/code>&lt;/p></description></item></channel></rss>

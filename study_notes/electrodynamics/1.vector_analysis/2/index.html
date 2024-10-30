@@ -1,0 +1,113 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>Vector Analysis 2</title><script src=/js/if_mobile.js></script>
+<link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/footer.css><link rel=stylesheet href=/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/js/favicon.js></script>
+<link rel=stylesheet href=/css/katex.min.css integrity=sha384-zTROYFVGOfTw7JV7KUu8udsvW2fx4lWOsCEDqhBreBwlHI4ioVRtmIvEThzJHGET crossorigin=anonymous><script defer src=/js/katex.min.js integrity=sha384-GxNFqL3r9uRJQhR+47eDxuPoNE7yLftQM8LcxzgS4HT73tp970WS/wV5p8UzCOmb crossorigin=anonymous></script>
+<script defer src=/js/auto-render.min.js integrity=sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl crossorigin=anonymous onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"\\[",right:"\\]",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1}]})'></script>
+# added by katex parameter</head><body><h1>Vector Analysis 2</h1>Thu, 2021-09-16<hr><div><div id=TitleWithToc>Vector Analysis 2</div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/avatar.jpg></div><ul><li><a href=/about>About Me</a></li><li><a href=/donate>Donate Me</a></li><li><a href=/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div><div id=content><p>Q1: Derive the formula for the volume of a sphere</p><p><span class="math display">\[
+\begin{aligned}
+V &=\int dV \\
+&= \int r^2\sin\theta dr d\theta d\phi\\
+&=\frac{1}{3} r^3|_{0}^{r} \times (-\cos\theta)|_{0}^{\pi}\times 2\pi\\
+&=\frac{4}{3}r^3
+\end{aligned}
+\]</span></p><p><span class="math inline">\(r^2\sin\theta\)</span>: it can also be derivative form Jacobi formula.</p><hr><h2 id=curvilinear-coordinates>Curvilinear Coordinates</h2><h3 id=spherical-polar-coordinates-spc>Spherical polar coordinates (SPC):</h3><h4 id=review>review</h4><ul><li>4 types integrate</li><li>Curvilinear Coordinates</li><li><span class="math inline">\(dl\)</span>, <span class="math inline">\(dl_\theta\)</span>, <span class="math inline">\(dl_\phi\)</span> 对球坐标和柱坐标</li></ul><h4 id=derivatives-in-spc>Derivatives in SPC</h4><h5 id=gradient-in-the-spc>1. Gradient in the SPC</h5><p>Definition of the gradient:</p><p><span class="math display">\[
+df \equiv \frac{\partial f}{ \partial r} dr+ \frac{\partial f}{ \partial \theta} d\theta + \frac{\partial f}{ \partial \phi } d\phi
+\]</span></p><p>We define <span class="math inline">\(\nabla f\)</span> as</p><p><span class="math display">\[
+df = \nabla f \cdot d\bold{l} = \nabla f \cdot ( dl_r \hat{r} + dl_\theta \hat{\theta} + dl_\phi \hat{\phi})
+\]</span></p><p>because <span class="math inline">\(dl\)</span> defined as <span class="math display">\[
+d\bold{l} \equiv dl_r \hat{r} + dl_\theta \hat{\theta} + dl_\phi \hat{\phi} = \hat{r} dr + \hat{\theta}\sin\theta d\theta + \hat{\phi} r\sin\theta d\phi
+\]</span></p><p>To meet the definition of <span class="math inline">\(df\)</span>,</p><p><span class="math display">\[
+\nabla f = \frac{\partial f}{ \partial r} \hat{r}+ \frac{1}{r}\frac{\partial f}{ \partial \theta} \hat{\theta} + \frac{1}{r\sin\theta} \frac{\partial f}{ \partial \phi} \hat{\phi}\\
+= \frac{1}{h_1} dr + \frac{1}{h_2}d\theta + \frac{1}{h_3}d\phi
+\]</span></p><h5 id=divergence-in-the-spc>2. Divergence in the SPC</h5><p>To get <span class="math display">\[
+\nabla \cdot \bold{A}
+\]</span></p><p>We need start from: <span class="math inline">\(\int (\nabla \cdot \bold{A}) dV = \int_{\partial V} \bold{A} \cdot d\bold{S}\)</span></p><hr><ul><li><p><span class="math inline">\(dS_z=\hat{x}dx \times \hat{y} dy=dxdy\hat{z}\)</span></p></li><li><p>So for a small cubic: <span class="math inline">\(dS=dl_\phi dl_\theta\hat{r}+dl_r dl_\phi \hat{\theta} + dl_r dl_\theta\phi\)</span></p></li></ul><p>From the <span class="math inline">\(\int \nabla \cdot \bold{A} dV = \int \bold{A} \cdot d\bold{S}\)</span>, we get <span class="math inline">\(\nabla \cdot \bold{A} = \frac{1}{dV}(\bold{A} \cdot d\bold{S})\)</span></p><ol type=1><li><span class="math display">\[
+\nabla \cdot \bold{A} dV \equiv \nabla \cdot \bold{A} h_1 h_2 h_3 dr d\theta d\phi
+\]</span></li><li><span class="math display">\[
+\bold{A} \cdot d\bold{S} = \Delta_r(A_r dl_\theta dl_\phi) + \Delta_\theta(A_\theta dl_r dl_\phi) + \Delta_\phi (A_\phi dl_\theta dl_r)
+\]</span></li></ol><ul><li>第一项是穿过<span class="math inline">\(\theta \phi\)</span> 面的通量</li></ul><p>Then <span class="math display">\[
+\nabla \cdot \bold{A} = \frac{1}{h_1h_2h_3} \left[\frac{\partial (A_r h_2 h_3)}{ \partial r} +\frac{\partial (A_\theta h_1 h_3)}{ \partial \theta} + \frac{\partial (A_\phi h_1h_2)}{ \partial \phi} \right]
+\]</span></p><p>Eg. <span class="math display">\[
+\frac{1}{h_1h_2h_3} \frac{\partial A_rh_2h_3}{ \partial r} = \frac{1}{r^2\sin\theta} \frac{\partial \frac{1}{r^2} r^2\sin\theta}{ \partial r}
+=\frac{1}{r^2} \frac{\partial A_r r^2}{ \partial r}
+\]</span></p><h5 id=curl-in-the-spc>3. Curl in the SPC</h5><p>矢量场中一个方向的分量和另外两个坐标有关，和标量场不同。比方说，沿着<span class="math inline">\(y\)</span> 轴向上，只有<span class="math inline">\(y\)</span> 在变，而此时，<span class="math inline">\(x\)</span> 方向的电场会变小。</p><p>To get <span class="math inline">\(\nabla \times \bold{A}\)</span>, we start from</p><p><span class="math display">\[
+\int (\nabla \times \bold{A}) \cdot d\bold{S} = \oint_{\partial S} \bold{A} \cdot d\bold{l}
+\]</span></p><p>我们先只写 <span class="math inline">\(r\)</span> 方向的分量：</p><p><img src=./figures/curl_in_SPC.svg alt=curl_in_SPC width=500></p><ol type=1><li><p><span class="math display">\[
+\nabla \times A \cdot d\bold{S}_r = \nabla \times A \ h_2h_3 d\theta d\phi \ \hat{\theta} \times \hat{\phi}
+=(\nabla \times A)_r \ h_2h_3 d\theta d\phi
+\]</span></p></li><li><p><span class="math display">\[
+\bold{A}_r \cdot d\bold{l}_r = - \Delta_\phi(A_\theta h_2d\theta) + \Delta_\theta(A_\phi h_3 d\phi)
+\]</span></p></li></ol><hr><p><span class="math display">\[
+(\nabla \times \bold{A})_r = \frac{\bold{A}\cdot d\bold{l}}{dS}=- \frac{\Delta_\phi(A_\theta h_2) }{h_2h_3d\phi} + \frac{\Delta_\theta(A_\phi h_3)}{h_2h_3d\theta}
+\]</span></p><ul><li>here the <span class="math inline">\(dS=h_2h_3 d\theta d\phi\)</span>, which is a scalar.</li></ul><p>So, curl in SPC</p><p><span class="math display">\[
+\nabla \times \bold{A} = \frac{1}{h_1h_2h_3}
+\begin{pmatrix}
+h_1\hat{r} & h_2\hat{\theta} & h_3\hat{\phi}\\
+\partial_r & \partial_\theta & \partial_\phi\\
+h_1A_r & h_2A_\theta & h_3A_\phi
+\end{pmatrix}
+\]</span></p><hr><p>Q2: Find the formula of curl in the <strong>spherical polar coordinate</strong> <span class="math display">\[
+\nabla \times A =
+\]</span></p><hr><h2 id=dirac-delta-function>Dirac Delta Function</h2><p>Consider the vector function <span class="math inline">\(v=\frac{1}{r^2} \hat{r}\)</span>, from the very begin (problem 1.16): <span class="math display">\[
+\begin{aligned}
+\nabla \cdot \bold{v} &= \frac{\partial }{ \partial x} \left(\frac{x}{r^3}\right)
++ \frac{\partial }{ \partial y} \left(\frac{y}{r^3}\right)
++ \frac{\partial }{ \partial z} \left(\frac{z}{r^3}\right)\\
+&=\frac{\partial }{ \partial x} \left[x(x^2+y^2+z^2)^{-\frac{3}{2}}\right]
++\frac{\partial }{ \partial y} \left[y(x^2+y^2+z^2)^{-\frac{3}{2}}\right]
++\frac{\partial }{ \partial z} \left[z(x^2+y^2+z^2)^{-\frac{3}{2}}\right]\\
+&=()^{-\frac{3}{2}} + x(-\frac{3}{2})()^{-\frac{5}{2}}2x
++()^{-\frac{3}{2}} + y(-\frac{3}{2})()^{-\frac{5}{2}}2y
++()^{-\frac{3}{2}} + z(-\frac{3}{2})()^{-\frac{5}{2}}2z\\
+&=3r^{-3}-3r^{-5}(x^2+y^2+z^2)=3r^{-3}-3r^{-3}=0
+\end{aligned}
+\]</span></p><p>or</p><p><span class="math display">\[
+\nabla \cdot \bold{v} = \frac{1}{r^2} \frac{\partial }{ \partial r} \left(r^2 \frac{1}{r^2}\right) = 0
+\]</span></p><hr><p>But</p><p><span class="math display">\[
+\oint \bold{v} \cdot d\bold{S} = \int_{0}^{R} \left(\frac{1}{r^2}\hat{r}\right) \cdot (R^2 \sin \theta d \theta d\phi \hat{r}) = 4\pi
+\]</span> where, <span class="math display">\[
+d\bold{S}=dl_\theta \hat{\theta} \times dl_\phi \hat{\phi} = R d\theta R \sin \theta d\phi \hat{r}
+\]</span></p><p>The contradiction comes from the point <span class="math inline">\(r = 0\)</span>, where <span class="math inline">\(\frac{1}{r^2}\)</span> blows up. So the point <span class="math inline">\(r = 0\)</span> contributes to the integration, giving the <span class="math inline">\(4\pi\)</span> result.</p><p>The <strong>Answer</strong> is that <span class="math inline">\(\nabla \cdot \bold{v} =0\)</span> everywhere <em>except</em> at the origin. The calculation of <span class="math inline">\(\frac{\partial }{ \partial x} \left(\frac{x}{r^2}\right)\)</span> at origin doesn’t work. (or <span class="math inline">\(\frac{\partial }{ \partial r} \left(r^2 \frac{1}{r^2}\right)\)</span> not work at origin <span class="math inline">\(\frac{0}{0}\)</span>).</p><hr><ul><li>空间角</li></ul><p><span class="math display">\[
+d\Omega \equiv \sin\theta d \theta d\phi
+\]</span></p><ul><li>来源：当r取R时，上面那个式子没有<span class="math inline">\(r\)</span>了，就变成<span class="math inline">\(\int d\Omega\)</span>了，或者说这个式子本身和<span class="math inline">\(r\)</span> 无关，或者说可以用在求flux上。</li></ul><hr><h3 id=define-dirac-function>Define Dirac function</h3><h4 id=d>1D:</h4><p><span class="math display">\[
+\delta (x-a) =
+\begin{cases}
+0, &\text{ if } x\neq a \\
+\infty &\text{ if }x = a \\
+\end{cases}
+\text{ and}
+\int_{-\infty}^{+\infty} \delta(x-a)dx=1
+\]</span></p><h4 id=d-1>3D</h4><p><span class="math display">\[
+\nabla \cdot \left(\frac{1}{r^2}\hat{\bold{r}}\right) \equiv \frac{1}{4\pi}\delta(r)
+\]</span></p><h4 id=性质>性质：</h4><p><span class="math display">\[
+\int_{-\infty}^{+\infty} f(x) \delta(x-a) dx =f(a)
+\]</span> <span class="math display">\[
+\delta(kx) = \frac{1}{|k|} \delta(x)
+\]</span></p><p>LS变瘦了,原来的<span class="math inline">\(1\)</span>，现在<span class="math inline">\(\frac{1}{k}\)</span> 就够了</p><p><span class="math display">\[
+\int_{a}^{b} f(x) \delta[ g(x) - g(x_0) ] dx = f(x_j) / \left|\frac{dg}{dx}\right||_{x=x_j}
+\]</span></p><h2 id=the-theory-of-vector-fields>The Theory of Vector Fields</h2><h3 id=helmholtzs-theorem>Helmholtz’s Theorem:</h3><p>Maxwell reduce the <span class="math inline">\(E\)</span> and <span class="math inline">\(B\)</span> into four equations, and this four equations are all about the divergence and the curl of <span class="math inline">\(\bold{E}\)</span> and <span class="math inline">\(\bold{B}\)</span>. So here raise an important mathematical question: To what extent is a vector function determined by its divergence and curl?(一个向量函数在多大程度上是由它的散度和卷度决定的), 即给一个向量函数的散度和旋度，是否能得到这个向量函数。</p><p>事实上，是不行的，需要一个边界条件，Helmholtz theorem 告诉说给一些边界条件之后可以唯一确定这个函数。</p><hr><p>数学的表示： the <em>divergence</em> of <span class="math inline">\(\bold{F}\)</span> (which stands for <span class="math inline">\(\bold{E}\)</span> or <span class="math inline">\(\bold{B}\)</span>) is a specified (scalar) function D, <span class="math display">\[
+\nabla \cdot \bold{F} = D
+\]</span></p><p>and the curl of <span class="math inline">\(\bold{F}\)</span> is a specified (vector) function <span class="math inline">\(\bold{C}\)</span>,</p><p><span class="math display">\[
+\nabla \times \bold{F}=\bold{C}
+\]</span></p><p>当然 <span class="math inline">\(\bold{C}\)</span> must be divergenceless, <span class="math inline">\(\nabla \cdot \bold{C}=0\)</span>，旋度的散度为<span class="math inline">\(0\)</span></p><hr><p>Eg: divergence =0 , curl = 0, 的解：<span class="math inline">\(\bold{F}=\bold{0}\)</span> <span class="math inline">\(F=yz \hat{\bold{x}} + zx \hat{\bold{y}} + xy \hat{\bold{z}}\)</span> <span class="math inline">\(F=\sin x\cosh y \hat{\bold{x}} - \cos x \sinh \hat{\bold{y}}\)</span></p><hr><h3 id=potentials>Potentials</h3><h4 id=curl-less-field>Curl-less field</h4><p>If the curl of a vector field(<span class="math inline">\(\bold{F}\)</span>) vanishes(everywhere), then <span class="math inline">\(\bold{F}\)</span> can be written as gradient of a <strong>Scalar potential</strong>(<span class="math inline">\(V\)</span>):</p><p><span class="math display">\[
+\nabla \times \bold{F} = 0\Leftrightarrow \bold{F} = - \nabla V.
+\]</span></p><ul><li>Theorem 1 <strong>Curl-less</strong> (“<strong>irrotational</strong>”) <strong>fields</strong>:(保守场)<ul><li><span class="math inline">\(\nabla \times \bold{F} = 0\)</span> everywhere</li><li><span class="math inline">\(\int_a^{b} \bold{F} \cdot d\bold{l}\)</span> is independent of path, for any given end points.</li><li><span class="math inline">\(\oint\bold{F} \cdot d\bold{l} =0\)</span> for any closed loop</li><li><span class="math inline">\(\bold{F}\)</span> is gradient of some scalar, <span class="math inline">\(\bold{F} = -\nabla V\)</span>(+ any constant)</li></ul></li></ul><h4 id=divergence-less-field>Divergence-less field</h4><p>If the divergence of a vector field (<span class="math inline">\(\bold{F}\)</span>) vanishes(everywhere), then <span class="math inline">\(\bold{F}\)</span> can be expressed as the curl of <strong>Vector potential</strong>(<strong>A</strong>): <span class="math display">\[
+\nabla \cdot \bold{F} =0 \Leftrightarrow \bold{F} = \nabla \times \bold{A}
+\]</span></p><ul><li>Theorem 2 <strong>Divergence-less</strong> (or “<strong>solenoidal</strong>”) <strong>fields</strong>:<ul><li><span class="math inline">\(\nabla \cdot \bold{F} = 0\)</span> everywhere</li><li><span class="math inline">\(\int \bold{F} \cdot d\bold{a}\)</span> is independent of surface, for any given bound.</li><li><span class="math inline">\(\oint\bold{F} \cdot d\bold{a} =0\)</span> for any closed surface</li><li><span class="math inline">\(\bold{F}\)</span> is curl of some scalar, <span class="math inline">\(\bold{F} = -\nabla \times \bold{A}\)</span>(+gradient of any scalar function)</li></ul></li></ul><p>Any vector field <span class="math inline">\(\bold{F}\)</span> can be written as gradient of a scalar of a scalar plus the curl of a vector: <span class="math display">\[
+\bold{F} = -\nabla V + \nabla \times A
+\]</span></p><p>Any vector field resolved into curl-free vector field and divergence-free vector field</p><ul><li>curl free: <span class="math inline">\(\nabla \times (\nabla \phi) = 0\)</span></li><li>divergence free: <span class="math inline">\(\nabla \cdot (\nabla \times \vec{A}) = 0\)</span></li></ul><hr><ul><li><span class="math inline">\(\nabla \cdot F= D\)</span> and <span class="math inline">\(\nabla \times F = C\)</span></li><li>physical: <span class="math inline">\(\nabla \cdot (\nabla \phi) =\nabla \cdot E\)</span> and <span class="math inline">\(\nabla \times A = \vec{B}\)</span></li></ul><hr><p>Q3: In the following, <span class="math inline">\(p\)</span> is a constant vector, and <span class="math inline">\(r=x\hat{x}+y\hat{y}+z\hat{z}\)</span> <span class="math display">\[
+\begin{aligned}
+\nabla \cdot r\\
+\nabla(r \cdot r)\\
+\end{aligned}
+\]</span> and <span class="math display">\[
+\begin{aligned}
+\nabla p \cdot r\\
+\end{aligned}
+\]</span></p><p>Solve: <span class="math display">\[
+\nabla \cdot r =\nabla \cdot r = 3
+\]</span></p><p><span class="math display">\[
+\nabla(r \cdot r) = 2x\hat{x} +2y \hat{y} +2z \hat{z} = 2 r
+\]</span></p><p><span class="math display">\[
+\nabla p \cdot r = \nabla (p_1x + p_2y+p_3z) = p_1
+\]</span></p><footer><hr><a href=/>Ben's Blog</a><br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。<br><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/icons/public_safety_icon.png>浙公网安备 33028102001039号</a>
+<a href=https://beian.miit.gov.cn/ target=_blank>浙ICP备2021032097号-1</a></footer></div></div></body></html>

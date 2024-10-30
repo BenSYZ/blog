@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>NVIDIA on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/NVIDIA/</link><description>Recent content in NVIDIA on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 13 Apr 2023 11:13:20 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/NVIDIA/index.xml" rel="self" type="application/rss+xml"/><item><title>migrate from ubuntu16.04 to ubuntu20.04</title><link>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</link><pubDate>Thu, 13 Apr 2023 11:13:20 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</guid><description>&lt;p>公司服务器需要升级系统&lt;/p>
+&lt;ol type="1">
+&lt;li>系统升级&lt;/li>
+&lt;li>docker 迁移&lt;/li>
+&lt;/ol>
+&lt;h2 id="系统升级">系统升级&lt;/h2>
+&lt;ol type="1">
+&lt;li>download and extra to new root&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> https://cdimage.ubuntu.com/ubuntu-base/releases/focal/release/ubuntu-base-20.04.5-base-amd64.tar.gz &lt;span class="kw">|&lt;/span> &lt;span class="fu">sudo&lt;/span> tar -xzvf - -C /mnt&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol start="2" type="1">
+&lt;li>update and install grub and other needs&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>&lt;code>grub-efi-amd64&lt;/code> # 可能直接 grub 就好，不知道这种基础组建要怎么一下安装&lt;/li>
+&lt;li>&lt;code>ubuntu-minimal&lt;/code>&lt;/li>
+&lt;li>&lt;code>linux-image-generic&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;ol start="3" type="1">
+&lt;li>然后参考 archlinux wiki installation guide 做些必要的动作，不要忘了 &lt;code>systemd-networkd&lt;/code> 和 &lt;code>sshd&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;p>特别关注 grub&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>grub-install&lt;/code>&lt;/li>
+&lt;li>&lt;code>grub-config&lt;/code>&lt;/li>
+&lt;li>&lt;code>efibootmgr&lt;/code> check 一下&lt;/li>
+&lt;/ul>
+&lt;h2 id="docker-迁移">docker 迁移&lt;/h2>
+&lt;h3 id="rsync">1. &lt;code>rsync&lt;/code>&lt;/h3>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># https://blog.lilydjwg.me/2013/12/29/rsync-btrfs-dm-crypt-full-backup.42219.html&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">rsync&lt;/span> --archive --one-file-system --inplace --hard-links &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a> &lt;span class="ex">--human-readable&lt;/span> --numeric-ids --delete --delete-excluded &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a> &lt;span class="ex">--acls&lt;/span> --xattrs --sparse &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a> &lt;span class="ex">--itemize-changes&lt;/span> --verbose --progress &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a> &lt;span class="ex">/var/lib/docker&lt;/span> /mnt/var/lib&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>注意最后 不要变成 &lt;code>/mnt/var/lib&lt;/code> 否则就变成 &lt;code>/mnt/var/lib/docker/docker&lt;/code>….&lt;/p>
+&lt;h3 id="docker-复杂的点在-nvidia">2. Docker 复杂的点在 nvidia&lt;/h3>
+&lt;p>Copy /etc/docker/&lt;/p>
+&lt;p>然后 docker 就 起不来了。日志&lt;/p>
+&lt;pre class="log">&lt;code>E: Unable to locate package nvidia-container-toolkit-base&lt;/code>&lt;/pre>
+&lt;p>然后找到这个&lt;/p>
+&lt;p>https://gitlab.com/nvidia/container-toolkit/container-toolkit/-/tree/main/&lt;/p>
+&lt;blockquote>
+&lt;p>The NVIDIA Container Toolkit allows users to build and run GPU accelerated containers. The toolkit includes a container runtime library and utilities to automatically configure containers to leverage NVIDIA GPUs.&lt;/p>
+&lt;/blockquote>
+&lt;p>也就时说 container 要使用 &lt;code>nvidia&lt;/code> 需要装 &lt;code>nvidia-container-toolkit&lt;/code>(也就是 &lt;code>/etc/docker/daemon.json&lt;/code> 中这行的作用 &lt;code>"path": "nvidia-container-runtime"&lt;/code>)&lt;/p>
+&lt;p>安装分两个&lt;/p>
+&lt;ol type="1">
+&lt;li>nvidia driver https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#nvidia-drivers&lt;/li>
+&lt;li>nvidia-container-toolkit https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installation-guide&lt;/li>
+&lt;/ol>
+&lt;p>其实是一篇文档…关于安装 &lt;code>nvidia-container-toolkit&lt;/code> 的&lt;/p>
+&lt;h4 id="安装-nvidia-container-toolkit">安装 &lt;code>nvidia-container-toolkit&lt;/code>&lt;/h4>
+&lt;h5 id="pre-requests">pre-requests&lt;/h5>
+&lt;p>注意左侧目录层次，Pre-Requisites 只包含两个 （我看走眼了 Container Device Interface (CDI) Support 这个不是必须的，这节说要装 &lt;code>nvidia-container-toolkit-base&lt;/code> 不是很明白）&lt;/p>
+&lt;ul>
+&lt;li>NVIDIA Drivers （这个选用包管理器安装的 https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#package-manager , 并且不用管 post-installation steps 这个是 cuda 的，我们这里不需要 cuda，只要 driver)&lt;/li>
+&lt;li>Platform Requirements (默认够了)&lt;/li>
+&lt;/ul>
+&lt;h5 id="nvidia-container-toolkit">&lt;code>nvidia-container-toolkit&lt;/code>&lt;/h5>
+&lt;p>参照 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker&lt;/p>
+&lt;p>这里有一点是 20.04 是指向 18.04 的源，文档里也有说，然后就 ok 了。&lt;/p>
+&lt;p>由于已开始 rsync 那里敲错了，之前的几个 container, image 都没找到，所以怀疑是迁移出了问题，然后就看到了这个。。。如何迁移？删除。。。不过，有可能是提交成一个 image 再新开 container 就可以了，由于我们以前用的是 nvidia-docker 2 的，就没关系了。&lt;/p>
+&lt;p>https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/migrating-from-1.0.html#migration-1-0&lt;/p></description></item></channel></rss>

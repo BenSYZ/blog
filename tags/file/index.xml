@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>file on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/file/</link><description>Recent content in file on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 28 Nov 2023 12:06:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/file/index.xml" rel="self" type="application/rss+xml"/><item><title>file、magic number 和 Debian 中 file 的跨大版本更新</title><link>https://bensyz.github.io/blog/blogs/file_magic-number_debian-build-deb/</link><pubDate>Tue, 28 Nov 2023 12:06:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_magic-number_debian-build-deb/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>故事会，哈哈，可以跳过，简单来说就是 &lt;code>feh&lt;/code> 没有认出一种 &lt;code>bmp&lt;/code> 的格式。&lt;/p>
+&lt;p>我们在 3588 上使用了 RK 提供的 Debian 11 系统。我们使用 &lt;code>eog&lt;/code> 也就是 gnome 带的图形查看软件，但是遇到了一个问题，如果我用 &lt;code>eog&lt;/code> 打开一张图后，又去更新这张图，&lt;code>eog&lt;/code> 是不会自动刷新的，它没有接入 &lt;code>libnotify&lt;/code>。于是我从 &lt;code>eog&lt;/code> 迁移到了 &lt;code>feh&lt;/code>，由于 Debian 11 自带的 &lt;code>feh&lt;/code> 版本过低只有 &lt;code>3.6.3&lt;/code>，这版的 &lt;code>feh&lt;/code> 也一样不支持 &lt;code>libnotify&lt;/code>，于是我就尝试自己编译并打包 &lt;code>feh-3.10&lt;/code>，打包是基于 arch 的 &lt;code>PKGBUILD&lt;/code>，很是折腾，最后还是成功编译。最近遇到了一个问题：一张 &lt;code>bmp&lt;/code> 的图片，&lt;code>feh&lt;/code> 打不开，给我包这个错：&lt;/p>
+&lt;pre class="log">&lt;code>feh WARNING: T002-001.bmp - Does not look like an image (magic bytes missing)
+feh: No loadable images specified.
+See &amp;#39;feh --help&amp;#39; or &amp;#39;man feh&amp;#39; for detailed usage information&lt;/code>&lt;/pre>
+&lt;p>然后我用 &lt;code>imagemagick&lt;/code> 转了一下，&lt;code>feh&lt;/code> 就能正常打开了。&lt;/p>
+&lt;pre>&lt;code>convert T002-001.bmp T002-00X.bmp&lt;/code>&lt;/pre>
+&lt;p>嗯，这是为啥？于是我把两张图片拷到我自己的 arch 上，&lt;code>feh&lt;/code> 都能打开。于是我用 &lt;code>file&lt;/code> 查看了两张图，结果是不一样的，那问题就处在这了，看起来两张图的格式不一样。&lt;/p>
+&lt;pre class="console">&lt;code> ➜ file T002-001.bmp
+T002-001.bmp: PC bitmap, Windows 3.x format, 5496 x 3672 x 8, image size 20181312, resolution 3780 x 3780 px/m, 256 important colors, cbSize 20182390, bits offset 1078
+➜ file T002-00X.bmp
+T002-00X.bmp: PC bitmap, Windows 98/2000 and newer format, 5496 x 3672 x 8, cbSize 25606550, bits offset 1162&lt;/code>&lt;/pre>
+&lt;p>那为啥我在我的 arch 上可以开，在主机的 Debian 上不行呢？一样的打包方式呀？于是同样的我在主机上 &lt;code>file&lt;/code> 了这两个文件，结果很 amazing 啊，一张图是 &lt;code>data&lt;/code>，一张图是 &lt;code>Windows 98/2000 and newer format&lt;/code>，那看起来就是 &lt;code>file&lt;/code> 没识别出这个 &lt;code>Windows 3.x&lt;/code>。&lt;/p>
+&lt;pre class="console">&lt;code>$ file T002-001.bmp
+T002-001.bmp: data
+$ file T002-00X.bmp
+T002-00X.bmp: PC bitmap, Windows 98/2000 and newer format, 5496 x 3672 x 8&lt;/code>&lt;/pre>
+&lt;p>那是不是 &lt;code>feh&lt;/code> 也是因为一样的问题识别不出来这个文件呢？但是 &lt;code>eog&lt;/code> 又能正常打开啊。无奈只能各种搜，没搜到。那没办法了只能直接去看 &lt;code>feh&lt;/code> 的源代码了，看这个报错是什么，惊喜地发现这个 &lt;code>Waring&lt;/code> 只有一处，代码逻辑也很清楚，还是拿 &lt;code>c&lt;/code> 写的，甚至 &lt;code>config.mk&lt;/code> 里 &lt;code>CFLAGS&lt;/code> 是带着 &lt;code>-g&lt;/code>！那不直接 &lt;code>gdb&lt;/code> 走起，拷 &lt;code>feh&lt;/code> 源码到主机上，然后 &lt;code>gdb --args feh T002-00X.bmp&lt;/code>：&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co">//src/imlib.c &lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> feh_is_image(feh_file * file, &lt;span class="dt">int&lt;/span> magic_flags)&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a>...&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a> magic_setflags(magic, MAGIC_MIME_TYPE | MAGIC_SYMLINK | magic_flags);&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a> mime_type = magic_file(magic, file-&amp;gt;filename);&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (!mime_type) {&lt;/span>
+&lt;span id="cb5-9">&lt;a href="#cb5-9" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb5-10">&lt;a href="#cb5-10" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb5-11">&lt;a href="#cb5-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-12">&lt;a href="#cb5-12" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (strncmp(mime_type, &lt;span class="st">&amp;quot;image/&amp;quot;&lt;/span>, &lt;span class="dv">6&lt;/span>) == &lt;span class="dv">0&lt;/span>) {&lt;/span>
+&lt;span id="cb5-13">&lt;a href="#cb5-13" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb5-14">&lt;a href="#cb5-14" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb5-15">&lt;a href="#cb5-15" aria-hidden="true">&lt;/a>...&lt;/span>
+&lt;span id="cb5-16">&lt;a href="#cb5-16" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="gdb">&lt;code>(gdb) b feh_is_image
+(gdb) layout src
+(gdb) r
+(gdb) n
+...&lt;/code>&lt;/pre>
+&lt;p>最终发现问题出在这句上&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>mime_type = magic_file(magic, file-&amp;gt;filename);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>对于那张正常的图，这里的返回值是 &lt;code>image/bmp&lt;/code>，而对于那张打不开的图，这里的返回值是 &lt;code>application/octet-stream&lt;/code>&lt;/p>
+&lt;pre class="gdb">&lt;code>(gdb) p mime_type
+$4 = 0x55555e0c00 &amp;quot;image/bmp&amp;quot;
+(gdb) p mime_type
+$2 = 0x55555b3350 &amp;quot;application/octet-stream&amp;quot;&lt;/code>&lt;/pre>
+&lt;p>ps. 这里有一点搞了我一会儿的是在 next 跳过赋值之后查看 &lt;code>mime_type&lt;/code> 的值是 &lt;code>0x0&lt;/code>，两张图都是，我直接好家伙，然后各种 &lt;code>return&lt;/code> 让我一下摸不清头脑，有时是 &lt;code>0&lt;/code>(&lt;code>strncmp&lt;/code>) 是想要的，有时是 &lt;code>1&lt;/code>(&lt;code>feh_is_image&lt;/code>) 是想要的。后面是又往后跳了一下，应该是 return 回之前，print 了一下在发现哦这两个值不一样。这个应该和 &lt;code>O1&lt;/code> 优化有关。&lt;/p>
+&lt;p>搜了一下 &lt;code>application/octet-stream&lt;/code> 是啥。&lt;/p>
+&lt;blockquote>
+&lt;p>A MIME attachment with the content type application/octet-stream is a binary file.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://docs.oracle.com/en/cloud/paas/integration-cloud/rest-adapter/support-application-octet-stream-mime-attachment-binary-payloads.html">ref_link&lt;/a>&lt;/p>
+&lt;p>好家伙，这不就是 &lt;code>file&lt;/code> 返回给我的那个 &lt;code>data&lt;/code> 吗？没吊用。&lt;/p>
+&lt;p>然后我在 arch 上一跳转 &lt;code>magic_file&lt;/code>，直接跳到这里了&lt;code>/usr/include/magic.h&lt;/code>，&lt;code>pacman&lt;/code> 的结果直接把我搞无语了：&lt;/p>
+&lt;pre class="console">&lt;code> ➜ pacman -Qo /usr/include/magic.h
+/usr/include/magic.h is owned by file 5.45-1&lt;/code>&lt;/pre>
+&lt;p>啊这，找了半天原来一早 &lt;code>file&lt;/code> 就告诉我了。原来 &lt;code>feh&lt;/code> 用了 &lt;code>file&lt;/code> 的库哇。我一开始还以为像这种软件不会像 shell 一样调用其他软件，没想到啊。当然 &lt;code>feh&lt;/code> 没有直接使用 &lt;code>file&lt;/code> 而是使用了 &lt;code>file&lt;/code> 的库。或许这就是 “kiss” 的魅力吧。&lt;/p>
+&lt;h2 id="file-和-magic-number">file 和 magic number&lt;/h2>
+&lt;p>&lt;code>file&lt;/code> 这个命令再熟悉不过了，在刚学 Linux 的时候我们就被告知扩展名在 Linux 上只是给人看的。文件真正的格式要用 &lt;code>file&lt;/code> 来查看。但是 &lt;code>file&lt;/code> 是如何实现的呢？从 &lt;a href="https://en.wikipedia.org/wiki/File_(command)">File 的 wiki&lt;/a> 找到了 &lt;a href="https://en.wikipedia.org/wiki/Magic_number_(programming)">Magic Number&lt;/a>。magic number 原指在代码中突然出现的毫无意义的数字，（所谓黑魔法~）。而 file 这里的 magic number 是来自 Unix 用几个没有任何说明的常量来区别几种可执行文件，而后来得知，这两个 magic number 对应的是 PDP-11 的跳转指令。故事大概是这样的：&lt;/p>
+&lt;p>可执行文件的最前端有 8 bytes 的 header，这段 header 包含程序（text）的大小和初始化的值（global）。由于早期 Unix 没有分页机制（有 PIC），导致操作系统只能一整块地从文件系统中读取文件，然后跳转到文件的开头开始执行。但是由于 header 的存在，我需要跳转到真正的程序处，所以最前面的 16bit 是用于跳转到 8byte 这个offset 的位置，而&lt;a href="https://en.wikipedia.org/wiki/PDP-11_architecture#Branch_instructions">这个跳转指令&lt;/a>由分两部分：跳转指令（0x04）和偏移（0x07）：0000,0010|0000,0111)，这里偏移 7 是因为 &lt;code>pc&lt;/code> 在第一个 byte 上，它需要向后跳转7个字节，也就是跳过 8 bytes 的 header。这样这个可执行文件可以正常执行了。&lt;/p>
+&lt;p>Unix 应该是支持 3 种格式的可执行文件：&lt;/p>
+&lt;ol type="1">
+&lt;li>the executable image contained relocatable memory references (normal)&lt;/li>
+&lt;li>the newly implemented paged read-only executable image&lt;/li>
+&lt;li>the separated instruction and data paged image&lt;/li>
+&lt;/ol>
+&lt;p>从第六版开始，Unix 支持分页机制：一整个文件看起来载入到一段连续的内存中，但其实，header 所在的页是位于内核 buffer 中，而用户空间的起始位就直接是真正代码段了，直接是从 0 开始的。但对不同的可执行文件，操作系统执行 &lt;code>exec()&lt;/code> 时应该是有不同的执行逻辑。这个时候上面的 2 bytes 被当作一个特征来区分三种文件，这个时候所谓“指令”其实不再是指令，只是被当作一个特征符。而 Unix 在代码中去比较这两个字节的时候，直接拿了两个常数在对比，并且从来没有提到关于这个比较的含义，黑魔法出现了，哈哈。后来这种文件内容的特征指纹来表示文件类型的方式逐渐被大家接收，并逐渐扩展到所有文件。&lt;a href="https://en.wikipedia.org/wiki/Magic_number_(programming)#In_files">wiki&lt;/a> 上也列了一些常见文件类型的特征数据，比如 &lt;code>png&lt;/code> 格式开头的 8 字节 &lt;code>89 50 4E 47 0D 0A 1A 0A&lt;/code>。&lt;/p>
+&lt;p>&lt;code>libmagic.so&lt;/code> 则包含了一个完整的数据库来记录这些特征段，从而使得 &lt;code>file&lt;/code> 可以不借助后缀也能识别到文件类型。这个数据库在 &lt;code>file&lt;/code> 源码的 &lt;code>magic/Magdir&lt;/code> 目录中，以文件类型为名创建了很多文件，如 image，music。这些文件有特殊的格式，参见 &lt;code>magic(5)&lt;/code>。&lt;/p>
+&lt;h2 id="更新-debian-上的-libmagic.so-和-file">更新 Debian 上的 &lt;code>libmagic.so&lt;/code> 和 &lt;code>file&lt;/code>&lt;/h2>
+&lt;p>了解了问题所在之后就是如何更新 &lt;code>libmagic.so&lt;/code> 了，而由于 Debian 11 即&lt;code>bullseye&lt;/code> 提供的 &lt;code>file&lt;/code> 和 &lt;code>libmagic1&lt;/code> 太旧了，查看了一下 Debian 12 即 &lt;code>bookworm&lt;/code> 的 &lt;code>libmagic1&lt;/code> 的版本和我的 arch 差不了太多，应该是可以 work 的。直接下载 &lt;code>bookworm&lt;/code> 的 &lt;code>libmagic1.deb&lt;/code> 不行，&lt;code>libc&lt;/code> 版本不对，大概是因为 &lt;code>bookworm&lt;/code> 的 &lt;code>libc&lt;/code> 的版本有做升级。这次不想从 arch 的 &lt;code>PKGBUILD&lt;/code> 折腾编译 Debian 的包了，想直接从 Debian 的源码编译，简单查看了一下发现 &lt;code>file&lt;/code> 和 &lt;code>libmagic1&lt;/code> 的依赖不多，单独更新这两个包应该不会有太大问题，&lt;code>libc&lt;/code> 的版本不一致应该也可以解决。&lt;/p>
+&lt;h3 id="更新源">更新源：&lt;/h3>
+&lt;p>在 &lt;code>/etc/apt/sources.list&lt;/code> 添加 &lt;code>bookworm&lt;/code> 的 &lt;code>deb-src&lt;/code>，就是复制 &lt;code>bullseye&lt;/code> 的 &lt;code>deb-src&lt;/code>，然后把 &lt;code>bullseye&lt;/code> 改成 &lt;code>bookworm&lt;/code>:&lt;/p>
+&lt;pre class="sources.list">&lt;code>deb-src http://mirrors.ustc.edu.cn/debian bullseye main contrib&lt;/code>&lt;/pre>
+&lt;p>改成&lt;/p>
+&lt;pre class="sources.list">&lt;code>deb-src http://mirrors.ustc.edu.cn/debian bookworm main contrib&lt;/code>&lt;/pre>
+&lt;p>改完的 &lt;code>sources.list&lt;/code>：&lt;/p>
+&lt;pre class="sources.list">&lt;code>#/etc/apt/sources.list
+deb http://mirrors.ustc.edu.cn/debian bullseye main contrib
+#deb-src http://mirrors.ustc.edu.cn/debian bullseye main contrib
+deb http://mirrors.ustc.edu.cn/debian-security bullseye-security main contrib
+#deb-src http://mirrors.ustc.edu.cn/debian-security bullseye-security main contrib
+deb http://mirrors.ustc.edu.cn/debian bullseye-updates main contrib
+#deb-src http://mirrors.ustc.edu.cn/debian bullseye-updates main contrib
+deb http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib
+#deb-src http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib
+deb-src http://mirrors.ustc.edu.cn/debian bookworm main contrib&lt;/code>&lt;/pre>
+&lt;div class="sourceCode" id="cb13">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb13-1">&lt;a href="#cb13-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt update&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="下载源码并编译">下载源码并编译&lt;/h3>
+&lt;p>&lt;a href="https://www.linuxfordevices.com/tutorials/debian/build-packages-from-source">ref_link1&lt;/a>，&lt;a href="http://rediceli.blogspot.com/2006/08/debian.html">ref_link2&lt;/a>&lt;/p>
+&lt;p>下载 &lt;code>libmagic1&lt;/code> 源码：&lt;/p>
+&lt;div class="sourceCode" id="cb14">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb14-1">&lt;a href="#cb14-1" aria-hidden="true">&lt;/a>&lt;span class="fu">mkdir&lt;/span> libmagic1&lt;/span>
+&lt;span id="cb14-2">&lt;a href="#cb14-2" aria-hidden="true">&lt;/a>&lt;span class="bu">cd&lt;/span> libmagic1&lt;/span>
+&lt;span id="cb14-3">&lt;a href="#cb14-3" aria-hidden="true">&lt;/a>&lt;span class="ex">apt&lt;/span> source libmagic1&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>下载编译所需环境：&lt;/p>
+&lt;div class="sourceCode" id="cb15">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb15-1">&lt;a href="#cb15-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt -y build-dep libmagic1&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>编译打包：&lt;/p>
+&lt;div class="sourceCode" id="cb16">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb16-1">&lt;a href="#cb16-1" aria-hidden="true">&lt;/a>&lt;span class="bu">cd&lt;/span> file-5.44&lt;/span>
+&lt;span id="cb16-2">&lt;a href="#cb16-2" aria-hidden="true">&lt;/a>&lt;span class="ex">dpkg-buildpackage&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>然后 file 和 libmagic1 等包全被打好了，一样好方便哇。然后就是简单的装 &lt;code>deb&lt;/code> 的包了，dbgsym 的和 dev 的包没装：&lt;/p>
+&lt;div class="sourceCode" id="cb17">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb17-1">&lt;a href="#cb17-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dpkg -i file_5.44-3_arm64.deb libmagic1_5.44-3_arm64.deb libmagic-mgc_5.44-3_arm64.deb&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ul>
+&lt;li>ps. feh 也可以通过这种方式来打包诶。&lt;/li>
+&lt;li>pps. 发现 debian 默认的 feh 是 disable libmagic 的，看了下代码 &lt;code>feh_is_image&lt;/code> 这个函数是受这个宏控制的，所以我只要把 &lt;code>feh&lt;/code> 的这个选项关了，&lt;code>file&lt;/code> 也不需要更新了。（啊啊啊）&lt;/li>
+&lt;/ul></description></item></channel></rss>

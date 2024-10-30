@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>beauty on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/beauty/</link><description>Recent content in beauty on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Apr 2022 12:23:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/beauty/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell echo 输出带样式 (style) 的文字</title><link>https://bensyz.github.io/blog/blogs/shell_color/</link><pubDate>Mon, 04 Apr 2022 12:23:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_color/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>好久没明白 Shell 的格式化输出，这次看了一些资料，整理了一下。&lt;/p>
+&lt;h2 id="method-result">Method &amp;amp; Result&lt;/h2>
+&lt;p>我们知道 shell 可以用 &lt;code>-e&lt;/code> 来转义 &lt;code>\n&lt;/code> 这些符号。由于样式输出也是特殊的输出，所以要使用样式输出也要打开这个开关。那如何表示样式的符号是什么呢？基本格式是这样&lt;/p>
+&lt;pre>&lt;code>\033[ + 样式码 + m + &amp;quot;要打印的字符&amp;quot;&lt;/code>&lt;/pre>
+&lt;p>这里的样式码就是一些数字，比如 &lt;code>1&lt;/code> 代表加粗，&lt;code>32&lt;/code> 代表绿色：&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[32mGreen&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold.png" alt="" />&lt;figcaption>bold&lt;/figcaption>
+&lt;/figure>
+&lt;figure>
+&lt;img src="./figures/green.png" alt="" />&lt;figcaption>green&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="样式的分开">样式的分开&lt;/h3>
+&lt;p>由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold&amp;#39;&lt;/span> &lt;span class="st">&amp;#39;\033[32mGreen&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_mixed.png" alt="" />&lt;figcaption>bold_and_green_mixed&lt;/figcaption>
+&lt;/figure>
+&lt;p>所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1mBold\033[0m&amp;#39;&lt;/span> &lt;span class="st">&amp;#39;\033[32mGreen\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_seperated.png" alt="" />&lt;figcaption>bold_and_green_seperated&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="样式的合并">样式的合并&lt;/h3>
+&lt;p>根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1m\033[32mBold and Green\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_together.png" alt="" />&lt;figcaption>bold_and_green_together&lt;/figcaption>
+&lt;/figure>
+&lt;p>它有个简略的写法：用分号 &lt;code>;&lt;/code> 分开两个样式码。比如加粗又加绿:&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[1;32mBold and Green\033[0m&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/bold_and_green_together_simpler.png" alt="" />&lt;figcaption>bold_and_green_together_simpler&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="列出-shell-支持的所有样式">列出 Shell 支持的所有样式：&lt;/h3>
+&lt;p>我们可以用一个小的脚本来列出所有样式&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="kw">for&lt;/span> &lt;span class="ex">i&lt;/span> in &lt;span class="va">$(&lt;/span>&lt;span class="fu">seq&lt;/span> 0 109&lt;span class="va">)&lt;/span>&lt;span class="kw">;do&lt;/span>&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;#39;\033[&amp;#39;&lt;/span>&lt;span class="va">$i&lt;/span>&lt;span class="st">&amp;#39;m&amp;#39;&lt;/span>&lt;span class="va">$i&lt;/span>&lt;span class="st">&amp;#39;\033[0m &amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>由于版面有限，我只选取了部分有效段展示：&lt;/p>
+&lt;ul>
+&lt;li>所有颜色：&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/all_styles.png" alt="" />&lt;figcaption>all_styles&lt;/figcaption>
+&lt;/figure>
+&lt;ul>
+&lt;li>反色：&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/all_styles_reverse.png" alt="" />&lt;figcaption>all_styles_reverse&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="tips">Tips&lt;/h3>
+&lt;p>不知发现没有，虽然打印出来好看了，但是脚本却变丑了，很难阅读，因此我们可以把这些样式定义成变量，要用时用变量来格式化输出：&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/sh&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleNone=&lt;/span>&lt;span class="st">&amp;#39;\033[0m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleGreen=&lt;/span>&lt;span class="st">&amp;#39;\033[33m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a>&lt;span class="va">shellStyleBold=&lt;/span>&lt;span class="st">&amp;#39;\033[1m&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb8-5">&lt;a href="#cb8-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleBold&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>Bold&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleNone&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleGreen&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>Green&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$shellStyleNone&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>格式化输出：&lt;/p>
+&lt;pre>&lt;code>\033[ + 样式码 + m + &amp;quot;要打印的字符&amp;quot; + \033[ + 无样式码 + m&lt;/code>&lt;/pre>
+&lt;p>叠加多个样式的话，样式码可以用 &lt;code>;&lt;/code> 来分开&lt;/p></description></item></channel></rss>

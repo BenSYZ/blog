@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PCIe on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/PCIe/</link><description>Recent content in PCIe on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 08 May 2024 08:06:33 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/PCIe/index.xml" rel="self" type="application/rss+xml"/><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>&lt;h2 id="pcie-基础介绍">PCIe 基础介绍&lt;/h2>
+&lt;p>Wikipedia 上对 &lt;a href="https://zh.wikipedia.org/wiki/PCI_Express">PCI_Express&lt;/a> 的介绍 如下：&lt;/p>
+&lt;blockquote>
+&lt;p>Peripheral Component Interconnect Express，简称 PCI-E，官方简称 PCIe，是计算机总线的一个重要分支，它沿用既有的 PCI 编程概念及信号标准，并且构建了更加高速的串行通信系统标准。目前这一标准由 PCI-SIG 组织制定和维护。PCIe 仅应用于内部互连。由于 PCIe 是基于既有的 PCI 系统，所以只需修改物理层而无须修改软件就可将现有 PCI 系统转换为 PCIe。&lt;/p>
+&lt;/blockquote>
+&lt;h3 id="版本传输通道数和速率">版本、传输通道数和速率&lt;/h3>
+&lt;p>我们在买固态硬盘和显卡的时候，经常需要确定 PCIe 的 &lt;strong>版本&lt;/strong> 和 &lt;strong>通道数(x几)&lt;/strong>，那这两个和速率有什么关系？&lt;/p>
+&lt;p>首先，什么是 PCIe 的版本和通道数：&lt;/p>
+&lt;ul>
+&lt;li>版本：无疑就是 PCIe 技术迭代之后，速率有了极大地提升。例如：&lt;code>PCIe 3.0&lt;/code>&lt;/li>
+&lt;li>通道数：lane 数，一条 lane 对应两组“差分信号对”，一组差分信号对用于传输 TX，另一组用于传输 RX。由于 PCIe 是串行传输，多条 lane 的数据传输是由 PCIe 上层应用来自行做 IO 多路复用的。例如：&lt;code>x4&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>其次，上边两个参数和速率有什么关系？同一版本，通道数每增一个速率就翻倍。版本每增一个，速率几乎翻倍（除了 PCIe 1.0 到 PCIe 2.0）&lt;/p>
+&lt;p>不同版本对应的速率关系：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Version&lt;/th>
+&lt;th>Transfer rate per lane(GT/s)&lt;/th>
+&lt;th>Line code&lt;/th>
+&lt;th>Throughput for &lt;code>x1&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>1.0&lt;/td>
+&lt;td>2.5&lt;/td>
+&lt;td>8b/10b&lt;/td>
+&lt;td>&lt;code>2.5 Gib/s*(8b/10b)=2.0 Gib/s=0.250 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>2.0&lt;/td>
+&lt;td>5.0&lt;/td>
+&lt;td>8b/10b&lt;/td>
+&lt;td>&lt;code>5.0 Gib/s*(8b/10b)=4.0 Gib/s=0.500 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>3.0&lt;/td>
+&lt;td>8.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>8.0 Gib/s*(128b/130b)=7.88 Gib/s=0.985 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>4.0&lt;/td>
+&lt;td>16.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>16.0 Gib/s*(128b/130b)=15.753 Gib/s=1.969 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>5.0&lt;/td>
+&lt;td>32.0&lt;/td>
+&lt;td>128b/130b&lt;/td>
+&lt;td>&lt;code>32.0 Gib/s*(128b/130b)=31.508 Gib/s=3.938 GiB/s&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>1 GT/s 表示每秒有 1*10^9 次传输，一次传输传输 1 个bit&lt;/li>
+&lt;li>为了避免多个低信号连续传输无法被区分，我们使用 8b/10b 等 Line code 来编码。所以实际传输速率的计算，如最后一列所写：&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>而通道数的增长就非常简单了，直接对应版本的 &lt;code>x1&lt;/code> 的速率上乘几。&lt;/p>
+&lt;h3 id="设备类别">设备类别&lt;/h3>
+&lt;p>PCIe 是一种信号传输协议，信号的传输必有设备，那么，涉及到 PCIe 信号的设备种类有哪些：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>类别&lt;/th>
+&lt;th>类似于&lt;/th>
+&lt;th>上游信号&lt;/th>
+&lt;th>下游信号&lt;/th>
+&lt;th>用途&lt;/th>
+&lt;th>例子/体现在&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>Root Complex&lt;/td>
+&lt;td>PCIe 主设备&lt;/td>
+&lt;td>CPU、内存连接&lt;/td>
+&lt;td>下游收发 PCIe 信号。&lt;/td>
+&lt;td>主机收发 PCIe 信号&lt;/td>
+&lt;td>在主板北桥或 SOC 内部&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Switch&lt;/td>
+&lt;td>PCIe hub&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>用于扩展 PCIe 口&lt;/td>
+&lt;td>在主板北桥&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Endpoint&lt;/td>
+&lt;td>PCIe 从设备&lt;/td>
+&lt;td>PCIe 信号&lt;/td>
+&lt;td>下游为其他信号&lt;/td>
+&lt;td>实际功能设备&lt;/td>
+&lt;td>固态硬盘、显卡、RTL8168 网卡芯片&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>Root Complex 中的上游信号: 和 CPU 连接大概是用于发送中断以及 DMA 控制，和内存连接的大概是用于 DMA 数据搬运。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>他们的关系&lt;a href="https://en.wikipedia.org/wiki/Root_complex">如图&lt;/a>：&lt;/p>
+&lt;figure>
+&lt;img src="./figures/Example_PCI_Express_Topology.png" alt="" />&lt;figcaption>Example PCI Express Topology&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="lspci-介绍">&lt;code>lspci&lt;/code> 介绍&lt;/h2>
+&lt;p>正如开头所说， PCIe 相对于 PCI 只是物理层上发生了变动，上层软件完全一样，所以我们可以使用 &lt;code>lspci&lt;/code> 来读取设备上 PCIe 的信息。也就是说虽然 PCIe 没有总线的概念，物理上是点对点协议，但是由于上层软件是兼容的，所以，仍然会有总线的概念。在后面选择设备时会用到总线的概念，但是它只是一个虚的概念。&lt;/p>
+&lt;p>我们将用 &lt;code>lspci&lt;/code> 命令来获取常见的 &lt;code>PCIe&lt;/code> 的信息，主要包括以下几个方面：&lt;/p>
+&lt;ol type="1">
+&lt;li>获取设备的总线号和设备号，用于选择设备&lt;/li>
+&lt;li>获取 PCIe 插槽/设备的 &lt;em>版本号&lt;/em> 和 &lt;em>传输通道数&lt;/em>&lt;/li>
+&lt;/ol>
+&lt;h3 id="常用参数">常用参数&lt;/h3>
+&lt;ul>
+&lt;li>&lt;code>s&lt;/code>: select&lt;/li>
+&lt;li>&lt;code>v&lt;/code>: verbose&lt;/li>
+&lt;li>&lt;code>vv&lt;/code>: more verbose&lt;/li>
+&lt;li>&lt;code>vvv&lt;/code>: even more verbose&lt;/li>
+&lt;li>&lt;code>t&lt;/code>: tree view&lt;/li>
+&lt;/ul>
+&lt;h3 id="选择-pci-设备-lspci--t">选择 PCI 设备（ &lt;code>lspci -t&lt;/code>）&lt;/h3>
+&lt;h4 id="lspci">&lt;code>lspci&lt;/code>&lt;/h4>
+&lt;p>在选择 PCI 设备前，我们先看一下不带任何参数的 &lt;code>lspci&lt;/code>，它的输出如下：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci
+...
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+03:10.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+05:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+05:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+...&lt;/code>&lt;/pre>
+&lt;p>由于 PCIe 借用的 PCI 的软件，因此沿用了 PCI 的这四种属性：&lt;code>domain&lt;/code>, &lt;code>bus&lt;/code>, &lt;code>device&lt;/code>, &lt;code>function&lt;/code> 我们可以通过这四个参数确定或者说选择一个 PCI 设备上的一个功能。他们也就是上述输出中的第一列。其中由于 domain number 基本是一样的，为 &lt;code>0&lt;/code>，所以这里省略了只有当带上 &lt;code>-t&lt;/code> 的时候会看到这个 domain number。完整的定位一个 PCI 设备和功能的格式是：&lt;/p>
+&lt;pre>&lt;code>domain:bus:device.function&lt;/code>&lt;/pre>
+&lt;p>对于下面这个设备&lt;/p>
+&lt;pre>&lt;code>04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1)
+| | |
+| | \- function
+| \--- device
+\------ bus&lt;/code>&lt;/pre>
+&lt;p>它的各个属性如下：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>domain&lt;/code>: 0 ( 被省略了 )&lt;/li>
+&lt;li>&lt;code>bus&lt;/code>: 04&lt;/li>
+&lt;li>&lt;code>device&lt;/code>: 00&lt;/li>
+&lt;li>&lt;code>function&lt;/code>: 0&lt;/li>
+&lt;/ul>
+&lt;h4 id="lspci--s-xx">&lt;code>lspci -s xx&lt;/code>&lt;/h4>
+&lt;p>上一节中说到，可以由这个四个属性确定一个 PCI 设备功能。它有什么用呢？当我们使用 &lt;code>vvv&lt;/code> 显示更多详细信息而不选择特定设备时，&lt;code>lspci&lt;/code> 会反给我们一大串的输出，你会发现太多了，都不知道看哪个，用 &lt;code>-s&lt;/code> 来选择一下会对结果输出有极大的简化。对上面那个设备我们可以用以下命令来选择输出：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci -s 0:03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)
+$ lspci -s 03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca)&lt;/code>&lt;/pre>
+&lt;p>你可以用 &lt;code>-vvv&lt;/code> 来输出更多详细信息。我们会在读取 PCIe 版本和带宽的时候用到这个参数。&lt;/p>
+&lt;h3 id="pcie-树状结构的输出解析确定设备和槽-lspci--t">PCIe 树状结构的输出解析，确定设备和槽（ &lt;code>lspci -t&lt;/code>）&lt;/h3>
+&lt;p>&lt;code>lspci -t&lt;/code> 给出的树状结构表示的是它的物理连接方式（ &lt;code>bus&lt;/code> 是虚拟的含义），我们可以通过它来查询一个 PCIe 外设是插在哪个 PCIe 的槽上，当我们要扩容，或者要替换外设时，我们需要选择版本、通道匹配的 PCI 外设，我们可以通过这个命令来查看 PCIe 槽最大支持的版本和通道数，避免不匹配带来的性能缺失。同时，我们将看到 &lt;code>domain&lt;/code>, &lt;code>bus&lt;/code>, &lt;code>device&lt;/code>, &lt;code>function&lt;/code> 属性在树状结构中的表示。&lt;/p>
+&lt;p>以下是 &lt;code>lspci -tv&lt;/code> 的输出：&lt;/p>
+&lt;pre class="console">&lt;code>$ lspci -tv
+-+-[0000:ff]-+-08.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D QPI Link 0
+| +-...
+\-[0000:00]-+-00.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D DMI2
++-01.0-[01]--
++-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| | \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+| \-10.0-[05]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
++-03.0-[06-09]----00.0-[07-09]--+-08.0-[08]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| | \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+| \-10.0-[09]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
++-05.0 Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
++-...&lt;/code>&lt;/pre>
+&lt;p>在 &lt;code>lspci -t&lt;/code> 中，domain 和 bus 被用中括号包裹起来，例如第一行的 &lt;code>[0000:ff]&lt;/code> 表示 domain 为 0000，bus 为 ff。&lt;/p>
+&lt;p>我们来一点一点看一下这棵子树&lt;/p>
+&lt;pre>&lt;code>-+-
+\-[0000:00]-+
++
++-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+| \-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+\-10.0-[05]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+\-00.1 NVIDIA Corporation GP102 HDMI Audio Controller&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]&lt;/code>:
+&lt;ul>
+&lt;li>domain: 0000&lt;/li>
+&lt;li>bus: 00&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[0000:00]-+-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]-+-02.0-[02-05]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[0000:00]-+-02.0&lt;/code>
+&lt;ul>
+&lt;li>02 的设备挂在 &lt;code>[0000:00]&lt;/code>，即它的“索引”是 &lt;strong>&lt;code>00:02&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>02.0-[02-05]&lt;/code>
+&lt;ul>
+&lt;li>02-05 (即 02、03、04、05) 这些 bus 挂在 &lt;code>00:02&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[02-05]----00.0-[03-05]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[02-05]----00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>00&lt;/code> 这个设备挂在 bus 02 上，（03-05 bus 号是给后续的桥用的），即它的“索引”是 &lt;strong>&lt;code>02:00&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>00.0-[03-05]&lt;/code>
+&lt;ul>
+&lt;li>03-05 (即 03、04、05) 这些 bus 挂在 &lt;code>02:00&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[03-05]--+-08.0-[04]&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>[03-05]--+-08.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>08&lt;/code> 这个设备挂在 bus 03 上，（04 05 bus 号是给后续的桥用的），即它的“索引”是 &lt;strong>&lt;code>03:08&lt;/code>&lt;/strong>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>08.0-[04]&lt;/code>
+&lt;ul>
+&lt;li>04 bus 挂在 &lt;code>03:08&lt;/code> 这个设备的 &lt;code>.0&lt;/code> 功能上&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>[04]--+-00.0&lt;/code>
+&lt;ul>
+&lt;li>&lt;code>00&lt;/code> 这个设备挂在 bus 04 上，即它的“索引”是 &lt;strong>&lt;code>04:00&lt;/code>&lt;/strong>，也就是 &lt;code>GP102 [TITAN X]&lt;/code> 显卡&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>00.0&lt;/code> 和 &lt;code>00.1&lt;/code> 是 &lt;code>GP102 [TITAN X]&lt;/code> 显卡的两个 Function&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>为了不让上述的解析过长，我将上述涉及的设备列在这里，可以通过 &lt;code>lspci -s&lt;/code>，来选择输出&lt;/p>
+&lt;pre>&lt;code>00:02.0 PCI bridge: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D PCI Express Root Port 2 (rev 01) -&amp;gt; 它是一个 Root Complex。
+02:00.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) -&amp;gt; 它是一个 switch。
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) -&amp;gt; 它是一个 switch。
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) -&amp;gt; 显卡的 VGA 功能
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1) -&amp;gt; 显卡的 HDMI 功能&lt;/code>&lt;/pre>
+&lt;p>所以回到本节开头的问题，&lt;code>04:00&lt;/code> 的显卡插在哪个 PCIe 槽上呢？&lt;code>03:08.0&lt;/code> 这个 switch 芯片上。&lt;/p>
+&lt;h3 id="获取-pci-设备的详细信息">获取 PCI 设备的详细信息&lt;/h3>
+&lt;p>终于到了获取 PCI 设备速率的时候了，我们将查看 &lt;code>04:00&lt;/code> 显卡和 &lt;code>03:08.0&lt;/code> 插槽，注意 Capabilities 信息需要 root 来读取。以下是 &lt;code>03:08.0&lt;/code> 和 &lt;code>04:00&lt;/code> 的完整输出。&lt;/p>
+&lt;pre class="console">&lt;code># lspci -vvv -s 03:08.0
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin A routed to IRQ 34
+NUMA node: 0
+Bus: primary=03, secondary=04, subordinate=04, sec-latency=0
+I/O behind bridge: 00006000-00006fff [size=4K]
+Memory behind bridge: c4000000-c50fffff [size=17M]
+Prefetchable memory behind bridge: 0000033fe0000000-0000033ff1ffffff [size=288M]
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;lt;SERR- &amp;lt;PERR-
+BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16+ MAbort- &amp;gt;Reset- FastB2B-
+PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
+Address: 00000000fee00000 Data: 40ef
+Masking: 000000ff Pending: 00000000
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+DevCap: MaxPayload 2048 bytes, PhantFunc 0
+ExtTag- RBE+
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 128 bytes
+DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L1 &amp;lt;4us
+ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
+LnkCtl: ASPM L1 Enabled; Disabled- CommClk-
+ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
+SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+Slot #8, PowerLimit 25.000W; Interlock- NoCompl-
+SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+Changed: MRL- PresDet- LinkState-
+DevCap2: Completion Timeout: Not Supported, TimeoutDis-, NROPrPrP-, LTR+
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-, ARIFwd+
+AtomicOpsCap: Routing+
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+AtomicOpsCtl: EgressBlck-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
+EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
+Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch
+Capabilities: [100 v1] Vendor Specific Information: ID=0000 Rev=0 Len=000 &amp;lt;?&amp;gt;
+Capabilities: [fb4 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 1f, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [138 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [10c v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn-, PerformEqu-
+LaneErrStat: 0
+Capabilities: [148 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=8
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=03 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64+ WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=WRR64 TC/VC=01
+Status: NegoPending- InProgress-
+Port Arbitration Table &amp;lt;?&amp;gt;
+Capabilities: [e00 v1] Multicast
+McastCap: MaxGroups 64, ECRCRegen+
+McastCtl: NumGroups 1, Enable-
+McastBAR: IndexPos 0, BaseAddr 0000000000000000
+McastReceiveVec: 0000000000000000
+McastBlockAllVec: 0000000000000000
+McastBlockUntransVec: 0000000000000000
+McastOverlayBAR: OverlaySize 0 (disabled), BaseAddr 0000000000000000
+Capabilities: [f24 v1] Access Control Services
+ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
+ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 &amp;lt;?&amp;gt;
+Kernel driver in use: pcieport
+# lspci -vvv -s 04:00
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0
+Interrupt: pin A routed to IRQ 103
+NUMA node: 0
+Region 0: Memory at c4000000 (32-bit, non-prefetchable) [size=16M]
+Region 1: Memory at 33fe0000000 (64-bit, prefetchable) [size=256M]
+Region 3: Memory at 33ff0000000 (64-bit, prefetchable) [size=32M]
+Region 5: I/O ports at 6000 [size=128]
+Expansion ROM at c5000000 [virtual] [disabled] [size=512K]
+Capabilities: [60] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [68] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Address: 00000000fee00000 Data: 4022
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 &amp;lt;64us
+ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range AB, TimeoutDis+, NROPrPrP-, LTR-
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-
+AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+AtomicOpsCtl: ReqEn-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
+EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
+Capabilities: [100 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=1
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=Fixed TC/VC=01
+Status: NegoPending- InProgress-
+Capabilities: [128 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [420 v2] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 &amp;lt;?&amp;gt;
+Capabilities: [900 v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn-, PerformEqu-
+LaneErrStat: 0
+Kernel driver in use: nvidia
+Kernel modules: nvidiafb, nouveau, nvidia_drm, nvidia
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin B routed to IRQ 101
+NUMA node: 0
+Region 0: Memory at c5080000 (32-bit, non-prefetchable) [size=16K]
+Capabilities: [60] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+Address: 0000000000000000 Data: 0000
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 &amp;lt;64us
+ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd- ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 256 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- CommClk-
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range AB, TimeoutDis+, NROPrPrP-, LTR-
+10BitTagComp-, 10BitTagReq-, OBFF Via message, ExtFmt-, EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS-, TPHComp-, ExtTPHComp-
+AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+AtomicOpsCtl: ReqEn-
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+Capabilities: [100 v2] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Kernel driver in use: snd_hda_intel
+Kernel modules: snd_hda_intel&lt;/code>&lt;/pre>
+&lt;p>输出有点多，我们先看一层一层来看，第一层的输出：&lt;/p>
+&lt;pre class="console">&lt;code>03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin A routed to IRQ 34
+NUMA node: 0
+Bus: primary=03, secondary=04, subordinate=04, sec-latency=0
+I/O behind bridge: 00006000-00006fff [size=4K]
+Memory behind bridge: c4000000-c50fffff [size=17M]
+Prefetchable memory behind bridge: 0000033fe0000000-0000033ff1ffffff [size=288M]
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;lt;SERR- &amp;lt;PERR-
+BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16+ MAbort- &amp;gt;Reset- FastB2B-
+Capabilities: [40] Power Management version 3
+Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch
+Capabilities: [100 v1] Vendor Specific Information: ID=0000 Rev=0 Len=000 &amp;lt;?&amp;gt;
+Capabilities: [fb4 v1] Advanced Error Reporting
+Capabilities: [138 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [10c v1] Secondary PCI Express
+Capabilities: [148 v1] Virtual Channel
+Capabilities: [e00 v1] Multicast
+Capabilities: [f24 v1] Access Control Services
+Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 &amp;lt;?&amp;gt;
+Kernel driver in use: pcieport
+# lspci -vvv -s 04:00
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0
+Interrupt: pin A routed to IRQ 103
+NUMA node: 0
+Region 0: Memory at c4000000 (32-bit, non-prefetchable) [size=16M]
+Region 1: Memory at 33fe0000000 (64-bit, prefetchable) [size=256M]
+Region 3: Memory at 33ff0000000 (64-bit, prefetchable) [size=32M]
+Region 5: I/O ports at 6000 [size=128]
+Expansion ROM at c5000000 [virtual] [disabled] [size=512K]
+Capabilities: [60] Power Management version 3
+Capabilities: [68] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+Capabilities: [100 v1] Virtual Channel
+Capabilities: [128 v1] Power Budgeting &amp;lt;?&amp;gt;
+Capabilities: [420 v2] Advanced Error Reporting
+Capabilities: [600 v1] Vendor Specific Information: ID=0001 Rev=1 Len=024 &amp;lt;?&amp;gt;
+Capabilities: [900 v1] Secondary PCI Express
+Kernel driver in use: nvidia
+Kernel modules: nvidiafb, nouveau, nvidia_drm, nvidia
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast &amp;gt;TAbort- &amp;lt;TAbort- &amp;lt;MAbort- &amp;gt;SERR- &amp;lt;PERR- INTx-
+Latency: 0, Cache Line Size: 32 bytes
+Interrupt: pin B routed to IRQ 101
+NUMA node: 0
+Region 0: Memory at c5080000 (32-bit, non-prefetchable) [size=16K]
+Capabilities: [60] Power Management version 3
+Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+Capabilities: [100 v2] Advanced Error Reporting
+Kernel driver in use: snd_hda_intel
+Kernel modules: snd_hda_intel&lt;/code>&lt;/pre>
+&lt;p>目前我看得懂的，或者说我常用的属性是以下几个：&lt;/p>
+&lt;p>&lt;code>Subsystem&lt;/code>：属于什么子系统 &lt;code>Status&lt;/code>：状态，是否有错 &lt;code>Interrupt&lt;/code>：中断信息 &lt;code>Region&lt;/code>: 内存映射 &lt;code>Capabilities&lt;/code>：能力，包括 MSI，Express &lt;code>Kernel driver in use&lt;/code>：正在使用的驱动 &lt;code>Kernel modules&lt;/code>：可用的驱动&lt;/p>
+&lt;p>其中最有用的 Capabilities，&lt;code>lspci&lt;/code> 毕竟是列出 PCI 设备，那我们如何确定设备是 PCIe 设备呢？看 Capabilities 中是否有 Express，这个 PCI 设备有 Express 的能力，也就是说它是 PCIe 设备。那么我们要查看的速率和版本也在这个属性下面。&lt;/p>
+&lt;h4 id="获取-pcie-设备的版本和传输通道数">获取 PCIe 设备的版本和传输通道数&lt;/h4>
+&lt;p>我们在 &lt;code>Capabilities: Express (v2) Endpoint, MSI 00&lt;/code> 属性下面可以找两个属性：&lt;code>LnkCap&lt;/code> 和 &lt;code>LnkSta&lt;/code>，前者表示该设备支持的能力（Link Capability），后者是这个设备的连接状态（Link State)。我们可以从 &lt;code>LnkCap&lt;/code> 属性上看到下面这两个设备的“单个传输通道数”的速率都是 8GT/s，传输通道数是 &lt;code>x16&lt;/code>，也就是说这两个设备是 &lt;code>PCIe 3.0 x16&lt;/code> 的。&lt;/p>
+&lt;pre>&lt;code># tree view(partial)
+-[0000:00]-+-02.0-[02-05]----00.0-[03-05]--+-08.0-[04]--+-00.0 NVIDIA Corporation GP102 [TITAN X]
+\-00.1 NVIDIA Corporation GP102 HDMI Audio Controller
+# verbose output(partial)
+03:08.0 PCI bridge: PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev ca) (prog-if 00 [Normal decode])
+Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L1, Exit Latency L1 &amp;lt;4us
+ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
+04:00.0 VGA compatible controller: NVIDIA Corporation GP102 [TITAN X] (rev a1) (prog-if 00 [VGA controller])
+Subsystem: NVIDIA Corporation GP102 [TITAN X]
+Capabilities: [78] Express (v2) Legacy Endpoint, MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+04:00.1 Audio device: NVIDIA Corporation GP102 HDMI Audio Controller (rev a1)
+Subsystem: NVIDIA Corporation GP102 HDMI Audio Controller
+Capabilities: [78] Express (v2) Endpoint, MSI 00
+LnkCap: Port #8, Speed 8GT/s, Width x16, ASPM L0s L1, Exit Latency L0s &amp;lt;1us, L1 &amp;lt;4us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>Tips：
+&lt;ul>
+&lt;li>我猜测，一个设备的两个功能对应的版本和传输通道数是一样的。（可能插槽会有区别？我不是很确定，或者说，我们需要明确的是 function 是什么东西，TODO）&lt;/li>
+&lt;li>还有一些是 PCIe 设备 training（类似自协商）时会用的属性，例如 &lt;code>LnkCtl2&lt;/code>, &lt;code>LnkSta2&lt;/code>。&lt;/li>
+&lt;li>这些属性本质其实是 PCIe 配置空间内，寄存器的值。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>由于插槽和设备的能力不匹配，实际的连接状态 &lt;code>LnkSta&lt;/code> 和设备的能力 &lt;code>LnkCap&lt;/code> 会不一样。我们可以在 &lt;code>LnkSta&lt;/code> 中查看当前连接状态，可以看到上面这台设备 &lt;code>LnkSta&lt;/code> 中的 Speed 和 Width 和 &lt;code>LnkCap&lt;/code> 中的一样，因此，速率是匹配的，设备的性能可以得到完全发挥，&lt;code>lspci&lt;/code> 也很贴心地标注了两个 &lt;code>ok&lt;/code>。但是下面这台设备，速率就不匹配了我们可以看到固态硬盘（&lt;code>03:00&lt;/code>）设备支持的速率是 &lt;code>8GT/s x4&lt;/code>（&lt;code>PCIe 3.0 x4&lt;/code>），而插槽（&lt;code>00:1d.0&lt;/code>）支持的速率是 &lt;code>8GT/s x2&lt;/code>（&lt;code>PCIe 3.0 x2&lt;/code>），因此，固态硬盘的性能得不到完全的发挥。同时，我们可以看到设备的 &lt;code>LnkSta&lt;/code> 下对应有问题的属性边上标注了 &lt;code>downgraded&lt;/code>。&lt;/p>
+&lt;pre>&lt;code># tree view(partial)
+-[0000:00]-+-1d.0-[03]----00.0 Silicon Motion, Inc. SM2262/SM2262EN SSD Controller
+# verbose output(partial)
+00:1d.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 (rev f1) (prog-if 00 [Normal decode])
+Subsystem: Lenovo Device 505b
+Capabilities: [40] Express (v2) Root Port (Slot+), IntMsgNum 0
+LnkCap: Port #9, Speed 8GT/s, Width x2, ASPM L1, Exit Latency L1 &amp;lt;16us
+ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
+LnkSta: Speed 8GT/s, Width x2
+TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+Kernel driver in use: pcieport
+03:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2262/SM2262EN SSD Controller (rev 03) (prog-if 02 [NVM Express])
+Subsystem: Silicon Motion, Inc. SM2262/SM2262EN SSD Controller
+Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
+LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 &amp;lt;8us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkSta: Speed 8GT/s, Width x2 (downgraded)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-&lt;/code>&lt;/pre>
+&lt;p>至此，我们已经介绍了 PCIe 的基础知识以及如何使用 &lt;code>lspci&lt;/code> 查询 PCIe 设备的属性，快去看看你的 Linux 下的 PCIe 系统吧，看看有什么可以改进和升级的。&lt;/p></description></item><item><title>RK3588 PCIe Introduction</title><link>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</link><pubDate>Thu, 23 Nov 2023 10:51:55 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</guid><description>&lt;h2 id="intro">Intro&lt;/h2>
+&lt;p>起因是发现启动的时候 PCIe 有关于 &lt;code>fe160000&lt;/code> 的报错信息:&lt;/p>
+&lt;pre class="dmesg">&lt;code>[ 1.712561] rk-pcie fe160000.pcie: invalid prsnt-gpios property in node
+[ 1.728638] rk-pcie fe160000.pcie: IRQ msi not found
+[ 1.728645] rk-pcie fe160000.pcie: use outband MSI support
+[ 1.728647] rk-pcie fe160000.pcie: Missing *config* reg space
+[ 1.728660] rk-pcie fe160000.pcie: host bridge /pcie@fe160000 ranges:
+[ 1.728670] rk-pcie fe160000.pcie: err 0x00f1000000..0x00f10fffff -&amp;gt; 0x00f1000000
+[ 1.728677] rk-pcie fe160000.pcie: IO 0x00f1100000..0x00f11fffff -&amp;gt; 0x00f1100000
+[ 1.728686] rk-pcie fe160000.pcie: MEM 0x00f1200000..0x00f1ffffff -&amp;gt; 0x00f1200000
+[ 1.728691] rk-pcie fe160000.pcie: MEM 0x0940000000..0x097fffffff -&amp;gt; 0x0940000000
+[ 1.728712] rk-pcie fe160000.pcie: Missing *config* reg space
+[ 1.728739] rk-pcie fe160000.pcie: invalid resource
+[ 1.934114] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 1.959670] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x1
+[ 1.986337] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.013002] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.043004] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.069669] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 4.629670] rk-pcie fe160000.pcie: PCIe Link Fail
+[ 4.629679] rk-pcie fe160000.pcie: failed to initialize host&lt;/code>&lt;/pre>
+&lt;p>于是阅读 RK3588 SDK 中关于 PCIe 的文档 &lt;code>docs/cn/Common/PCIe/Rockchip_Developer_Guide_PCIe_CN.pdf&lt;/code>，想了解这个错究竟是什么，对于纯新手的我来说不是很好理解，因而边画，边学习，整理如下，如有错误之处，还请谅解并告知于我，十分感谢。&lt;/p>
+&lt;h2 id="rks-intro-and-picture">RK’s Intro and Picture&lt;/h2>
+&lt;p>RK 有一段关于 PCIe Controller 使用限制的说明，和一张 Big Picture，不是太好理解，于是我把这张图拆开来，画了几张图。&lt;/p>
+&lt;p>&lt;img src="./figures/rk3588_PCIe_use_limitation.png" alt="rk3588_PCIe_use_limitation" />[1] &lt;img src="./figures/rk3588_PCIe_big_picture.png" alt="rk3588_PCIe_big_picture" />[2]&lt;/p>
+&lt;h2 id="phy-and-controller">PHY and Controller&lt;/h2>
+&lt;ul>
+&lt;li>PHY: Chip。把控制器发过来的信号做处理，然后再发出去。这种处理是为了方便传输，类似网络中的 rgmii（上游）和 8bit/10bit（下游）。简单来说 PHY 的上下是两种信号。&lt;/li>
+&lt;li>控制器：实现一定的功能的 Chip。&lt;/li>
+&lt;li>Cable: 网线。by ChatGPT: difference of PHY and cable: The PHY layer manages the signaling and encoding on the cable, ensuring reliable communication between devices.&lt;/li>
+&lt;/ul>
+&lt;h3 id="pcie-phy">PCIe PHY&lt;/h3>
+&lt;ul>
+&lt;li>RK3588 有两种 PCIe PHY
+&lt;ul>
+&lt;li>一种是 PCIe 3.0 的 PHY 有 1 个&lt;/li>
+&lt;li>一种是 PCIe 2.0 的 PHY 有 3 个&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>PCIe 3.0 有 4 条 Lane&lt;/li>
+&lt;li>每个 PCIe 2.0 只有一条 1 个Lane&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/PCIe_PHY.drawio.png" alt="" />&lt;figcaption>PCIe_PHY.drawio&lt;/figcaption>
+&lt;/figure>
+&lt;h3 id="connect-to-pcie-controller">Connect to PCIe Controller&lt;/h3>
+&lt;p>RK3588共有5个PCIe的控制器，硬件IP是一样的，配置不一样，&lt;/p>
+&lt;ul>
+&lt;li>1 个 4 Lane 控制器 支持 DM（dual mode）模式，可以作为 RC(Root Complex) 和 EP(End Point) 使用&lt;/li>
+&lt;li>1 个 2 Lane 控制器 只能作为 RC 使用&lt;/li>
+&lt;li>3 个 1 Lane 控制器 均只能作为 RC 使用&lt;/li>
+&lt;/ul>
+&lt;p>关于 RC 和 EP，可以详见我的这篇文章 &lt;a href="./PCIe_and_lspci">PCIe 和 lspci&lt;/a>。对于 RK3588 这个 PCIe 控制器的 EP 模式，其实此时，是将 RK3588 所在的 PCB 板当作板卡，就像显卡一样，插在其他主机的 PCIe 槽上，作为从设备。就像显卡、RTL8168 系列芯片一样。&lt;/p>
+&lt;p>PCIe PHY 受 PCIe Controller 控制，所以上面几个 PHY 的上游需要接 PCIe Controller。接法有很多，最简单的接法是这样子的：&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_4Lane.drawio.png" alt="" />&lt;figcaption>PCIe_4Lane.drawio&lt;/figcaption>
+&lt;/figure>
+&lt;ul>
+&lt;li>关于 Port，简单来说一个 Port 接一个设备&lt;/li>
+&lt;/ul>
+&lt;p>也可以把 PCIe 3.0 的 PHY 拆开使用，拆成两个 Port&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_4Lane_split2.drawio.png" alt="" />&lt;figcaption>PCIe_4Lane_split2.drawio&lt;/figcaption>
+&lt;/figure>
+&lt;p>PCIe 3.0 的 PHY 还可以再细拆，拆成 4 个 Port&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_4Lane_split4.drawio.png" alt="" />&lt;figcaption>PCIe_4Lane_split4.drawio&lt;/figcaption>
+&lt;/figure>
+&lt;p>由于控制器数量限制，所以有两条 Lane 空出来了。这两条 Lane 空着也是空着，为什么不把它再利用起来呢，于是 RK 把这两条多出来的 Lane 和 USB 和 SATA 做了复用，也就是所谓的 MUX。所谓 MUX 就是同一条物理线路上，我可以传输这种信号，也可以传输另一种信号，我复用了这条线路，但是这里的“可以”和“也可以”只能选一个，不能既选这个又选那个，选了一个就不能选另外一个了。&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_4Lane_split4_USB_SATA.png" alt="" />&lt;figcaption>PCIe_4Lane_split4_USB_SATA&lt;/figcaption>
+&lt;/figure>
+&lt;p>那么回过头来，看第一种情况，我们也可以不接 controller 2 和 controller 3&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_4Lane_USB_SATA.png" alt="" />&lt;figcaption>PCIe_4Lane_USB_SATA&lt;/figcaption>
+&lt;/figure>
+&lt;p>所以这个事情就变得非常灵活了。那再来一张相对完整的图片（没有包含使用组合的限制）&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PCIe_full_connection_info.drawio.png" alt="" />&lt;figcaption>PCIe_full_connection_info.drawio&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="dts">DTS&lt;/h2>
+&lt;p>上面是硬件上的连接，那么软件上也就是设备树上怎么和上面的关联呢？根据 RK 文档，我们可以看到两张表，这里做了简化和修改。&lt;/p>
+&lt;h3 id="phy">PHY&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>PHY Chip Type&lt;/th>
+&lt;th>dts alias&lt;/th>
+&lt;th>dts point&lt;/th>
+&lt;th>Usage&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>PCIE3.0&lt;/td>
+&lt;td>&lt;code>pcie30phy&lt;/code>&lt;/td>
+&lt;td>&lt;code>phy@fee80000&lt;/code>&lt;/td>
+&lt;td>pcie专⽤&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>PCIE2.0&lt;/td>
+&lt;td>&lt;code>combphy0_ps&lt;/code>&lt;/td>
+&lt;td>&lt;code>phy@fee00000&lt;/code>&lt;/td>
+&lt;td>与SATA combo&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>PCIE2.0&lt;/td>
+&lt;td>&lt;code>combphy1_ps&lt;/code>&lt;/td>
+&lt;td>&lt;code>phy@fee10000&lt;/code>&lt;/td>
+&lt;td>与SATA combo&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>PCIE2.0&lt;/td>
+&lt;td>&lt;code>combphy2_psu&lt;/code>&lt;/td>
+&lt;td>&lt;code>phy@fee20000&lt;/code>&lt;/td>
+&lt;td>SATA/USB3 combo&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>comboPHY 就是 PCIE 信号线路和其他信号线路复用的 PHY，当然在使用的时候只能选择一种使用，由硬件设计。&lt;/p>
+&lt;p>comboPHY dts alias name rule:&lt;/p>
+&lt;ul>
+&lt;li>如果和其他信号复用(mux)，phy 的 alias 名字以 combphy 来表示&lt;/li>
+&lt;li>combphy 的后缀表⽰复⽤关系，p、s、u、q分别表⽰PCIe、SATA、USB、QSGMII&lt;/li>
+&lt;/ul>
+&lt;h3 id="controller">Controller&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Controller index&lt;/th>
+&lt;th>dts alias&lt;/th>
+&lt;th>dts point&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>0&lt;/td>
+&lt;td>&lt;code>pcie3x4&lt;/code>&lt;/td>
+&lt;td>&lt;code>pcie@fe150000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1&lt;/td>
+&lt;td>&lt;code>pcie3x2&lt;/code>&lt;/td>
+&lt;td>&lt;code>pcie@fe160000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>2&lt;/td>
+&lt;td>&lt;code>pcie2x1l0&lt;/code>&lt;/td>
+&lt;td>&lt;code>pcie@fe170000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>3&lt;/td>
+&lt;td>&lt;code>pcie2x1l1&lt;/code>&lt;/td>
+&lt;td>&lt;code>pcie@fe180000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>4&lt;/td>
+&lt;td>&lt;code>pcie2x1l2&lt;/code>&lt;/td>
+&lt;td>&lt;code>pcie@fe190000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>dts alias rule:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>pcie2&lt;/code> PCIE 类型&lt;/li>
+&lt;li>&lt;code>x1&lt;/code> 这个控制器最多能控制的 lane 数&lt;/li>
+&lt;li>&lt;code>l0&lt;/code> lane index 0&lt;/li>
+&lt;/ul>
+&lt;p>关于更详细的配置，目前我并没有细看，因为看明白这点之后，和硬件的同事对了一下，发现一开始说的关于 &lt;code>fe160000&lt;/code> 的报错问题是因为我们现在的板子相较于那版，少接了一个 3142 芯片，少了两个 USB 口，而这条 Lane 对应的就是 &lt;code>fe160000&lt;/code>，目前它是空着的。&lt;/p>
+&lt;h2 id="references">References:&lt;/h2>
+&lt;ul>
+&lt;li>[1] Rockchip_Developer_Guide_PCIe_CN.pdf&lt;/li>
+&lt;li>[2] Rockchip_Developer_Guide_PCIe_CN.pdf&lt;/li>
+&lt;/ul>
+&lt;h2 id="resources">Resources:&lt;/h2>
+&lt;p>本文图片源文件: &lt;a href="./res/rk3588_PCIe_intro.drawio">rk3588_PCIe_intro.drawio&lt;/a>&lt;/p>
+&lt;h2 id="ps">ps&lt;/h2>
+&lt;p>本文中摘录了部分 RK 文档中的内容，此部份内容均以 Reference 的形式指向 &lt;code>Rockchip_Developer_Guide_PCIe_CN.pdf&lt;/code>。私以为并未“超越合理使用范畴”，如 Rockchip 认为“超越合理使用范畴”请联系告知，我将会移除此部份。&lt;/p>
+&lt;p>RK 文档中的版权声明：&lt;/p>
+&lt;blockquote>
+&lt;p>版权所有 © 2023 瑞芯微电子股份有限公司&lt;/p>
+&lt;p>超越合理使用范畴，非经本公司书面许可，任何单位和个人不得擅自摘抄、复制本文档内容的部分或全部，并不得以任何形式传播。&lt;/p>
+&lt;/blockquote></description></item></channel></rss>

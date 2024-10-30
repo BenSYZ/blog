@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>curl on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/curl/</link><description>Recent content in curl on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 09 Oct 2021 10:37:10 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/curl/index.xml" rel="self" type="application/rss+xml"/><item><title>用 curl 来制作一些简单的网络小工具</title><link>https://bensyz.github.io/blog/blogs/curl_post/</link><pubDate>Sat, 09 Oct 2021 10:37:10 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/curl_post/</guid><description>&lt;h2 id="问题的出现碎碎念">问题的出现（碎碎念）&lt;/h2>
+&lt;h3 id="校园网登录">1. 校园网登录&lt;/h3>
+&lt;p>校园网需要认证后才能登录上网，在使用 Linux 的时候有一点很麻烦，宿舍区必须使用客户端才能登录，不能像教学区那样可以网页登录，不知道是谁告诉我们宿舍区也可以网页登录，网址是:&lt;/p>
+&lt;pre>&lt;code>http://172.30.255.2/a30.html&lt;/code>&lt;/pre>
+&lt;p>于是宿舍区使用 Linux 的问题得以解决。但是每次断网都要打开浏览器去连接也不是很方便，我想是否可以使用爬虫来实现登录，找着找着发现可以用 &lt;code>curl&lt;/code> 来实现登录。&lt;/p>
+&lt;h3 id="宿舍电费查询">2. 宿舍电费查询&lt;/h3>
+&lt;p>这个小工具的出现的起因是宿舍如果没电了，夏天早上会断电，我的树莓派会被强制断电，对 SD 卡不好于是我想每天做个定时任务爬一下宿舍电费是多少，一开始也是想用 selenium 爬虫做的，但是 selenium 太吃资源，于是我又找着找着想到了 &lt;code>curl&lt;/code>，然后就成了。&lt;/p>
+&lt;h2 id="curl-简介">&lt;code>curl&lt;/code> 简介&lt;/h2>
+&lt;p>我们常用 &lt;code>curl&lt;/code>、&lt;code>wget&lt;/code> 在 Linux 上下载东西：&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> www.baidu.com&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">wget&lt;/span> www.baidu.com&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>而我们知道网络里有的不止是从服务器上下载内容，还有提交内容到服务器上。要怎么提交呢？&lt;/p>
+&lt;p>方法很简单就是使用 &lt;code>-d&lt;/code> 参数，语法如下：&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> -d &lt;span class="st">&amp;#39;variable=value&amp;#39;&lt;/span> URL&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>Windows、Linux、Mac 一般都有 &lt;code>curl&lt;/code> 命令，Windows 没有的话可以去这里下 &lt;a href="https://curl.se/windows">https://curl.se/windows&lt;/a>&lt;/p>
+&lt;h2 id="如何制作">如何制作&lt;/h2>
+&lt;p>上面说的 &lt;code>curl&lt;/code> 来贴一个 POST表单，可能很难理解，我们借 drcom 来举一个例子，给大家介绍一下如何制作两个使用 &lt;code>curl&lt;/code> 的小工具。&lt;/p>
+&lt;h3 id="登录-drcom-校园网">登录 drcom 校园网&lt;/h3>
+&lt;p>这里再提一下两个登录的网页地址，教学区这个域名默认的网页就是登录界面，但是宿舍区上网自动跳转的界面是让你下载客户端，但是&lt;code>a30.html&lt;/code>是可以和教学区那样实现网页登录的：&lt;/p>
+&lt;ul>
+&lt;li>教学区： &lt;code>https://drcom.szu.edu.cn&lt;/code>&lt;/li>
+&lt;li>宿舍区： &lt;code>http://172.30.255.2/a30.html&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>前面说到 &lt;code>curl&lt;/code> 登录需要提交一份包含登录信息的表单。那这个表单是怎么样的呢？&lt;/p>
+&lt;ol type="1">
+&lt;li>&lt;p>在浏览器中打开登录网页，并输入帐号密码，&lt;strong>不要登录&lt;/strong>。&lt;/p>&lt;/li>
+&lt;li>&lt;p>打开调试，选择&lt;code>网络 (Network)&lt;/code>， 并勾选&lt;code>保留日志 (Preserve log)&lt;/code>(Firefox 默认保留）&lt;/p>&lt;/li>
+&lt;/ol>
+&lt;figure>
+&lt;img src="./figures/2.fn12_preserve_log.png" alt="" />&lt;figcaption>Fig. 1&lt;/figcaption>
+&lt;/figure>
+&lt;p>打开调试的方法：&lt;/p>
+&lt;ul>
+&lt;li>Chrome, Firefox: F12&lt;/li>
+&lt;li>Mac 的 Safari:
+&lt;ol type="1">
+&lt;li>Safari 浏览器 &amp;gt; 偏好设置 &amp;gt; 高级 &amp;gt; 在菜单栏中显示“开发”菜单&lt;/li>
+&lt;li>开发 &amp;gt; 显示 JavaScript 控制台&lt;/li>
+&lt;/ol>&lt;/li>
+&lt;/ul>
+&lt;ol start="3" type="1">
+&lt;li>点击登录，调试框内会显示新的各种请求接受包&lt;/li>
+&lt;/ol>
+&lt;figure>
+&lt;img src="./figures/3.after_login.png" alt="" />&lt;figcaption>Fig. 2&lt;/figcaption>
+&lt;/figure>
+&lt;ol start="4" type="1">
+&lt;li>点最上面的&lt;code>a30.html&lt;/code>，点&lt;code>标头 (Headers)&lt;/code>，这是一个&lt;code>POST&lt;/code>包，并拉到最下面。&lt;/li>
+&lt;/ol>
+&lt;figure>
+&lt;img src="./figures/4.pull_to_end.png" alt="" />&lt;figcaption>Fig. 3&lt;/figcaption>
+&lt;/figure>
+&lt;ul>
+&lt;li>Chrome 和 Firefox 更新了，表单是单列了一条（Payload/请求）
+&lt;ul>
+&lt;li>Chrome:&lt;br />
+&lt;img src="./figures/chrome_payload.png" alt="Fig. 4" />&lt;/li>
+&lt;li>Firefox:&lt;br />
+&lt;img src="./figures/firefox_post.png" alt="Fig. 5" />&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;ol start="5" type="1">
+&lt;li>看到输入的帐号密码（别的地方的 WIFI 可能是被加密过的，但没关系，拷下来就是），以及一个&lt;code>0MKKEY&lt;/code>，点击&lt;code>view URL encoded&lt;/code>，&lt;code>0MKKEY&lt;/code> 显示出来了。&lt;/li>
+&lt;/ol>
+&lt;figure>
+&lt;img src="./figures/5.click_view_url_encoded.png" alt="" />&lt;figcaption>Fig. 6&lt;/figcaption>
+&lt;/figure>
+&lt;p>这个就是前面说的 &lt;code>curl&lt;/code> 需要的表单。&lt;/p>
+&lt;ol start="6" type="1">
+&lt;li>用&lt;code>curl&lt;/code>登录，在终端（Linux，Mac）cmd（Windows）输入命令，可以在登出后测试。&lt;/li>
+&lt;/ol>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> -d &lt;span class="st">&amp;quot;DDDDD=245235&amp;quot;&lt;/span> -d &lt;span class="st">&amp;quot;upass=tsaeitonsr&amp;quot;&lt;/span> -d &lt;span class="st">&amp;quot;0MKKey=%B5%C7%A1%A1%C2%BC&amp;quot;&lt;/span> http://172.30.255.2/a30.html&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="co"># 换上你的帐号密码&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;strong>update: 可以直接右键复制为 &lt;code>cURL&lt;/code>&lt;/strong>&lt;/p>
+&lt;ol start="7" type="1">
+&lt;li>脚本化&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>windows 桌面新建一个&lt;code>drcom.cmd&lt;/code>，然后把上面这个命令拷进去，下次双击就可以执行啦。&lt;/li>
+&lt;li>Linux、Mac 在桌面或者别的地方建一个&lt;code>drcom.sh&lt;/code>，然后拷贝上面的命令到这个文件里。添加&lt;code>#!/bin/sh&lt;/code>作为第一行，保存。通过&lt;code>chmod +x drcom.sh&lt;/code>添加执行权限。
+&lt;ul>
+&lt;li>Linux 双击或者选择用终端打开就可以了&lt;/li>
+&lt;li>Mac 右键选择打开方式 &amp;gt; 启用：所有应用程序，始终以此方式打开 &amp;gt; 实用工具 &amp;gt; 终端&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>多说一句那一行的意思，在终端执行&lt;code>./drcom.sh&lt;/code>时，系统会用&lt;code>/bin/sh&lt;/code>来解释执行，它等同于在终端使用&lt;code>/bin/sh drcom.sh&lt;/code>，如果你有 python 程序，在添加&lt;code>#/bin/python&lt;/code>（自己注意 python 的位置和版本）后，可以使用&lt;code>./script.py&lt;/code>来用 python 执行，当然&lt;code>./drcom.sh&lt;/code>的前提是文件有执行权限。&lt;/p>
+&lt;h3 id="查询宿舍电费">查询宿舍电费&lt;/h3>
+&lt;p>第二个例子是“查询宿舍电费”&lt;/p>
+&lt;p>查询路径：&lt;/p>
+&lt;pre class="mermaid">&lt;code>graph LR
+%%TB
+A(内部网) --&amp;gt; B(学生事务)
+B --&amp;gt; C(宿舍用电查询)&lt;/code>&lt;/pre>
+&lt;p>用同样的方法，只不过这次的脚本相比于登录校园网，需要生成时间，并解析HTML。&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="co">#!/bin/bash&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a>&lt;span class="co"># get from curl&lt;/span>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a>&lt;span class="va">dormitory=&lt;/span>1632&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a>&lt;span class="va">roomId=&lt;/span>8780&lt;/span>
+&lt;span id="cb6-6">&lt;a href="#cb6-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-7">&lt;a href="#cb6-7" aria-hidden="true">&lt;/a>&lt;span class="co"># Send an email when the battery is below 20&lt;/span>&lt;/span>
+&lt;span id="cb6-8">&lt;a href="#cb6-8" aria-hidden="true">&lt;/a>&lt;span class="va">mail_threshold=&lt;/span>20&lt;/span>
+&lt;span id="cb6-9">&lt;a href="#cb6-9" aria-hidden="true">&lt;/a>&lt;span class="va">mail_address=&lt;/span>&lt;span class="op">&amp;lt;&lt;/span>&lt;span class="ex">mail&lt;/span> address&lt;span class="op">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb6-10">&lt;a href="#cb6-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-11">&lt;a href="#cb6-11" aria-hidden="true">&lt;/a>&lt;span class="va">today=$(&lt;/span>&lt;span class="fu">date&lt;/span> -d today +%Y-%m-%d&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-12">&lt;a href="#cb6-12" aria-hidden="true">&lt;/a>&lt;span class="va">three_days_ago=$(&lt;/span>&lt;span class="fu">date&lt;/span> -d 3-days-ago +%Y-%m-%d&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-13">&lt;a href="#cb6-13" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-14">&lt;a href="#cb6-14" aria-hidden="true">&lt;/a>&lt;span class="va">today_y=$(&lt;/span>&lt;span class="fu">date&lt;/span> -d today +%Y&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-15">&lt;a href="#cb6-15" aria-hidden="true">&lt;/a>&lt;span class="va">three_days_ago_y=$(&lt;/span>&lt;span class="fu">date&lt;/span> -d 3-days-ago +%Y&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-17">&lt;a href="#cb6-17" aria-hidden="true">&lt;/a>&lt;span class="co">#echo $three_days_ago&lt;/span>&lt;/span>
+&lt;span id="cb6-18">&lt;a href="#cb6-18" aria-hidden="true">&lt;/a>&lt;span class="co">#echo $today&lt;/span>&lt;/span>
+&lt;span id="cb6-19">&lt;a href="#cb6-19" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-20">&lt;a href="#cb6-20" aria-hidden="true">&lt;/a>&lt;span class="va">html=$(&lt;/span>&lt;span class="ex">curl&lt;/span> -s &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-21">&lt;a href="#cb6-21" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;beginTime=&lt;/span>&lt;span class="va">$three_days_ago&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-22">&lt;a href="#cb6-22" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;endTime=&lt;/span>&lt;span class="va">$today&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-23">&lt;a href="#cb6-23" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;type=2&amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-24">&lt;a href="#cb6-24" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;roomId=&lt;/span>&lt;span class="va">$roomId&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-25">&lt;a href="#cb6-25" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;roomName=&lt;/span>&lt;span class="va">$dormitory&lt;/span>&lt;span class="st"> &amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-26">&lt;a href="#cb6-26" aria-hidden="true">&lt;/a> &lt;span class="ex">-d&lt;/span> &lt;span class="st">&amp;quot;client=192.168.84.110&amp;quot;&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb6-27">&lt;a href="#cb6-27" aria-hidden="true">&lt;/a> &lt;span class="ex">http&lt;/span>://192.168.84.3:9090/cgcSims/selectList.do&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-28">&lt;a href="#cb6-28" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-29">&lt;a href="#cb6-29" aria-hidden="true">&lt;/a>&lt;span class="co"># parse HTML&lt;/span>&lt;/span>
+&lt;span id="cb6-30">&lt;a href="#cb6-30" aria-hidden="true">&lt;/a>&lt;span class="va">electric_info=$(&lt;/span>&lt;span class="fu">sed&lt;/span> &lt;span class="st">&amp;#39;s/\r//g;s/^[ \t]*//g;/^[[:space:]]*$/d&amp;#39;&lt;/span> &lt;span class="op">&amp;lt;(&lt;/span>&lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$html&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="op">)&lt;/span> &lt;span class="kw">|\&lt;/span>&lt;/span>
+&lt;span id="cb6-31">&lt;a href="#cb6-31" aria-hidden="true">&lt;/a> &lt;span class="fu">grep&lt;/span> -a -v &lt;span class="st">&amp;#39;[&amp;lt;&amp;gt;]&amp;#39;&lt;/span> &lt;span class="kw">|\&lt;/span>&lt;/span>
+&lt;span id="cb6-32">&lt;a href="#cb6-32" aria-hidden="true">&lt;/a> &lt;span class="fu">awk&lt;/span> -v dormitory=&lt;span class="va">$dormitory&lt;/span> -v today_y=&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$today_y&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> -v three_days_ago_y=&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$three_days_ago_y&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="st">&amp;#39;($0~dormitory),($0~today_y||$0~three_days_ago_y){print $0}&amp;#39;&lt;/span>&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-33">&lt;a href="#cb6-33" aria-hidden="true">&lt;/a> &lt;span class="co"># remove \r space return&lt;/span>&lt;/span>
+&lt;span id="cb6-34">&lt;a href="#cb6-34" aria-hidden="true">&lt;/a> &lt;span class="co"># remove html tags &lt;/span>&lt;/span>
+&lt;span id="cb6-35">&lt;a href="#cb6-35" aria-hidden="true">&lt;/a> &lt;span class="co"># print between dormitory and year # grammar: comma&lt;/span>&lt;/span>
+&lt;span id="cb6-36">&lt;a href="#cb6-36" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-37">&lt;a href="#cb6-37" aria-hidden="true">&lt;/a>&lt;span class="co"># send mail&lt;/span>&lt;/span>
+&lt;span id="cb6-38">&lt;a href="#cb6-38" aria-hidden="true">&lt;/a>&lt;span class="va">mail_info=$(&lt;/span>&lt;span class="fu">tac&lt;/span> &lt;span class="op">&amp;lt;(&lt;/span>&lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$electric_info&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="op">)&lt;/span> &lt;span class="kw">|&lt;/span>&lt;span class="fu">awk&lt;/span> &lt;span class="st">&amp;#39;NR==1{print &amp;quot;更新时间：&amp;quot; $0};NR==4{print &amp;quot;剩余电量：&amp;quot; $0}&amp;#39;&lt;/span>&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb6-39">&lt;a href="#cb6-39" aria-hidden="true">&lt;/a>&lt;span class="co">#electric_reserve=$(tac &amp;lt;(echo &amp;quot;$electric_info&amp;quot;) |awk &amp;#39;NR==4{print $0}&amp;#39;)&lt;/span>&lt;/span>
+&lt;span id="cb6-40">&lt;a href="#cb6-40" aria-hidden="true">&lt;/a>&lt;span class="co">#echo $mail_info&lt;/span>&lt;/span>
+&lt;span id="cb6-41">&lt;a href="#cb6-41" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-42">&lt;a href="#cb6-42" aria-hidden="true">&lt;/a>&lt;span class="co">#echo $electric_reserve&lt;/span>&lt;/span>
+&lt;span id="cb6-43">&lt;a href="#cb6-43" aria-hidden="true">&lt;/a>&lt;span class="bu">:&lt;/span> &lt;span class="va">${electric_reserve:=$(($mail_threshold&lt;/span>+1&lt;span class="va">))}&lt;/span>&lt;/span>
+&lt;span id="cb6-44">&lt;a href="#cb6-44" aria-hidden="true">&lt;/a>&lt;span class="co">#echo $electric_reserve&lt;/span>&lt;/span>
+&lt;span id="cb6-45">&lt;a href="#cb6-45" aria-hidden="true">&lt;/a>&lt;span class="co">#electric_reserve=$(sed &amp;#39;s/\r//&amp;#39; &amp;lt;&amp;lt;&amp;lt;$(echo &amp;quot;$electric_reserve&amp;quot;)) #remove the \r&lt;/span>&lt;/span>
+&lt;span id="cb6-46">&lt;a href="#cb6-46" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-47">&lt;a href="#cb6-47" aria-hidden="true">&lt;/a>&lt;span class="kw">if&lt;/span>&lt;span class="bu"> [&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$(&lt;/span>&lt;span class="fu">bc&lt;/span> &lt;span class="op">&amp;lt;&amp;lt;&amp;lt;&lt;/span>&lt;span class="va">$(&lt;/span>&lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$electric_reserve&lt;/span>&lt;span class="st"> &amp;lt; &lt;/span>&lt;span class="va">$mail_threshold&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">))&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="ot">-eq&lt;/span> 1&lt;span class="bu"> ]&lt;/span>; &lt;span class="kw">then&lt;/span>&lt;/span>
+&lt;span id="cb6-48">&lt;a href="#cb6-48" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> -e &lt;span class="st">&amp;quot;Subject: 宿舍电费\n\n&lt;/span>&lt;span class="va">$mail_info&lt;/span>&lt;span class="st">\n记得及时充电费哦. \n\nRaspberrypi\n&lt;/span>&lt;span class="va">$(&lt;/span>&lt;span class="fu">date&lt;/span>&lt;span class="va">)&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="ex">sendmail&lt;/span> &lt;span class="va">$mail_address&lt;/span>&lt;/span>
+&lt;span id="cb6-49">&lt;a href="#cb6-49" aria-hidden="true">&lt;/a>&lt;span class="kw">fi&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;hr />
+&lt;h2 id="drcom-自动登录">drcom 自动登录&lt;/h2>
+&lt;p>断网了就要重新去点运行脚本好麻烦，那能不能连上校园网断网自动重连呢？&lt;/p>
+&lt;p>思路是：&lt;/p>
+&lt;ul>
+&lt;li>WIFI:&lt;/li>
+&lt;/ul>
+&lt;ol type="1">
+&lt;li>获取当前连着的 WIFI 的名字&lt;/li>
+&lt;li>如果那个需要登录的 WIFI 名，包含在当前连着的 WIFI 里（分 &lt;code>172&lt;/code> 和 &lt;code>192&lt;/code>），就尝试 &lt;code>ping baidu.com&lt;/code>&lt;/li>
+&lt;li>如果 &lt;code>ping&lt;/code> 不通，就用 &lt;code>curl&lt;/code> 登录&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>以太网：&lt;/li>
+&lt;/ul>
+&lt;ol type="1">
+&lt;li>比较网关的 mac 地址 （分 &lt;code>172&lt;/code> 和 &lt;code>192&lt;/code>) 和预存是否一样，这里可能每到一个新地方就要添加一下挺麻烦的。&lt;/li>
+&lt;li>如果一样，则尝试 &lt;code>ping baidu.com&lt;/code>&lt;/li>
+&lt;li>如果 &lt;code>ping&lt;/code> 不通，就用 &lt;code>curl&lt;/code> 登录&lt;/li>
+&lt;/ol>
+&lt;p>我已经将它写好了，放在 &lt;a href="https://github.com/BenSYZ/tools-in-szu">github&lt;/a> 上。 * 一般情况把卡号和密码改上，运行一下 install 就可以了，如果有问题欢迎留言和提 issue。 * 需要修改 &lt;code>drcom.cmd&lt;/code>/&lt;code>drcom.sh&lt;/code> 里的卡号、密码、以太网的设备名和 mac 地址，保存后然后运行 install * WIFI 名称不一定非得是 SZU_WLAN, SZU_NewFi，可以加上自己的路由器的 WIFI 名，这样打开电脑，连上这个 WIFI，也会尝试登录的。 * 如果是别的学校的同学可能需要自己修改一下内容啦&lt;/p>
+&lt;p>需要注意的是：如果你在宿舍跑着这个脚本，就不能在食堂用手机登录啦，会自动踢下线的，但是教学区和宿舍区是分开的（192 和 172 是分开的）。&lt;/p>
+&lt;h3 id="windows">Windows&lt;/h3>
+&lt;p>Install 后相关文件：&lt;/p>
+&lt;pre>&lt;code>C:\Users\%username%\drcom\drcom_autologin\
+C:\Users\%username%\drcom\drcom_autologin\drcom.sh
+C:\Users\%username%\drcom\drcom_autologin\drcom.vbs
+C:\Users\%username%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\drcom.vbs -&amp;gt; C:\Users\%username%\drcom\drcom_autologin\drcom.vbs&lt;/code>&lt;/pre>
+&lt;p>用&lt;code>vbs&lt;/code>启动 &lt;code>cmd&lt;/code>，发送这个&lt;code>vbs&lt;/code>的快捷方式到开机启动的目录，就可以实现开机自启动了。&lt;/p>
+&lt;h3 id="linux">Linux&lt;/h3>
+&lt;p>Install 后相关文件：&lt;/p>
+&lt;pre>&lt;code>~/.local/bin/drcom.sh
+~/.config/systemd/user/drcom.service&lt;/code>&lt;/pre>
+&lt;h4 id="requirements">Requirements&lt;/h4>
+&lt;ul>
+&lt;li>&lt;code>ip&lt;/code> in &lt;code>iproute2&lt;/code>&lt;/li>
+&lt;li>&lt;code>arp&lt;/code> in &lt;code>net-tools&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>通过 user &lt;code>systemd&lt;/code>，在用户登录时启动脚本，&lt;/p>
+&lt;p>需要注意的是 &lt;strong>用户级别的&lt;/strong> &lt;code>systemd&lt;/code>在没登录的时候是不会启动的，我之前把树莓派上的 service 从系统级别换成用户级别，每次重启后连上树莓派的热点后都要登录，脚本好像失效了，但登录到树莓派上，又能上网了，那时让我很是困惑。&lt;/p>
+&lt;h3 id="mac">Mac&lt;/h3>
+&lt;p>Install 后相关文件：&lt;/p>
+&lt;pre>&lt;code>~/.local/bin/drcom.sh
+~/Library/LaunchAgents/com.drcom.app.plist&lt;/code>&lt;/pre>
+&lt;h4 id="requirements-1">Requirements&lt;/h4>
+&lt;ul>
+&lt;li>&lt;code>ip&lt;/code> in &lt;code>iproute2mac&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="ex">brew&lt;/span> install iproute2mac&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>通过&lt;code>launchctl&lt;/code>，来实现自动启动脚本。&lt;/p></description></item></channel></rss>

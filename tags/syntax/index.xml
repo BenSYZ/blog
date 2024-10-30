@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>syntax on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/syntax/</link><description>Recent content in syntax on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 20 May 2023 16:55:23 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/syntax/index.xml" rel="self" type="application/rss+xml"/><item><title>about nested struct and anonymous struct in c</title><link>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</link><pubDate>Sat, 20 May 2023 16:55:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</guid><description>&lt;p>看书的时候没明白一个 macro 的用法，搜了一下，发现这个&lt;a href="https://stackoverflow.com/questions/58346036/c-c-macro-parameter-containing-dot-member-access-operator">问题&lt;/a>，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个&lt;a href="https://stackoverflow.com/questions/38457109/c-how-to-access-different-types-of-anonymous-or-unnamed-nested-structs/38457240">问题&lt;/a>，一下把我能想到的关于结构体的情况都写出来了&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> s {&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> abc;&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
+&lt;span id="cb1-9">&lt;a href="#cb1-9" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
+&lt;span id="cb1-10">&lt;a href="#cb1-10" aria-hidden="true">&lt;/a> } intern;&lt;/span>
+&lt;span id="cb1-11">&lt;a href="#cb1-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-12">&lt;a href="#cb1-12" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i {&lt;/span>
+&lt;span id="cb1-13">&lt;a href="#cb1-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> c;&lt;/span>
+&lt;span id="cb1-14">&lt;a href="#cb1-14" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-15">&lt;a href="#cb1-15" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-16">&lt;a href="#cb1-16" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i2 {&lt;/span>
+&lt;span id="cb1-17">&lt;a href="#cb1-17" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> d;&lt;/span>
+&lt;span id="cb1-18">&lt;a href="#cb1-18" aria-hidden="true">&lt;/a> } intern2;&lt;/span>
+&lt;span id="cb1-19">&lt;a href="#cb1-19" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-20">&lt;a href="#cb1-20" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 {&lt;/span>
+&lt;span id="cb1-21">&lt;a href="#cb1-21" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> e;&lt;/span>
+&lt;span id="cb1-22">&lt;a href="#cb1-22" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-23">&lt;a href="#cb1-23" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 intern3;&lt;/span>
+&lt;span id="cb1-24">&lt;a href="#cb1-24" aria-hidden="true">&lt;/a>};&lt;/span>
+&lt;span id="cb1-25">&lt;a href="#cb1-25" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-26">&lt;a href="#cb1-26" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> i3 AA;&lt;/span>
+&lt;span id="cb1-27">&lt;a href="#cb1-27" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-28">&lt;a href="#cb1-28" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> &lt;span class="dt">const&lt;/span> *argv[])&lt;/span>
+&lt;span id="cb1-29">&lt;a href="#cb1-29" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb1-30">&lt;a href="#cb1-30" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> s mystruct;&lt;/span>
+&lt;span id="cb1-31">&lt;a href="#cb1-31" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-32">&lt;a href="#cb1-32" aria-hidden="true">&lt;/a> mystruct.abc = &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-33">&lt;a href="#cb1-33" aria-hidden="true">&lt;/a> mystruct.a = &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb1-34">&lt;a href="#cb1-34" aria-hidden="true">&lt;/a> mystruct.intern.b = &lt;span class="dv">2&lt;/span>;&lt;/span>
+&lt;span id="cb1-35">&lt;a href="#cb1-35" aria-hidden="true">&lt;/a> mystruct.c = &lt;span class="dv">3&lt;/span>; &lt;span class="co">// &amp;lt;-- does not compile&lt;/span>&lt;/span>
+&lt;span id="cb1-36">&lt;a href="#cb1-36" aria-hidden="true">&lt;/a> mystruct.intern2.d = &lt;span class="dv">4&lt;/span>;&lt;/span>
+&lt;span id="cb1-37">&lt;a href="#cb1-37" aria-hidden="true">&lt;/a> mystruct.intern3.e = &lt;span class="dv">5&lt;/span>;&lt;/span>
+&lt;span id="cb1-38">&lt;a href="#cb1-38" aria-hidden="true">&lt;/a> AA.e=&lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-39">&lt;a href="#cb1-39" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-40">&lt;a href="#cb1-40" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-41">&lt;a href="#cb1-41" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>两个回答都很好：&lt;/p>
+&lt;blockquote>
+&lt;p>Regarding anonymous structure, quoting C11, chapter §6.7.2.1, (emphasis mine)&lt;/p>
+&lt;blockquote>
+&lt;p>An unnamed member whose type specifier is a structure specifier with no tag is called an anonymous structure; an unnamed member whose type specifier is a union specifier with no tag is called an anonymous union. The members of an anonymous structure or union are considered to be members of the containing structure or union. This applies recursively if the containing structure or union is also anonymous.&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;p>说明了 anonymous struct 访问内部变量这种奇怪的 &lt;code>.&lt;/code> 法。&lt;/p>
+&lt;blockquote>
+&lt;p>Member c is declared inside inside strut i. And you are not creating any variable for struct i&lt;/p>
+&lt;/blockquote>
+&lt;p>这个回答看起来没说什么，其实说明了 &lt;code>struct i&lt;/code> 在 struct 内部的声明（可能不叫声明）等同于放在外面，也解释了 warning 的问题。（其实不等同，不然不会有这个 warning 了）&lt;/p>
+&lt;p>&lt;a href="./res/example.c">example.c&lt;/a>&lt;/p></description></item></channel></rss>

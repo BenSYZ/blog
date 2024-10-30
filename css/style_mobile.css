@@ -1,0 +1,13 @@
+ul{
+    padding-left: 1%;
+}
+
+#content {
+    margin:10% auto 10% auto;
+    width:90%;
+    overflow:hidden; /*超出宽度隐藏*/
+}
+
+#Rsidebar {
+    display: none;
+}

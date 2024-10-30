@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>network on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/network/</link><description>Recent content in network on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 26 Apr 2022 02:32:01 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/network/index.xml" rel="self" type="application/rss+xml"/><item><title>网络断连分析工具介绍</title><link>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</link><pubDate>Tue, 26 Apr 2022 02:32:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</guid><description>&lt;h1 id="网络断连分析工具介绍">网络断连分析工具介绍&lt;/h1>
+&lt;p>[toc]&lt;/p>
+&lt;h2 id="抓包工具数据链路层及之上">抓包工具（数据链路层及之上）&lt;/h2>
+&lt;h3 id="tcpdump">&lt;code>tcpdump&lt;/code>&lt;/h3>
+&lt;ol type="1">
+&lt;li>网络层：&lt;/li>
+&lt;/ol>
+&lt;pre class="console">&lt;code># tcpdump -i eth0&lt;/code>&lt;/pre>
+&lt;ol start="2" type="1">
+&lt;li>数据链路层&lt;/li>
+&lt;/ol>
+&lt;pre class="console">&lt;code># tcpdump -e -i eth0&lt;/code>&lt;/pre>
+&lt;h3 id="wireshark">&lt;code>wireshark&lt;/code>&lt;/h3>
+&lt;p>&lt;code>wireshark&lt;/code> 还是更香一点，可以直接抓，抓完还可以看流量图 (statistic-Flow graph)(一应一答的那种)&lt;/p>
+&lt;p>需要注意的是通讯双方的 &lt;code>wireshark&lt;/code> 版本要保持一致，老版本的 sequence number 和新版本的对不上&lt;/p>
+&lt;p>我们这次使用的是 Version 3.6.3，如果没有可以自行 &lt;a href="https://1.as.dl.wireshark.org/src/wireshark-3.6.3.tar.xz">下载&lt;/a> 编译，编译方法查看 INSTALL 文件，对于 Ubnutu 来说&lt;/p>
+&lt;pre class="console">&lt;code># ./tools/debian-setup.sh
+# mkdir build
+# cmake -DCMAKE_INSTALL_PREFIX ..
+# make -j4
+# make install&lt;/code>&lt;/pre>
+&lt;h2 id="phy-芯片的查看物理层">PHY 芯片的查看（物理层）&lt;/h2>
+&lt;p>rtl8169 的手册：&lt;a href="https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf" class="uri">https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf&lt;/a>&lt;/p>
+&lt;p>PHY 分 MAC 侧和 PHY 侧，我们这次主要看 PHY 是否有变化，以及 中断 mask 是否有变化导致网络中断上不来。&lt;/p>
+&lt;h3 id="网上找的一个小工具-mdio">网上找的一个小工具 mdio&lt;/h3>
+&lt;p>我先是找到了这个&lt;a href="https://blog.csdn.net/qq_40083589/article/details/102495601">工具&lt;/a>，但它只支持 PHY 侧的状态查询&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdlib.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;string.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;linux/mii.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;sys/types.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;sys/socket.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;sys/ioctl.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;net/if.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;linux/sockios.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;linux/types.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;netinet/in.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a>&lt;span class="pp">#define reteck(ret) \&lt;/span>&lt;/span>
+&lt;span id="cb4-15">&lt;a href="#cb4-15" aria-hidden="true">&lt;/a>&lt;span class="pp"> if(ret &amp;lt; 0){ \&lt;/span>&lt;/span>
+&lt;span id="cb4-16">&lt;a href="#cb4-16" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;%m! \&amp;quot;%s\&amp;quot; : line: %d\n&amp;quot;, __func__, __LINE__); \&lt;/span>&lt;/span>
+&lt;span id="cb4-17">&lt;a href="#cb4-17" aria-hidden="true">&lt;/a>&lt;span class="pp"> goto lab; \&lt;/span>&lt;/span>
+&lt;span id="cb4-18">&lt;a href="#cb4-18" aria-hidden="true">&lt;/a>&lt;span class="pp"> }&lt;/span>&lt;/span>
+&lt;span id="cb4-19">&lt;a href="#cb4-19" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-20">&lt;a href="#cb4-20" aria-hidden="true">&lt;/a>&lt;span class="pp">#define help() \&lt;/span>&lt;/span>
+&lt;span id="cb4-21">&lt;a href="#cb4-21" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;mdio:\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-22">&lt;a href="#cb4-22" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;read operation: mdio reg_addr\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-23">&lt;a href="#cb4-23" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;write operation: mdio reg_addr value\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-24">&lt;a href="#cb4-24" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;For example:\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-25">&lt;a href="#cb4-25" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;mdio eth0 1\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-26">&lt;a href="#cb4-26" aria-hidden="true">&lt;/a>&lt;span class="pp"> printf(&amp;quot;mdio eth0 0 0x12\n\n&amp;quot;); \&lt;/span>&lt;/span>
+&lt;span id="cb4-27">&lt;a href="#cb4-27" aria-hidden="true">&lt;/a>&lt;span class="pp"> exit(0);&lt;/span>&lt;/span>
+&lt;span id="cb4-28">&lt;a href="#cb4-28" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-29">&lt;a href="#cb4-29" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> sockfd;&lt;/span>
+&lt;span id="cb4-30">&lt;a href="#cb4-30" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-31">&lt;a href="#cb4-31" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb4-32">&lt;a href="#cb4-32" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-33">&lt;a href="#cb4-33" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span>(argc == &lt;span class="dv">1&lt;/span> || !strcmp(argv[&lt;span class="dv">1&lt;/span>], &lt;span class="st">&amp;quot;-h&amp;quot;&lt;/span>)){&lt;/span>
+&lt;span id="cb4-34">&lt;a href="#cb4-34" aria-hidden="true">&lt;/a> help();&lt;/span>
+&lt;span id="cb4-35">&lt;a href="#cb4-35" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb4-36">&lt;a href="#cb4-36" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-37">&lt;a href="#cb4-37" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> mii_ioctl_data *mii = NULL;&lt;/span>
+&lt;span id="cb4-38">&lt;a href="#cb4-38" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> ifreq ifr;&lt;/span>
+&lt;span id="cb4-39">&lt;a href="#cb4-39" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> ret;&lt;/span>
+&lt;span id="cb4-40">&lt;a href="#cb4-40" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-41">&lt;a href="#cb4-41" aria-hidden="true">&lt;/a> memset(&amp;amp;ifr, &lt;span class="dv">0&lt;/span>, &lt;span class="kw">sizeof&lt;/span>(ifr));&lt;/span>
+&lt;span id="cb4-42">&lt;a href="#cb4-42" aria-hidden="true">&lt;/a> strncpy(ifr.ifr_name, argv[&lt;span class="dv">1&lt;/span>], IFNAMSIZ - &lt;span class="dv">1&lt;/span>);&lt;/span>
+&lt;span id="cb4-43">&lt;a href="#cb4-43" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-44">&lt;a href="#cb4-44" aria-hidden="true">&lt;/a> sockfd = socket(PF_LOCAL, SOCK_DGRAM, &lt;span class="dv">0&lt;/span>);&lt;/span>
+&lt;span id="cb4-45">&lt;a href="#cb4-45" aria-hidden="true">&lt;/a> reteck(sockfd);&lt;/span>
+&lt;span id="cb4-46">&lt;a href="#cb4-46" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-47">&lt;a href="#cb4-47" aria-hidden="true">&lt;/a> &lt;span class="co">//get phy address in smi bus&lt;/span>&lt;/span>
+&lt;span id="cb4-48">&lt;a href="#cb4-48" aria-hidden="true">&lt;/a> ret = ioctl(sockfd, SIOCGMIIPHY, &amp;amp;ifr);&lt;/span>
+&lt;span id="cb4-49">&lt;a href="#cb4-49" aria-hidden="true">&lt;/a> reteck(ret);&lt;/span>
+&lt;span id="cb4-50">&lt;a href="#cb4-50" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-51">&lt;a href="#cb4-51" aria-hidden="true">&lt;/a> mii = (&lt;span class="kw">struct&lt;/span> mii_ioctl_data*)&amp;amp;ifr.ifr_data;&lt;/span>
+&lt;span id="cb4-52">&lt;a href="#cb4-52" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-53">&lt;a href="#cb4-53" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-54">&lt;a href="#cb4-54" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span>(argc == &lt;span class="dv">3&lt;/span>){&lt;/span>
+&lt;span id="cb4-55">&lt;a href="#cb4-55" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-56">&lt;a href="#cb4-56" aria-hidden="true">&lt;/a> mii-&amp;gt;reg_num = (&lt;span class="dt">uint16_t&lt;/span>)strtoul(argv[&lt;span class="dv">2&lt;/span>], NULL, &lt;span class="dv">0&lt;/span>);&lt;/span>
+&lt;span id="cb4-57">&lt;a href="#cb4-57" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-58">&lt;a href="#cb4-58" aria-hidden="true">&lt;/a> ret = ioctl(sockfd, SIOCGMIIREG, &amp;amp;ifr);&lt;/span>
+&lt;span id="cb4-59">&lt;a href="#cb4-59" aria-hidden="true">&lt;/a> reteck(ret);&lt;/span>
+&lt;span id="cb4-60">&lt;a href="#cb4-60" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-61">&lt;a href="#cb4-61" aria-hidden="true">&lt;/a> &lt;/span>
+&lt;span id="cb4-62">&lt;a href="#cb4-62" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;read phy addr: 0x%x reg: 0x%x value : 0x%x&lt;/span>&lt;span class="sc">\n\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, mii-&amp;gt;phy_id, mii-&amp;gt;reg_num, mii-&amp;gt;val_out);&lt;/span>
+&lt;span id="cb4-63">&lt;a href="#cb4-63" aria-hidden="true">&lt;/a> }&lt;span class="cf">else&lt;/span> &lt;span class="cf">if&lt;/span>(argc == &lt;span class="dv">4&lt;/span>){&lt;/span>
+&lt;span id="cb4-64">&lt;a href="#cb4-64" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-65">&lt;a href="#cb4-65" aria-hidden="true">&lt;/a> mii-&amp;gt;reg_num = (&lt;span class="dt">uint16_t&lt;/span>)strtoul(argv[&lt;span class="dv">2&lt;/span>], NULL, &lt;span class="dv">0&lt;/span>);&lt;/span>
+&lt;span id="cb4-66">&lt;a href="#cb4-66" aria-hidden="true">&lt;/a> mii-&amp;gt;val_in = (&lt;span class="dt">uint16_t&lt;/span>)strtoul(argv[&lt;span class="dv">3&lt;/span>], NULL, &lt;span class="dv">0&lt;/span>);&lt;/span>
+&lt;span id="cb4-67">&lt;a href="#cb4-67" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-68">&lt;a href="#cb4-68" aria-hidden="true">&lt;/a> ret = ioctl(sockfd, SIOCSMIIREG, &amp;amp;ifr);&lt;/span>
+&lt;span id="cb4-69">&lt;a href="#cb4-69" aria-hidden="true">&lt;/a> reteck(ret);&lt;/span>
+&lt;span id="cb4-70">&lt;a href="#cb4-70" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-71">&lt;a href="#cb4-71" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;write phy addr: 0x%x reg: 0x%x value : 0x%x&lt;/span>&lt;span class="sc">\n\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, mii-&amp;gt;phy_id, mii-&amp;gt;reg_num, mii-&amp;gt;val_in);&lt;/span>
+&lt;span id="cb4-72">&lt;a href="#cb4-72" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb4-73">&lt;a href="#cb4-73" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-74">&lt;a href="#cb4-74" aria-hidden="true">&lt;/a>lab:&lt;/span>
+&lt;span id="cb4-75">&lt;a href="#cb4-75" aria-hidden="true">&lt;/a> close(sockfd);&lt;/span>
+&lt;span id="cb4-76">&lt;a href="#cb4-76" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb4-77">&lt;a href="#cb4-77" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>编译后使用方法：&lt;/p>
+&lt;ul>
+&lt;li>读取：&lt;/li>
+&lt;/ul>
+&lt;pre class="console">&lt;code># ./mdio eth0 0x00&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>修改：&lt;/li>
+&lt;/ul>
+&lt;pre class="console">&lt;code># ./mdio eth0 0x00 0x00&lt;/code>&lt;/pre>
+&lt;h3 id="ethtool">&lt;code>ethtool&lt;/code>&lt;/h3>
+&lt;p>ethtool 可以同时直接看 PHY侧 和 MAC 侧的 PHY 芯片的状态：&lt;/p>
+&lt;pre class="console">&lt;code>ethtool -d eth0&lt;/code>&lt;/pre>
+&lt;pre class="output">&lt;code>RealTek RTL8168g/8111g registers:
+--------------------------------------------------------
+0x00: MAC Address ma:c0:ad:dr:es:s0
+0x08: Multicast Address Filter 0x02020040 0x80400083
+0x10: Dump Tally Counter Command 0x1303b000 0x00000001
+0x20: Tx Normal Priority Ring Addr 0x02a25000 0x00000001
+0x28: Tx High Priority Ring Addr 0x00000000 0x00000000
+0x30: Flash memory read/write 0x00000000
+0x34: Early Rx Byte Count 0
+0x36: Early Rx Status 0x00
+0x37: Command 0x0c
+Rx on, Tx on
+0x3C: Interrupt Mask 0x003f
+LinkChg RxNoBuf TxErr TxOK RxErr RxOK
+0x3E: Interrupt Status 0x0000
+0x40: Tx Configuration 0x53900f80
+0x44: Rx Configuration 0x0002cf0e
+0x48: Timer count 0x00000000
+0x4C: Missed packet counter 0x000000
+0x50: EEPROM Command 0x10
+0x51: Config 0 0x00
+0x52: Config 1 0xcf
+0x53: Config 2 0x1c
+0x54: Config 3 0x60
+0x55: Config 4 0x11
+0x56: Config 5 0x00
+0x58: Timer interrupt 0x00000000
+0x5C: Multiple Interrupt Select 0x0000
+0x60: PHY access 0x00000000
+0x64: TBI control and status 0x00000000
+0x68: TBI Autonegotiation advertisement (ANAR) 0x0000
+0x6A: TBI Link partner ability (LPAR) 0x0000
+0x6C: PHY status 0x84
+0x84: PM wakeup frame 0 0x00000000 0x00000000
+0x8C: PM wakeup frame 1 0x00000000 0x00000000
+0x94: PM wakeup frame 2 (low) 0x00000000 0x00000000
+0x9C: PM wakeup frame 2 (high) 0x00000000 0x00000000
+0xA4: PM wakeup frame 3 (low) 0x00000000 0x00000000
+0xAC: PM wakeup frame 3 (high) 0x00000000 0x00000000
+0xB4: PM wakeup frame 4 (low) 0x00000000 0xd20a0000
+0xBC: PM wakeup frame 4 (high) 0x00000000 0x00000000
+0xC4: Wakeup frame 0 CRC 0x0000
+0xC6: Wakeup frame 1 CRC 0x0000
+0xC8: Wakeup frame 2 CRC 0x0000
+0xCA: Wakeup frame 3 CRC 0x0000
+0xCC: Wakeup frame 4 CRC 0x0000
+0xDA: RX packet maximum size 0x4000
+0xE0: C+ Command 0x2060
+VLAN de-tagging
+RX checksumming
+0xE2: Interrupt Mitigation 0x0000
+TxTimer: 0
+TxPackets: 0
+RxTimer: 0
+RxPackets: 0
+0xE4: Rx Ring Addr 0x03fef000 0x00000001
+0xEC: Early Tx threshold 0x27
+0xF0: Func Event 0x0000003f
+0xF4: Func Event Mask 0x00000000
+0xF8: Func Preset State 0x00000003
+0xFC: Func Force Event 0x00000000&lt;/code>&lt;/pre>
+&lt;p>但ethtool 并不支持解析 r8168 驱动，只会返回给我们裸数据，所以我们需要添加r8168，用r8169来解析这个裸数据，并自己编译。添加的位置：是 &lt;code>driver_list[]={}&lt;/code>。虽说这可能会有些问题，有些状态不对，但由于我们只需看中断mask，所以可以直接拿来用。根据从手册上说的，r8168 和 r8169 中断mask的位置是同一个所以我们可以直接看了。&lt;/p></description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除">C 和 Qt 中 socket 的创建和删除&lt;/h1>
+&lt;p>[toc]&lt;/p>
+&lt;h2 id="c">C&lt;/h2>
+&lt;p>&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/">example code&lt;/a>&lt;/p>
+&lt;h3 id="客户端">客户端&lt;/h3>
+&lt;p>客户端相对来说比较简单：创建，然后 connect&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>connect(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="服务端">服务端&lt;/h3>
+&lt;p>服务端相对来说会复杂一些&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>bind(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>listen(sockfd, &lt;span class="dv">5&lt;/span>);&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>connfd = accept(sockfd, (SA*)&amp;amp;cli, &amp;amp;len);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p>
+&lt;p>从 &lt;code>man 2 accept&lt;/code> 可以知道 accept 做了这些事：&lt;/p>
+&lt;ol type="1">
+&lt;li>从这个监听的 socket 中取出第一个连接请求&lt;/li>
+&lt;li>创建一个新的连接着的socket，&lt;/li>
+&lt;li>返回一个指向这个 socket 的文件描述符&lt;/li>
+&lt;/ol>
+&lt;p>这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p>
+&lt;h4 id="文件描述符">文件描述符：&lt;/h4>
+&lt;p>文件描述符号是 int。&lt;/p>
+&lt;p>在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p>
+&lt;p>文件描述符在系统中在这里 &lt;code>/proc/&amp;lt;PID&amp;gt;/fd/&amp;lt;fdNum&amp;gt;&lt;/code> 虽然新的socket 的描述符还是 21，但它的软连接对象已经变了。&lt;/p>
+&lt;pre>&lt;code>/proc/30475/fd/21 -&amp;gt; socket:[31166317]
+/proc/30475/fd/21 -&amp;gt; socket:[31206486]
+cat /proc/net/tcp |grep 31206486&lt;/code>&lt;/pre>
+&lt;h2 id="qt">Qt&lt;/h2>
+&lt;p>Qt 就结构上也差不多，只不过它把服务端的监听的 socket 抽象成了 &lt;code>QTcpServer&lt;/code>，但有一个区别就是 accept 在 Qt 中的对应是 &lt;code>QTcpSocket *QTcpServer::nextPendingConnection()&lt;/code>，注意这里返回的是一个指针也就是说它现在不再栈中了，而是在堆中，那它是在什么时候建的呢，我是否可以删除它？那就去翻源码咯(doge)&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">QTcpSocket&lt;/span> *&lt;span class="ex">QTcpServer::&lt;/span>nextPendingConnection()&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> d-&amp;gt;pendingConnections.takeFirst();&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>addPendingConnection(&lt;span class="ex">QTcpSocket&lt;/span>* socket)&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a> d_func()-&amp;gt;pendingConnections.append(socket);&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>incomingConnection(qintptr socketDescriptor)&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a> &lt;span class="ex">QTcpSocket&lt;/span> *socket = &lt;span class="kw">new&lt;/span> &lt;span class="ex">QTcpSocket&lt;/span>(&lt;span class="kw">this&lt;/span>);&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a> socket-&amp;gt;setSocketDescriptor(socketDescriptor);&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a> addPendingConnection(socket);&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> QTcpServerPrivate::readNotification()&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> descriptor = socketEngine-&amp;gt;accept();&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a> q-&amp;gt;incomingConnection(descriptor);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们可以看到 &lt;code>pendingConnections&lt;/code> 里面的 &lt;code>socket&lt;/code> 是在 &lt;code>incommingConnection&lt;/code> 那里 &lt;code>new&lt;/code> 的&lt;/p>
+&lt;p>那我们什么时候去 delete 呢，查阅 &lt;a href="https://doc.qt.io/qt-5/implicit-sharing.html">隐式共享&lt;/a>，QAbstractsocket 不在其中，所以需要对它进行手动释放。 在 &lt;a href="https://stackoverflow.com/questions/28820450/how-to-safely-delete-a-qtqtcpsocket">stack overflow 的这个回答&lt;/a> 中就说了，在 QTcpServer 删除的时候会把所有的socket 都释放掉，也就是 Qt 释放时的树状结构。但为了追求高效率，我们可以手动去释放掉。根据 Qt 的 &lt;a href="https://doc.qt.io/archives/qt-4.8/objecttrees.html">手册&lt;/a>: When any QObject in the tree is deleted, if the object has a parent, the destructor automatically removes the object from its parent. 所以你可以放心地删除，而不必担心析构两次。&lt;/p>
+&lt;p>另外在 disconnect 的信号的帮助里也有说到：&lt;/p>
+&lt;pre class="help">&lt;code>[signal] void QAbstractSocket::disconnected()
+Warning: If you need to delete the sender() of this signal in a slot connected to it, use the deleteLater() function.&lt;/code>&lt;/pre></description></item><item><title>通过命令行连接 WiFi</title><link>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</link><pubDate>Wed, 26 Feb 2020 10:15:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h2 id="检查是哪一个接口来支持无线连接的">检查是哪一个接口来支持无线连接的：&lt;/h2>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">iwconfig&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>假定是wlan0，我的是wlp5s0&lt;/p>
+&lt;h2 id="启动接口服务">启动接口服务&lt;/h2>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> ip link set wlan0 up&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="扫描附近的无线网络了">扫描附近的无线网络了：&lt;/h2>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 scan &lt;span class="kw">|&lt;/span> &lt;span class="fu">less&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="连接">连接&lt;/h2>
+&lt;h3 id="没有加密">没有加密：&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 connect [网络 SSID]&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>也可以通过&lt;code>wpa_supplicant&lt;/code> 连接，见‘WPA or WPA2’。&lt;/p>
+&lt;h3 id="wep-加密的">WEP 加密的：&lt;/h3>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> iw dev wlan0 connect [网络 SSID] key 0:[WEP 密钥]&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="wpa-or-wpa2">WPA or WPA2&lt;/h3>
+&lt;ol type="1">
+&lt;li>&lt;code>/etc/wpasupplicant/wpa_supplicant.conf&lt;/code> 文件，增加如下行：&lt;/li>
+&lt;/ol>
+&lt;p>network={ ssid=“[网络 ssid]” psk=“[密码]” priority=1}&lt;/p>
+&lt;p>&lt;code>/etc/wpasupplicant/wpa_supplicant.conf&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="va">country=&lt;/span>CN&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="va">update_config=&lt;/span>1&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-6">&lt;a href="#cb6-6" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb6-7">&lt;a href="#cb6-7" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>9&lt;/span>
+&lt;span id="cb6-8">&lt;a href="#cb6-8" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-9">&lt;a href="#cb6-9" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>
+&lt;span id="cb6-10">&lt;a href="#cb6-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-11">&lt;a href="#cb6-11" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-12">&lt;a href="#cb6-12" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-13">&lt;a href="#cb6-13" aria-hidden="true">&lt;/a> &lt;span class="va">psk=&lt;/span>&lt;span class="st">&amp;quot;Passwd&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-14">&lt;a href="#cb6-14" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>WPA-PSK&lt;/span>
+&lt;span id="cb6-15">&lt;a href="#cb6-15" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>8&lt;/span>
+&lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-17">&lt;a href="#cb6-17" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>
+&lt;span id="cb6-18">&lt;a href="#cb6-18" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-19">&lt;a href="#cb6-19" aria-hidden="true">&lt;/a>&lt;span class="co"># open wifi&lt;/span>&lt;/span>
+&lt;span id="cb6-20">&lt;a href="#cb6-20" aria-hidden="true">&lt;/a>&lt;span class="va">network=&lt;/span>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb6-21">&lt;a href="#cb6-21" aria-hidden="true">&lt;/a> &lt;span class="va">ssid=&lt;/span>&lt;span class="st">&amp;quot;SSID&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-22">&lt;a href="#cb6-22" aria-hidden="true">&lt;/a> &lt;span class="va">key_mgmt=&lt;/span>NONE&lt;/span>
+&lt;span id="cb6-23">&lt;a href="#cb6-23" aria-hidden="true">&lt;/a> &lt;span class="va">priority=&lt;/span>1&lt;/span>
+&lt;span id="cb6-24">&lt;a href="#cb6-24" aria-hidden="true">&lt;/a> &lt;span class="va">id_str=&lt;/span>&lt;span class="st">&amp;quot;identify which wifi is&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb6-25">&lt;a href="#cb6-25" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ol start="2" type="1">
+&lt;li>&lt;code>sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="通过-dhcp-获取ip">通过 DHCP 获取IP&lt;/h2>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dhcpcd wlan0&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;hr />
+&lt;p>推荐阅读： &lt;a href="https://blog.csdn.net/BenSYZ/article/details/104522084">archlinux 开机自动连接wifi&lt;/a>&lt;/p></description></item></channel></rss>

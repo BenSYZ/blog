@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>compile on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/compile/</link><description>Recent content in compile on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 08 Oct 2024 12:04:22 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/compile/index.xml" rel="self" type="application/rss+xml"/><item><title>Introduction to precompiled headers(PCH)</title><link>https://bensyz.github.io/blog/blogs/PCH/</link><pubDate>Tue, 08 Oct 2024 12:04:22 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCH/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>在讲预编译头文件 PCH 的之前，我们简单回顾一下编译的流程，编译大致有以下几个步骤：&lt;/p>
+&lt;ol type="1">
+&lt;li>预处理：将源代码中的宏、头文件等展开&lt;/li>
+&lt;li>编译：将源代码转成汇编代码&lt;/li>
+&lt;li>汇编：将汇编代码转成 object 文件&lt;/li>
+&lt;li>链接：生成可执行文件&lt;/li>
+&lt;/ol>
+&lt;p>如果有一个头文件，内容特别多，而且在好多源代码中都被引入了，那是不是会导致：每一个源代码文件在编译的时候都要展开一大段，然后在编译每一个源代码文件的时候都要重新编译这一大段，最终导致许多重复展开重复编译。那么我们是否可以将这种重复动作优化一下呢？让他只做一次，然后下次谁要用，就直接去取就完了？这就是“预编译头文件（precompiled header, PCH）” 最初的想法。&lt;/p>
+&lt;h2 id="what-is-pch">What is PCH?&lt;/h2>
+&lt;p>这是 &lt;a href="https://zh.wikipedia.org/zh-cn/预编译头">Wikipedia 上对 PCH 的介绍&lt;/a>:&lt;/p>
+&lt;blockquote>
+&lt;p>预编译头（precompiled header）是程序设计时把头文件编译为中间格式（如目标文件），以节约在开发过程中编译器反复编译该头文件的开销。 C 语言、C++语言、Objective C 语言等都有类似的技术。&lt;/p>
+&lt;/blockquote>
+&lt;p>那这个中间格式实际又是什么呢？我们在下节 “如何生成 PCH 文件” 中会来实际看看它是什么文件。&lt;/p>
+&lt;h2 id="如何生成-pch-文件">如何生成 PCH 文件？&lt;/h2>
+&lt;p>非常简单，和编译普通的源文件一样，只需对头文件做编译即可：&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="fu">gcc&lt;/span> blah.h&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>Tips: * &lt;code>gcc&lt;/code>/&lt;code>g++&lt;/code> 会根据扩展名来选择默认的编译选项，对 &lt;code>h&lt;/code> 文件，会默认使用 &lt;code>-x c-header&lt;/code>，我们也可以强制将一个 &lt;code>c&lt;/code> 文件用 &lt;code>-x c-header&lt;/code> 来编译，编译成 PCH （具体请 &lt;code>man 1 gcc&lt;/code> 搜索 &lt;code>-x&lt;/code> 参数）&lt;/p>
+&lt;p>我们会发现，经过上一条命令的执行，我们得到了 &lt;code>blah.h.gch&lt;/code> 让我们来看看这个文件是什么：&lt;/p>
+&lt;pre class="console">&lt;code>$ file blah.h.gch
+blah.h.gch: GCC precompiled header (version 014) for C&lt;/code>&lt;/pre>
+&lt;p>好吧，哈哈，PCH 就是 PCH，它就是单独的一个文件类型，和 &lt;code>.o: ELF 64-bit LSB relocatable, x86-64, version 1 (SYSV), not stripped&lt;/code> 文件是不一样的。&lt;/p>
+&lt;h2 id="如何使用-pch-文件">如何使用 PCH 文件？&lt;/h2>
+&lt;p>那既然 PCH 是一个单独的文件类型，那我们要怎么使用它呢？我们知道，头文件可以用 &lt;code>#include&lt;/code> 来引入，object 是在链接期间作为输入文件引入的。那预编译头文件呢？&lt;/p>
+&lt;p>这就要找 &lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html">GCC 的官方文档&lt;/a> 了。文中提到，要使用 PCH 文件，你啥都不需做，就正常 &lt;code>include&lt;/code> 原始的头文件就好，&lt;code>gcc&lt;/code>/&lt;code>g++&lt;/code> 在编译时，搜索头文件的时候会优先搜索同名带 &lt;code>.gch&lt;/code> 后缀的预编译头文件。另外这个带 &lt;code>.gch&lt;/code> 后缀的文件也可以是文件夹，里面可以放多个预编译头文件文件，&lt;code>gcc&lt;/code>/&lt;code>g++&lt;/code> 在编译时，会去这个目录下找任意一个可以用的预编译头文件。可以这么来理解，头文件有两种形式：文本形式和 PCH。我们来尝试使用一下预编译头文件。&lt;/p>
+&lt;h3 id="当-.gch-是文件时">当 &lt;code>.gch&lt;/code> 是文件时&lt;/h3>
+&lt;h4 id="修改原始头文件添加-error-宏">修改原始头文件，添加 &lt;code>#error&lt;/code> 宏&lt;/h4>
+&lt;p>GCC 的官方文档，给出的验证方式是 1. 编译 PCH 文件 2. 修改原始头文件，添加 &lt;code>#error&lt;/code> 宏 3. C 源文件中 &lt;code>include&lt;/code> 正常引入该头文件 4. 编译，查看是会报 error 还是编译通过&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ gcc blah.h
+$ echo &amp;#39;#error &amp;quot;PCH is not been used&amp;quot;&amp;#39; &amp;gt;&amp;gt; blah.h # blah.h 中添加 #error 宏
+$ gcc blah.c&lt;/code>&lt;/pre>
+&lt;p>我们会发现，它确实直接编译通过了，这就说明预编译头文件生效了。当然这里引入一个新的问题，我需要使用 Makefile 或是其他方式，来更新预编译头文件，来避免头文件和预编译头文件不对应。&lt;/p>
+&lt;h4 id="使用-gcc-的--h-参数">使用 &lt;code>gcc&lt;/code> 的 &lt;code>-H&lt;/code> 参数&lt;/h4>
+&lt;p>&lt;a href="https://stackoverflow.com/a/18593344/13033234">stackoverflow 上的这个回答&lt;/a> 介绍了一种更直接明了的方式：GCC 有一个 &lt;code>-H&lt;/code> 参数，可以用它打印实际引用的头文件或预编译头文件。查询 GCC 的 Man pages，我们可以看到：&lt;/p>
+&lt;blockquote>
+&lt;p>-H Print the name of each header file used, in addition to other normal activities. Each name is indented to show how deep in the #include stack it is. Precompiled header files are also printed, even if they are found to be invalid; an invalid precompiled header file is printed with …x and a valid one with …! .&lt;/p>
+&lt;/blockquote>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb7-5">&lt;a href="#cb7-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ gcc blah.h
+$ gcc -H blah.c
+! blah.h.gch
+blah.c&lt;/code>&lt;/pre>
+&lt;h3 id="当-.gch-是文件夹时">当 &lt;code>.gch&lt;/code> 是文件夹时&lt;/h3>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb9-4">&lt;a href="#cb9-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb10-2">&lt;a href="#cb10-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb10-3">&lt;a href="#cb10-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb10-4">&lt;a href="#cb10-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb10-5">&lt;a href="#cb10-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ mkdir blah.h.gch
+$ gcc blah.h -o blah.h.gch/c
+$ gcc -H blah.c
+! blah.h.gch/c
+blah.c&lt;/code>&lt;/pre>
+&lt;p>也是可以正常使用的。&lt;/p>
+&lt;h3 id="在-qt-中使用-pch">在 Qt 中使用 PCH&lt;/h3>
+&lt;p>&lt;a href="https://doc.qt.io/qt-6/qmake-precompiledheaders.html">Qt&lt;/a> 中只需在 &lt;code>.pro&lt;/code> 中加入以下两行，并在 &lt;code>stable.h&lt;/code> 中放入你想预编译的头文件，Qt 对单个项目目前只支持一个全局的预编译头文件。&lt;/p>
+&lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode pro">&lt;code class="sourceCode prolog">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="dt">CONFIG&lt;/span> += precompile_header&lt;/span>
+&lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="dt">PRECOMPILED_HEADER&lt;/span> &lt;span class="kw">=&lt;/span> stable&lt;span class="kw">.&lt;/span>h&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>然后 &lt;code>qmake&lt;/code> 会自动生成对应的 &lt;code>Makefile&lt;/code>，完成以下几件事： 1. 递归地找到所有依赖的头文件，将它们放在 PCH 的 prerequisite，来做到当头文件更新时，PCH 会更新。 2. 在所有 &lt;code>.o&lt;/code> 的 target 中通过 &lt;code>-include&lt;/code> 的方式强制引入 PCH 文件 3. 将 PCH 文件，作为所有 &lt;code>.o&lt;/code> 的 target 的 prerequisite&lt;/p>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>需要注意的是，通过上面几条 &lt;code>Makefile&lt;/code> 的规则，如果任意一个构成 PCH 的头文件变更，都会导致 PCH 更新，从而导致所有 .o 重编，反而使增量编译时间变长。这也是 Qt 问什么称这个文件为 &lt;code>stable.h&lt;/code> 的原因&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="预编译头文件失效invalid">预编译头文件失效（invalid）&lt;/h2>
+&lt;p>我们前面说到，“会去这个目录下找任意一个可以用的预编译头文件”，那什么时可用的，什么是不可用的呢？&lt;/p>
+&lt;h3 id="gccg-编译器不同">GCC/G++ 编译器不同&lt;/h3>
+&lt;p>GCC 编译时，不能使用 G++ 编译出来的预编译头文件，反之亦然。例如：&lt;/p>
+&lt;div class="sourceCode" id="cb13">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb13-1">&lt;a href="#cb13-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb13-2">&lt;a href="#cb13-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb13-3">&lt;a href="#cb13-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb13-4">&lt;a href="#cb13-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb14">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb14-1">&lt;a href="#cb14-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb14-2">&lt;a href="#cb14-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb14-3">&lt;a href="#cb14-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb14-4">&lt;a href="#cb14-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb14-5">&lt;a href="#cb14-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ g++ blah.h -o blah.h.gch
+$ gcc -H blah.c
+x blah.h.gch
+. blah.h&lt;/code>&lt;/pre>
+&lt;h3 id="头文件中的宏例如-ifdef引入分支">头文件中的宏（例如 &lt;code>#ifdef&lt;/code>）引入分支&lt;/h3>
+&lt;p>头文件中有宏（例如 &lt;code>#ifdef&lt;/code>）引入分支，编译 PCH 时的分支和使用 PCH 时的分支不同&lt;/p>
+&lt;div class="sourceCode" id="cb16">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb16-1">&lt;a href="#cb16-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb16-2">&lt;a href="#cb16-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb16-3">&lt;a href="#cb16-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb16-4">&lt;a href="#cb16-4" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb16-5">&lt;a href="#cb16-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifdef blah_1&lt;/span>&lt;/span>
+&lt;span id="cb16-6">&lt;a href="#cb16-6" aria-hidden="true">&lt;/a>&lt;span class="pp">#define blah 1&lt;/span>&lt;/span>
+&lt;span id="cb16-7">&lt;a href="#cb16-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#else&lt;/span>&lt;/span>
+&lt;span id="cb16-8">&lt;a href="#cb16-8" aria-hidden="true">&lt;/a>&lt;span class="pp">#define blah 2&lt;/span>&lt;/span>
+&lt;span id="cb16-9">&lt;a href="#cb16-9" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>
+&lt;span id="cb16-10">&lt;a href="#cb16-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb16-11">&lt;a href="#cb16-11" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb17">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb17-1">&lt;a href="#cb17-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb17-2">&lt;a href="#cb17-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb17-3">&lt;a href="#cb17-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb17-4">&lt;a href="#cb17-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb17-5">&lt;a href="#cb17-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ gcc -D blah_1 blah.h -o blah.h.gch
+$ gcc -H blah.c
+x blah.h.gch
+. blah.h&lt;/code>&lt;/pre>
+&lt;h2 id="解决失效问题">解决失效问题&lt;/h2>
+&lt;p>当然最直接的方式是该怎么样怎么样，GCC 编译就用 GCC 编译 PCH，编译 object 时的分支走哪个编译 PCH 时就走哪个。&lt;/p>
+&lt;p>但有一个问题：每换一个编译器，或每换一个宏（例如编译配置宏）都要重新编译预编译头文件，又或者需要自己拷来拷去。十分麻烦，有什么方式可以避免手动拷吗？把 &lt;code>.gch&lt;/code> 改成文件夹，往里面放各种有效的头文件，我们上面说过：GCC 会去这个目录下找任意一个可以用的预编译头文件。也就是说，你可以在这个目录下放多版不同情况下的预编译头文件，让 GCC 自动找寻合适的预编译头文件，&lt;/p>
+&lt;h3 id="gccg-编译器不同-1">GCC/G++ 编译器不同&lt;/h3>
+&lt;p>我们可以同时放 GCC/G++ 的预编译头文件，让 GCC/G++ 自己选择&lt;/p>
+&lt;pre class="console">&lt;code>$ mkdir blah.h.gch
+$ gcc blah.h -o blah.h.gch/c
+$ g++ blah.h -o blah.h.gch/c++
+$ gcc -H blah.c
+! blah.h.gch/c
+blah.c
+$ g++ -H blah.c
+x blah.h.gch/c
+! blah.h.gch/c++
+blah.c&lt;/code>&lt;/pre>
+&lt;h3 id="头文件中有宏例如-ifdef引入分支">头文件中有宏（例如 &lt;code>#ifdef&lt;/code>）引入分支&lt;/h3>
+&lt;div class="sourceCode" id="cb20">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb20-1">&lt;a href="#cb20-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb20-2">&lt;a href="#cb20-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifdef blah_1&lt;/span>&lt;/span>
+&lt;span id="cb20-3">&lt;a href="#cb20-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define blah 1&lt;/span>&lt;/span>
+&lt;span id="cb20-4">&lt;a href="#cb20-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#else&lt;/span>&lt;/span>
+&lt;span id="cb20-5">&lt;a href="#cb20-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#define blah 2&lt;/span>&lt;/span>
+&lt;span id="cb20-6">&lt;a href="#cb20-6" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb21">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb21-1">&lt;a href="#cb21-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb21-2">&lt;a href="#cb21-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb21-3">&lt;a href="#cb21-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb21-4">&lt;a href="#cb21-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb21-5">&lt;a href="#cb21-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="console">&lt;code>$ gcc blah.h -o blah.h.gch/c1
+$ gcc -D blah_1 blah.h -o blah.h.gch/c2
+$ gcc -H blah.c
+! blah.h.gch/c1
+blah.c
+$ gcc -D blah_1 -H blah.c
+x blah.h.gch/c1
+! blah.h.gch/c2
+blah.c&lt;/code>&lt;/pre>
+&lt;h2 id="常见的错误">常见的错误&lt;/h2>
+&lt;p>除了上述说的 &lt;code>gcc -H&lt;/code> 和 &lt;code>#error&lt;/code>，我们也可以使用 &lt;code>-Winvalid-pch&lt;/code> 来让 GCC 吐出 PCH 失效问题的详细信息。 ### &lt;code>blah.h.gch: not for GNU C17&lt;/code> 即上面说的 GCC 不能使用 G++ 编译的 PCH。&lt;/p>
+&lt;h3 id="blah.h.gch-not-used-because-xxx-not-defined">&lt;code>blah.h.gch: not used because xxx not defined&lt;/code>&lt;/h3>
+&lt;p>即上面说的编译 PCH 和使用 PCH 时宏分支不同。&lt;/p>
+&lt;h3 id="cc1plus-error-one-or-more-pch-files-were-found-but-they-were-invalid">&lt;code>cc1plus: error: one or more PCH files were found, but they were invalid&lt;/code>&lt;/h3>
+&lt;p>这种情况出现在使用 &lt;code>-include&lt;/code> 强制引入头文件，当这个头文件只有 PCH 的形式而没有文本形式时，便会报这个错，和这个错在一起的还有&lt;/p>
+&lt;pre>&lt;code>&amp;lt;command-line&amp;gt;: fatal error: test_pch: No such file or directory&lt;/code>&lt;/pre>
+&lt;div class="sourceCode" id="cb24">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb24-1">&lt;a href="#cb24-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.h&lt;/span>&lt;/span>
+&lt;span id="cb24-2">&lt;a href="#cb24-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#ifndef BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb24-3">&lt;a href="#cb24-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#define BLAH_H&lt;/span>&lt;/span>
+&lt;span id="cb24-4">&lt;a href="#cb24-4" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb24-5">&lt;a href="#cb24-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#define blah 1&lt;/span>&lt;/span>
+&lt;span id="cb24-6">&lt;a href="#cb24-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb24-7">&lt;a href="#cb24-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#endif&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb25">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb25-1">&lt;a href="#cb25-1" aria-hidden="true">&lt;/a>&lt;span class="co">// blah.c&lt;/span>&lt;/span>
+&lt;span id="cb25-2">&lt;a href="#cb25-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;quot;blah.h&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb25-3">&lt;a href="#cb25-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb25-4">&lt;a href="#cb25-4" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb25-5">&lt;a href="#cb25-5" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="make">&lt;code>pch_fake_header = test_pch
+pch_dir = $(pch_fake_header).gch
+old_external_macro = old
+new_external_macro = new
+target = main
+help:
+printf &amp;quot;Use the two commands to test the two cases:\nmake demo_1\nmake demo_2\n&amp;quot;
+demo_1: clean
+echo &amp;quot;macro changes&amp;quot;
+mkdir -p $(pch_dir)
+gcc -D external_macro=\&amp;quot;$(old_external_macro)\&amp;quot; -o $(pch_dir)/c blah.h
+gcc -D external_macro=\&amp;quot;$(new_external_macro)\&amp;quot; -include $(pch_fake_header) -o $(target) main.c
+demo_2: clean
+echo &amp;quot;gch generated with gcc&amp;quot;
+mkdir -p $(pch_dir)
+g++ -D external_macro=\&amp;quot;$(old_external_macro)\&amp;quot; -o $(pch_dir)/c blah.h
+gcc -D external_macro=\&amp;quot;$(new_external_macro)\&amp;quot; -include $(pch_fake_header) -o $(target) main.c
+main: pch
+gcc -include $(pch_fake_header) -D external_macro=\&amp;quot;$(new_external_macro)\&amp;quot; -o $(target) main.c
+pch:
+mkdir -p $(pch_dir)
+gcc -D external_macro=\&amp;quot;$(old_external_macro)\&amp;quot; -o $(pch_dir)/c blah.h
+clean:
+[ -e $(pch_dir) ] &amp;amp;&amp;amp; rm -r $(pch_dir) || true
+rm -f $(target)&lt;/code>&lt;/pre>
+&lt;h3 id="error-stray-xxx-in-program">&lt;code>error: stray xxx in program&lt;/code>&lt;/h3>
+&lt;p>这种情况一样出现在使用 &lt;code>-include&lt;/code> 强制引入头文件的情况，当这个头文件只有 PCH 的形式而没有文本形式时，但上一次编译的 ELF 文件生成了，生成的名称正好是强制引入的头文件的头文件，便会报这个错，原因是，这次直接 include 了二进制文件。这种情况在 Qt 中出现过，Qt 配置 PCH 后，会将 PCH 文件放在 &lt;code>TARGET.gch&lt;/code> 文件夹中，而该文件夹的目录和 &lt;code>TARGET&lt;/code> 同级。&lt;/p>
+&lt;h3 id="pch-有效但是并未使用">PCH 有效但是并未使用&lt;/h3>
+&lt;p>从 GCC 文档中看到，如果某个头文件要使用 PCH 的形式，必须在整个文件中第一行 C 代码前。而最常见的 &lt;code>stdio.h&lt;/code> 中有 C 代码，所以，如果我们将自己的头文件放在 &lt;code>stdio.h&lt;/code> 之后，GCC 是不会使用 PCH 的。&lt;/p></description></item></channel></rss>

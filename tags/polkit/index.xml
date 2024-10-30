@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>polkit on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/polkit/</link><description>Recent content in polkit on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 06 Jun 2022 08:55:33 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/polkit/index.xml" rel="self" type="application/rss+xml"/><item><title>polkit</title><link>https://bensyz.github.io/blog/blogs/polkit/</link><pubDate>Mon, 06 Jun 2022 08:55:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/polkit/</guid><description>&lt;h1 id="polkit">polkit&lt;/h1>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;h3 id="问题的出现">问题的出现&lt;/h3>
+&lt;p>&lt;code>udisks2&lt;/code> 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 &lt;code>/etc/fstab&lt;/code> 来自动挂载的分区。但由 &lt;code>/etc/fstab&lt;/code> 挂载的分区却不能直接用 &lt;code>udisks2&lt;/code> 卸载。(虽然加上 &lt;code>users&lt;/code> 这个 option 可以不用 sudo 直接 umount，但 &lt;code>udisks2&lt;/code> 限制了这种动作,后面会提到的 &lt;code>org.freedesktop.udisks2.filesystem-unmount-others&lt;/code>)。又由于 File explorer 中点击卸载，使用的是 &lt;code>udisks2&lt;/code>，所以对于前述的情况，便不能通过鼠标点击卸载。&lt;/p>
+&lt;h3 id="about-polkit">about polkit&lt;/h3>
+&lt;p>polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘&lt;/p>
+&lt;p>polkit 配置有两种方式，一种是应用自带的，叫Action，(&lt;code>.policy&lt;/code>)；另一种是类似补丁的形式，叫Authorization rules,(&lt;code>.rules&lt;/code> or &lt;code>.pkla&lt;/code>)&lt;/p>
+&lt;h2 id="action">Action:&lt;/h2>
+&lt;p>policy file 文件位置：&lt;/p>
+&lt;p>&lt;code>/usr/share/polkit-1/actions/*.policy&lt;/code>&lt;/p>
+&lt;p>在 default section 中，有这几个选项:&lt;/p>
+&lt;ul>
+&lt;li>keys:
+&lt;ul>
+&lt;li>&lt;code>allow_any&lt;/code>: 所有&lt;/li>
+&lt;li>&lt;code>allow_inactive&lt;/code>: 远程的 session(ssh vnc, etc.)&lt;/li>
+&lt;li>&lt;code>allow_active&lt;/code>: 本地 tty, X display&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>values:
+&lt;ul>
+&lt;li>&lt;code>no&lt;/code>: 无权限&lt;/li>
+&lt;li>&lt;code>yes&lt;/code>: 有权限&lt;/li>
+&lt;li>&lt;code>auth_self[_keep]&lt;/code>: 对 non-sudoer [keep some minutes] 开放权限&lt;/li>
+&lt;li>&lt;code>auth_admin[_keep]&lt;/code>: sudoer 开放权限&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="authorization-rules">Authorization rules&lt;/h2>
+&lt;p>文件位置：&lt;/p>
+&lt;p>&lt;code>/etc/polkit-1/rules.d/*.rules&lt;/code>&lt;/p>
+&lt;p>Tips:&lt;/p>
+&lt;ul>
+&lt;li>顺序是 &lt;code>00-test.rules&lt;/code> 比 &lt;code>99-test.rules&lt;/code> 更早验证，即，后面的不会覆写前面的。（区别于 &lt;code>/etc/udev/hwdb.d/&lt;/code>）因为这里直接 return 了&lt;/li>
+&lt;li>&lt;code>subject.local: true/false&lt;/code> responding to &lt;code>allow_active&lt;/code>, etc in policy&lt;/li>
+&lt;li>&lt;code>systemctl status polkit&lt;/code> 可以查看 &lt;code>Action name&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h3 id="examples">examples:&lt;/h3>
+&lt;ul>
+&lt;li>&lt;p>&lt;code>addAdminRule()&lt;/code> 需要特权时，使用何种身份验证是否有特权&lt;/p>
+&lt;pre class="rules">&lt;code># wheel 组的用户就可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-group:wheel&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: ben (ben is in wheel)&lt;/code>&lt;/pre>
+&lt;pre class="rules">&lt;code># root 用户才可以使用这个特权
+polkit.addAdminRule(function(action, subject) {
+return [&amp;quot;unix-user:root&amp;quot;];
+});&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
+==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
+Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
+Authenticating as: root&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>&lt;code>addRule()&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>&lt;p>change rule&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.gnome.gparted&amp;quot; &amp;amp;&amp;amp;
+subject.isInGroup(&amp;quot;admin&amp;quot;)) {
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;li>&lt;p>log&lt;/p>
+&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.policykit.exec&amp;quot;) {
+polkit.log(&amp;quot;action=&amp;quot; + action);
+polkit.log(&amp;quot;subject=&amp;quot; + subject);
+}
+});&lt;/code>&lt;/pre>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="old-authorization-rules">old Authorization rules&lt;/h3>
+&lt;p>&lt;code>pkaction --version&lt;/code>, rules not work for pkaction less then 106&lt;/p>
+&lt;p>&lt;a href="https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect" class="uri">https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect&lt;/a>&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+# section: random name
+# man pklocalauthority(8)
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;p>(似乎 &lt;code>ResultAny&lt;/code> 和 &lt;code>ResultActive&lt;/code> 有优先级，如果这里只设置 &lt;code>ResultAny=yes&lt;/code>，默认的 &lt;code>ResultActive&lt;/code> 还是 &lt;code>no&lt;/code>，还是不生效)&lt;/p>
+&lt;h2 id="问题的解决">问题的解决&lt;/h2>
+&lt;p>&lt;code>pkaction --version&lt;/code> 106 及以上的&lt;/p>
+&lt;pre class="rules">&lt;code>#/etc/polkit-1/rules.d/00-udisk-unmount-others.rules
+polkit.addRule(function(action, subject) {
+if (action.id == &amp;quot;org.freedesktop.udisks2.filesystem-unmount-others&amp;quot; ){
+return polkit.Result.YES;
+}
+});&lt;/code>&lt;/pre>
+&lt;p>&lt;code>pkaction --version&lt;/code> 低于 106 的&lt;/p>
+&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
+[Allow]
+Identity=unix-user:*
+Action=org.freedesktop.udisks2.filesystem-unmount-others
+ResultAny=yes
+ResultInactive=no
+ResultActive=yes&lt;/code>&lt;/pre>
+&lt;h2 id="refs">refs:&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://wiki.archlinux.org/title/Polkit" class="uri">https://wiki.archlinux.org/title/Polkit&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html" class="uri">https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html&lt;/a>&lt;/li>
+&lt;/ul></description></item></channel></rss>

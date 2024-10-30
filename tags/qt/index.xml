@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>qt on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/qt/</link><description>Recent content in qt on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 13 Jun 2023 06:27:03 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/qt/index.xml" rel="self" type="application/rss+xml"/><item><title>qt creator remote deploy and debug</title><link>https://bensyz.github.io/blog/blogs/qt_creator_remote_deploy/</link><pubDate>Tue, 13 Jun 2023 06:27:03 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/qt_creator_remote_deploy/</guid><description>&lt;h2 id="machines">machines&lt;/h2>
+&lt;ul>
+&lt;li>target (aarch64)&lt;/li>
+&lt;li>host (AMD64)&lt;/li>
+&lt;/ul>
+&lt;p>cross compile on AMD64, run on aarch64&lt;/p>
+&lt;h2 id="softwares">softwares&lt;/h2>
+&lt;h3 id="on-target">on target&lt;/h3>
+&lt;ul>
+&lt;li>basic: gdbserver&lt;/li>
+&lt;li>others: known from qt creator&lt;/li>
+&lt;/ul>
+&lt;h3 id="on-host">on host&lt;/h3>
+&lt;ul>
+&lt;li>basic: gdb-multiarch&lt;/li>
+&lt;/ul>
+&lt;h2 id="config">config&lt;/h2>
+&lt;h3 id="pro">pro&lt;/h3>
+&lt;pre class="config">&lt;code>target.path=/tmp
+INSTALLS += target&lt;/code>&lt;/pre>
+&lt;h3 id="kits">kits&lt;/h3>
+&lt;ol type="1">
+&lt;li>add debugger(gdb-multiarch)&lt;/li>
+&lt;li>config the kit with above debugger&lt;/li>
+&lt;/ol></description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除">C 和 Qt 中 socket 的创建和删除&lt;/h1>
+&lt;p>[toc]&lt;/p>
+&lt;h2 id="c">C&lt;/h2>
+&lt;p>&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/">example code&lt;/a>&lt;/p>
+&lt;h3 id="客户端">客户端&lt;/h3>
+&lt;p>客户端相对来说比较简单：创建，然后 connect&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>connect(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="服务端">服务端&lt;/h3>
+&lt;p>服务端相对来说会复杂一些&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>bind(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>listen(sockfd, &lt;span class="dv">5&lt;/span>);&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>connfd = accept(sockfd, (SA*)&amp;amp;cli, &amp;amp;len);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p>
+&lt;p>从 &lt;code>man 2 accept&lt;/code> 可以知道 accept 做了这些事：&lt;/p>
+&lt;ol type="1">
+&lt;li>从这个监听的 socket 中取出第一个连接请求&lt;/li>
+&lt;li>创建一个新的连接着的socket，&lt;/li>
+&lt;li>返回一个指向这个 socket 的文件描述符&lt;/li>
+&lt;/ol>
+&lt;p>这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p>
+&lt;h4 id="文件描述符">文件描述符：&lt;/h4>
+&lt;p>文件描述符号是 int。&lt;/p>
+&lt;p>在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p>
+&lt;p>文件描述符在系统中在这里 &lt;code>/proc/&amp;lt;PID&amp;gt;/fd/&amp;lt;fdNum&amp;gt;&lt;/code> 虽然新的socket 的描述符还是 21，但它的软连接对象已经变了。&lt;/p>
+&lt;pre>&lt;code>/proc/30475/fd/21 -&amp;gt; socket:[31166317]
+/proc/30475/fd/21 -&amp;gt; socket:[31206486]
+cat /proc/net/tcp |grep 31206486&lt;/code>&lt;/pre>
+&lt;h2 id="qt">Qt&lt;/h2>
+&lt;p>Qt 就结构上也差不多，只不过它把服务端的监听的 socket 抽象成了 &lt;code>QTcpServer&lt;/code>，但有一个区别就是 accept 在 Qt 中的对应是 &lt;code>QTcpSocket *QTcpServer::nextPendingConnection()&lt;/code>，注意这里返回的是一个指针也就是说它现在不再栈中了，而是在堆中，那它是在什么时候建的呢，我是否可以删除它？那就去翻源码咯(doge)&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">QTcpSocket&lt;/span> *&lt;span class="ex">QTcpServer::&lt;/span>nextPendingConnection()&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> d-&amp;gt;pendingConnections.takeFirst();&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>addPendingConnection(&lt;span class="ex">QTcpSocket&lt;/span>* socket)&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a> d_func()-&amp;gt;pendingConnections.append(socket);&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>incomingConnection(qintptr socketDescriptor)&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a> &lt;span class="ex">QTcpSocket&lt;/span> *socket = &lt;span class="kw">new&lt;/span> &lt;span class="ex">QTcpSocket&lt;/span>(&lt;span class="kw">this&lt;/span>);&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a> socket-&amp;gt;setSocketDescriptor(socketDescriptor);&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a> addPendingConnection(socket);&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> QTcpServerPrivate::readNotification()&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> descriptor = socketEngine-&amp;gt;accept();&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a> q-&amp;gt;incomingConnection(descriptor);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们可以看到 &lt;code>pendingConnections&lt;/code> 里面的 &lt;code>socket&lt;/code> 是在 &lt;code>incommingConnection&lt;/code> 那里 &lt;code>new&lt;/code> 的&lt;/p>
+&lt;p>那我们什么时候去 delete 呢，查阅 &lt;a href="https://doc.qt.io/qt-5/implicit-sharing.html">隐式共享&lt;/a>，QAbstractsocket 不在其中，所以需要对它进行手动释放。 在 &lt;a href="https://stackoverflow.com/questions/28820450/how-to-safely-delete-a-qtqtcpsocket">stack overflow 的这个回答&lt;/a> 中就说了，在 QTcpServer 删除的时候会把所有的socket 都释放掉，也就是 Qt 释放时的树状结构。但为了追求高效率，我们可以手动去释放掉。根据 Qt 的 &lt;a href="https://doc.qt.io/archives/qt-4.8/objecttrees.html">手册&lt;/a>: When any QObject in the tree is deleted, if the object has a parent, the destructor automatically removes the object from its parent. 所以你可以放心地删除，而不必担心析构两次。&lt;/p>
+&lt;p>另外在 disconnect 的信号的帮助里也有说到：&lt;/p>
+&lt;pre class="help">&lt;code>[signal] void QAbstractSocket::disconnected()
+Warning: If you need to delete the sender() of this signal in a slot connected to it, use the deleteLater() function.&lt;/code>&lt;/pre></description></item></channel></rss>

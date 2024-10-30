@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>macro on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/macro/</link><description>Recent content in macro on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Jun 2023 07:48:40 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/macro/index.xml" rel="self" type="application/rss+xml"/><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>&lt;h2 id="update">2023-06-06 update:&lt;/h2>
+&lt;p>windows does not support shell basename. Makefile native support &lt;code>basname&lt;/code> like, it’s &lt;code>notdir&lt;/code>.&lt;/p>
+&lt;h2 id="contents">contents&lt;/h2>
+&lt;p>Since gcc-12, gcc native support &lt;code>__FILE_NAME__&lt;/code> macro. &lt;a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=42579">ref&lt;/a>&lt;/p>
+&lt;p>Here we provide some methods to make gcc version lower than 12 support &lt;code>__FILE_NAME__&lt;/code>:&lt;/p>
+&lt;p>Makefile:&lt;/p>
+&lt;pre class="make">&lt;code>CXX_FLAGS+=-D__FILE_NAME__=\&amp;quot;$(notdir $&amp;lt;)\&amp;quot;
+test: test.c
+gcc-7 $(CXX_FLAGS) $&amp;lt;&lt;/code>&lt;/pre>
+&lt;p>Qt pro:&lt;/p>
+&lt;pre class="config">&lt;code>DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;quot;$(notdir $&amp;lt;)\\\&amp;quot;&amp;#39;&lt;/code>&lt;/pre>
+&lt;p>Some information of macro is at &lt;a href="../macro_in_gcc_Makefile_qmake">here&lt;/a>.&lt;/p></description></item></channel></rss>

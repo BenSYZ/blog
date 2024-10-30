@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>C-Lang on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/C-Lang/</link><description>Recent content in C-Lang on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 20 May 2023 17:49:48 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/C-Lang/index.xml" rel="self" type="application/rss+xml"/><item><title>struct initialization in C Lang</title><link>https://bensyz.github.io/blog/blogs/struct_initialization_in_C_Lang/</link><pubDate>Sat, 20 May 2023 17:49:48 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/struct_initialization_in_C_Lang/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>看内核源码关于任务初始化的时候看到一个很奇怪的写法：&lt;code>struct task_struct init_task = INIT_TASK(init_task);&lt;/code>，一个没被定义变量怎么可以传给一个函数，用来 初始化它自己。&lt;/p>
+&lt;p>我们把原始代码用一下这个 demo 展示：&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> myStruct {&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct *self;&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>};&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#define INIT_TASK(tsk){\&lt;/span>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a>&lt;span class="pp"> .self = &amp;amp;tsk, \&lt;/span>&lt;/span>
+&lt;span id="cb1-9">&lt;a href="#cb1-9" aria-hidden="true">&lt;/a>&lt;span class="pp"> .a = 0, \&lt;/span>&lt;/span>
+&lt;span id="cb1-10">&lt;a href="#cb1-10" aria-hidden="true">&lt;/a>&lt;span class="pp"> .b = 1, \&lt;/span>&lt;/span>
+&lt;span id="cb1-11">&lt;a href="#cb1-11" aria-hidden="true">&lt;/a>&lt;span class="pp">}&lt;/span>&lt;/span>
+&lt;span id="cb1-12">&lt;a href="#cb1-12" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-13">&lt;a href="#cb1-13" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main() {&lt;/span>
+&lt;span id="cb1-14">&lt;a href="#cb1-14" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct init_task = INIT_TASK(init_task);&lt;/span>
+&lt;span id="cb1-15">&lt;a href="#cb1-15" aria-hidden="true">&lt;/a> &lt;span class="co">/*&lt;/span>&lt;/span>
+&lt;span id="cb1-16">&lt;a href="#cb1-16" aria-hidden="true">&lt;/a>&lt;span class="co"> * 展开后：&lt;/span>&lt;/span>
+&lt;span id="cb1-17">&lt;a href="#cb1-17" aria-hidden="true">&lt;/a>&lt;span class="co"> * struct myStruct init_task = { .self = &amp;amp;init_task, .a = 0, .b = 1, };&lt;/span>&lt;/span>
+&lt;span id="cb1-18">&lt;a href="#cb1-18" aria-hidden="true">&lt;/a>&lt;span class="co"> */&lt;/span>&lt;/span>
+&lt;span id="cb1-19">&lt;a href="#cb1-19" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-20">&lt;a href="#cb1-20" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="whats-this">What’s this?&lt;/h2>
+&lt;ol type="1">
+&lt;li>&lt;code>INIT_TASK&lt;/code> 是一个宏，由于宏是在编译时展开，所以 &lt;code>init_task&lt;/code> 其实并不是作为 参数被传入的，而是在这里展开。同时 &lt;code>INIT_TASK&lt;/code> 只用了 &lt;code>init_task&lt;/code> 的地址，而 并没有用 &lt;code>init_task&lt;/code> 这个结构体本身。&lt;/li>
+&lt;li>&lt;code>{.self = &amp;amp;tsk, .a = 0, .b = 1,}&lt;/code> 是什么？结构体的初始化。&lt;/li>
+&lt;/ol>
+&lt;h3 id="何时分配-init_task-的地址">何时分配 &lt;code>init_task&lt;/code> 的地址&lt;/h3>
+&lt;p>那 &lt;code>init_task&lt;/code> 的地址是在什么时候分配的呢？这个结构体的赋值有些复杂，因为涉及到 取址。我们看一个简单的例子：&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(){&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a = &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode asm">&lt;code class="sourceCode fasm">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="bu">push&lt;/span> %&lt;span class="kw">rbp&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="bu">mov&lt;/span> %&lt;span class="kw">rsp&lt;/span>,%&lt;span class="kw">rbp&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>movl &lt;span class="dv">$&lt;/span>&lt;span class="bn">0x0,&lt;/span>-&lt;span class="bn">0x4&lt;/span>(%&lt;span class="kw">rbp&lt;/span>)&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="bu">mov&lt;/span> &lt;span class="dv">$&lt;/span>&lt;span class="bn">0x0,&lt;/span>%&lt;span class="kw">eax&lt;/span>&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;span class="bu">pop&lt;/span> %&lt;span class="kw">rbp&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="gdb">&lt;code>(gdb) p &amp;amp;a
+$1 = (int *) 0x7fffffffd5cc
+(gdb) p $rbp
+$2 = (void *) 0x7fffffffd5d0
+# 基地址 rbp: 0x7fffffffd5d0
+# movl $0x0,-0x4(%rbp) 将 0x0 赋值给 rbp-4 也就是 0x7fffffffd5cc&lt;/code>&lt;/pre>
+&lt;p>所以这些栈上的变量的地址是基于 &lt;code>rbp&lt;/code> 的，也就是说相对地址是由汇编代码决定的，而 汇编代码来自 C 的代码。也就是这份代码结构决定了变量 a 的地址的存在。&lt;/p>
+&lt;h4 id="验证是否可以用函数来替代宏">验证：是否可以用函数来替代宏&lt;/h4>
+&lt;p>既然我们说，宏（&lt;code>INIT_TASK&lt;/code>）只使用了 &lt;code>init_task&lt;/code> 的地址，而 &lt;code>init_task&lt;/code> 的地址 是由这份代码结构决定的。也就是说看起来传参传的是一个未定的变量（&lt;code>init_task&lt;/code>）， 其实传的是一个固定的值（&lt;code>&amp;amp;init_task&lt;/code>）。那这完全符合函数的操作。&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> myStruct {&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct *self;&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a>};&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> myStruct FUNC_INIT_TASK(&lt;span class="kw">struct&lt;/span> myStruct * tsk){&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a> tsk-&amp;gt;self = tsk;&lt;/span>
+&lt;span id="cb5-9">&lt;a href="#cb5-9" aria-hidden="true">&lt;/a> tsk-&amp;gt;a=&lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb5-10">&lt;a href="#cb5-10" aria-hidden="true">&lt;/a> tsk-&amp;gt;b=&lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb5-11">&lt;a href="#cb5-11" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> *tsk;&lt;/span>
+&lt;span id="cb5-12">&lt;a href="#cb5-12" aria-hidden="true">&lt;/a>}&lt;/span>
+&lt;span id="cb5-13">&lt;a href="#cb5-13" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-14">&lt;a href="#cb5-14" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main() {&lt;/span>
+&lt;span id="cb5-15">&lt;a href="#cb5-15" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct func_init_task = FUNC_INIT_TASK(&amp;amp;func_init_task);&lt;/span>
+&lt;span id="cb5-16">&lt;a href="#cb5-16" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb5-17">&lt;a href="#cb5-17" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="结构体内部用结构体本身">结构体内部用结构体本身？&lt;/h3>
+&lt;p>我们把 &lt;code>&amp;amp;init_task&lt;/code> 赋给了 &lt;code>init_task.self&lt;/code>，看起来有点像“鸡生蛋，蛋生鸡”的问题， 其实不然，就像上节中说的，&lt;code>&amp;amp;init_task&lt;/code> 和 &lt;code>init_task&lt;/code> 是两回事，对 &lt;code>&amp;amp;init_task&lt;/code> 我们只是借用了 &lt;code>init_task&lt;/code> 来取到这个地址。来看一个真正的“鸡生蛋，蛋生鸡”的代码：&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> myStruct {&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct self; &lt;span class="co">// field has incomplete type &amp;#39;struct myStruct&amp;#39; (ccls 2)&lt;/span>&lt;/span>
+&lt;span id="cb6-3">&lt;a href="#cb6-3" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
+&lt;span id="cb6-4">&lt;a href="#cb6-4" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
+&lt;span id="cb6-5">&lt;a href="#cb6-5" aria-hidden="true">&lt;/a>};&lt;/span>
+&lt;span id="cb6-6">&lt;a href="#cb6-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-7">&lt;a href="#cb6-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#define INIT_TASK(tsk){\&lt;/span>&lt;/span>
+&lt;span id="cb6-8">&lt;a href="#cb6-8" aria-hidden="true">&lt;/a>&lt;span class="pp"> .self = tsk, \&lt;/span>&lt;/span>
+&lt;span id="cb6-9">&lt;a href="#cb6-9" aria-hidden="true">&lt;/a>&lt;span class="pp"> .a = 0, \&lt;/span>&lt;/span>
+&lt;span id="cb6-10">&lt;a href="#cb6-10" aria-hidden="true">&lt;/a>&lt;span class="pp"> .b = 1, \&lt;/span>&lt;/span>
+&lt;span id="cb6-11">&lt;a href="#cb6-11" aria-hidden="true">&lt;/a>&lt;span class="pp">}&lt;/span>&lt;/span>
+&lt;span id="cb6-12">&lt;a href="#cb6-12" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb6-13">&lt;a href="#cb6-13" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main() {&lt;/span>
+&lt;span id="cb6-14">&lt;a href="#cb6-14" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> myStruct init_task = INIT_TASK(init_task);&lt;/span>
+&lt;span id="cb6-15">&lt;a href="#cb6-15" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们会发现，linter 直接在定义结构体的时候就报错了，因为它不知道 &lt;code>myStruct&lt;/code> 有多 大，或者说这种定义本身就是一种矛盾：外部的 &lt;code>myStruct&lt;/code> 一定比内部的 &lt;code>myStruct&lt;/code> 大两个 &lt;code>int&lt;/code> 的大小。&lt;/p>
+&lt;p>其实这个看似“鸡生蛋，蛋生鸡”的问题我们在数据结构中写链表的时候就用到了。&lt;/p>
+&lt;p>另外，对 64 bit 的 Linux 来说，这个 &lt;code>struct myStruct *self&lt;/code> 的本质其实是 &lt;code>long&lt;/code>。 关于各个变量的长度，有机会再聊聊，Linux 的 long 和 Windows 的 long 是不一样的。 （TODO）&lt;/p></description></item></channel></rss>

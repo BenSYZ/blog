@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>symbolic link on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/symbolic-link/</link><description>Recent content in symbolic link on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 01 Aug 2019 13:07:43 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/symbolic-link/index.xml" rel="self" type="application/rss+xml"/><item><title>学习笔记：链接</title><link>https://bensyz.github.io/blog/blogs/link/</link><pubDate>Thu, 01 Aug 2019 13:07:43 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/link/</guid><description>&lt;p>我原先发于 &lt;a href="https://blog.csdn.net/BenSYZ">CSDN&lt;/a>&lt;/p>
+&lt;h1 id="链接-link">链接 (link)&lt;/h1>
+&lt;h2 id="硬链接-hard-link">硬链接 (hard link) :&lt;/h2>
+&lt;p>硬链接可以用作备份文件，但不可跨硬盘链接。&lt;/p>
+&lt;h3 id="图示">图示&lt;/h3>
+&lt;pre class="mermaid">&lt;code>graph TB;
+A[&amp;quot;~/link/a/b/z.txt&amp;lt;Br/&amp;gt;（原始，用touch等新建的）&amp;quot;] -.-&amp;gt; Z(真实文件&amp;lt;Br/&amp;gt;数据位置);
+B[&amp;quot;~/link/z_harlink.txt&amp;lt;Br/&amp;gt; （硬链接）&amp;quot;] -.-&amp;gt; Z;&lt;/code>&lt;/pre>
+&lt;h3 id="命令">命令&lt;/h3>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cp&lt;/span> -l [source file] [destination file]&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="co">#or&lt;/span>&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>&lt;span class="fu">ln&lt;/span> [source file] [destination file]&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h2 id="符号链接-symbolic-link不是软链接哦">符号链接 (symbolic link)&lt;font size =1>(不是软链接哦)&lt;/font>&lt;/h2>
+&lt;p>即“快捷方式” 符号连接可以跨硬盘建链接，但不能用作备份，原始文件(“~ /link/a/b/z.txt”)被删除后，链接(“~/link/a/b/z.txt”)无用了。&lt;/p>
+&lt;h3 id="图示-1">图示&lt;/h3>
+&lt;pre class="mermaid">&lt;code>graph TB;
+A[&amp;quot;~/link/a/b/z.txt&amp;lt;Br/&amp;gt;（原始，用touch等新建的）&amp;quot;] -.-&amp;gt; Z(真实文件&amp;lt;Br/&amp;gt;数据位置);
+B[&amp;quot;~/link/z_harlink.txt&amp;lt;Br/&amp;gt; （硬链接）&amp;quot;] --&amp;gt; A;&lt;/code>&lt;/pre>
+&lt;h3 id="命令-1">命令&lt;/h3>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cp&lt;/span> -s [source file] [destination file]&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="co">#or&lt;/span>&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="fu">ln&lt;/span> -s [source file] [destination file]&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item></channel></rss>

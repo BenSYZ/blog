@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>c on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/c/</link><description>Recent content in c on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Jun 2023 07:48:40 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/c/index.xml" rel="self" type="application/rss+xml"/><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>&lt;h2 id="update">2023-06-06 update:&lt;/h2>
+&lt;p>windows does not support shell basename. Makefile native support &lt;code>basname&lt;/code> like, it’s &lt;code>notdir&lt;/code>.&lt;/p>
+&lt;h2 id="contents">contents&lt;/h2>
+&lt;p>Since gcc-12, gcc native support &lt;code>__FILE_NAME__&lt;/code> macro. &lt;a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=42579">ref&lt;/a>&lt;/p>
+&lt;p>Here we provide some methods to make gcc version lower than 12 support &lt;code>__FILE_NAME__&lt;/code>:&lt;/p>
+&lt;p>Makefile:&lt;/p>
+&lt;pre class="make">&lt;code>CXX_FLAGS+=-D__FILE_NAME__=\&amp;quot;$(notdir $&amp;lt;)\&amp;quot;
+test: test.c
+gcc-7 $(CXX_FLAGS) $&amp;lt;&lt;/code>&lt;/pre>
+&lt;p>Qt pro:&lt;/p>
+&lt;pre class="config">&lt;code>DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;quot;$(notdir $&amp;lt;)\\\&amp;quot;&amp;#39;&lt;/code>&lt;/pre>
+&lt;p>Some information of macro is at &lt;a href="../macro_in_gcc_Makefile_qmake">here&lt;/a>.&lt;/p></description></item><item><title>about nested struct and anonymous struct in c</title><link>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</link><pubDate>Sat, 20 May 2023 16:55:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</guid><description>&lt;p>看书的时候没明白一个 macro 的用法，搜了一下，发现这个&lt;a href="https://stackoverflow.com/questions/58346036/c-c-macro-parameter-containing-dot-member-access-operator">问题&lt;/a>，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个&lt;a href="https://stackoverflow.com/questions/38457109/c-how-to-access-different-types-of-anonymous-or-unnamed-nested-structs/38457240">问题&lt;/a>，一下把我能想到的关于结构体的情况都写出来了&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> s {&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> abc;&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
+&lt;span id="cb1-9">&lt;a href="#cb1-9" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
+&lt;span id="cb1-10">&lt;a href="#cb1-10" aria-hidden="true">&lt;/a> } intern;&lt;/span>
+&lt;span id="cb1-11">&lt;a href="#cb1-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-12">&lt;a href="#cb1-12" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i {&lt;/span>
+&lt;span id="cb1-13">&lt;a href="#cb1-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> c;&lt;/span>
+&lt;span id="cb1-14">&lt;a href="#cb1-14" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-15">&lt;a href="#cb1-15" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-16">&lt;a href="#cb1-16" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i2 {&lt;/span>
+&lt;span id="cb1-17">&lt;a href="#cb1-17" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> d;&lt;/span>
+&lt;span id="cb1-18">&lt;a href="#cb1-18" aria-hidden="true">&lt;/a> } intern2;&lt;/span>
+&lt;span id="cb1-19">&lt;a href="#cb1-19" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-20">&lt;a href="#cb1-20" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 {&lt;/span>
+&lt;span id="cb1-21">&lt;a href="#cb1-21" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> e;&lt;/span>
+&lt;span id="cb1-22">&lt;a href="#cb1-22" aria-hidden="true">&lt;/a> };&lt;/span>
+&lt;span id="cb1-23">&lt;a href="#cb1-23" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 intern3;&lt;/span>
+&lt;span id="cb1-24">&lt;a href="#cb1-24" aria-hidden="true">&lt;/a>};&lt;/span>
+&lt;span id="cb1-25">&lt;a href="#cb1-25" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-26">&lt;a href="#cb1-26" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> i3 AA;&lt;/span>
+&lt;span id="cb1-27">&lt;a href="#cb1-27" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-28">&lt;a href="#cb1-28" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> &lt;span class="dt">const&lt;/span> *argv[])&lt;/span>
+&lt;span id="cb1-29">&lt;a href="#cb1-29" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb1-30">&lt;a href="#cb1-30" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> s mystruct;&lt;/span>
+&lt;span id="cb1-31">&lt;a href="#cb1-31" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-32">&lt;a href="#cb1-32" aria-hidden="true">&lt;/a> mystruct.abc = &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-33">&lt;a href="#cb1-33" aria-hidden="true">&lt;/a> mystruct.a = &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb1-34">&lt;a href="#cb1-34" aria-hidden="true">&lt;/a> mystruct.intern.b = &lt;span class="dv">2&lt;/span>;&lt;/span>
+&lt;span id="cb1-35">&lt;a href="#cb1-35" aria-hidden="true">&lt;/a> mystruct.c = &lt;span class="dv">3&lt;/span>; &lt;span class="co">// &amp;lt;-- does not compile&lt;/span>&lt;/span>
+&lt;span id="cb1-36">&lt;a href="#cb1-36" aria-hidden="true">&lt;/a> mystruct.intern2.d = &lt;span class="dv">4&lt;/span>;&lt;/span>
+&lt;span id="cb1-37">&lt;a href="#cb1-37" aria-hidden="true">&lt;/a> mystruct.intern3.e = &lt;span class="dv">5&lt;/span>;&lt;/span>
+&lt;span id="cb1-38">&lt;a href="#cb1-38" aria-hidden="true">&lt;/a> AA.e=&lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-39">&lt;a href="#cb1-39" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-40">&lt;a href="#cb1-40" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb1-41">&lt;a href="#cb1-41" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>两个回答都很好：&lt;/p>
+&lt;blockquote>
+&lt;p>Regarding anonymous structure, quoting C11, chapter §6.7.2.1, (emphasis mine)&lt;/p>
+&lt;blockquote>
+&lt;p>An unnamed member whose type specifier is a structure specifier with no tag is called an anonymous structure; an unnamed member whose type specifier is a union specifier with no tag is called an anonymous union. The members of an anonymous structure or union are considered to be members of the containing structure or union. This applies recursively if the containing structure or union is also anonymous.&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;p>说明了 anonymous struct 访问内部变量这种奇怪的 &lt;code>.&lt;/code> 法。&lt;/p>
+&lt;blockquote>
+&lt;p>Member c is declared inside inside strut i. And you are not creating any variable for struct i&lt;/p>
+&lt;/blockquote>
+&lt;p>这个回答看起来没说什么，其实说明了 &lt;code>struct i&lt;/code> 在 struct 内部的声明（可能不叫声明）等同于放在外面，也解释了 warning 的问题。（其实不等同，不然不会有这个 warning 了）&lt;/p>
+&lt;p>&lt;a href="./res/example.c">example.c&lt;/a>&lt;/p></description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除">C 和 Qt 中 socket 的创建和删除&lt;/h1>
+&lt;p>[toc]&lt;/p>
+&lt;h2 id="c">C&lt;/h2>
+&lt;p>&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/">example code&lt;/a>&lt;/p>
+&lt;h3 id="客户端">客户端&lt;/h3>
+&lt;p>客户端相对来说比较简单：创建，然后 connect&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>connect(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="服务端">服务端&lt;/h3>
+&lt;p>服务端相对来说会复杂一些&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>bind(sockfd, (SA*)&amp;amp;servaddr, &lt;span class="kw">sizeof&lt;/span>(servaddr));&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>listen(sockfd, &lt;span class="dv">5&lt;/span>);&lt;/span>
+&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a>connfd = accept(sockfd, (SA*)&amp;amp;cli, &amp;amp;len);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p>
+&lt;p>从 &lt;code>man 2 accept&lt;/code> 可以知道 accept 做了这些事：&lt;/p>
+&lt;ol type="1">
+&lt;li>从这个监听的 socket 中取出第一个连接请求&lt;/li>
+&lt;li>创建一个新的连接着的socket，&lt;/li>
+&lt;li>返回一个指向这个 socket 的文件描述符&lt;/li>
+&lt;/ol>
+&lt;p>这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p>
+&lt;h4 id="文件描述符">文件描述符：&lt;/h4>
+&lt;p>文件描述符号是 int。&lt;/p>
+&lt;p>在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p>
+&lt;p>文件描述符在系统中在这里 &lt;code>/proc/&amp;lt;PID&amp;gt;/fd/&amp;lt;fdNum&amp;gt;&lt;/code> 虽然新的socket 的描述符还是 21，但它的软连接对象已经变了。&lt;/p>
+&lt;pre>&lt;code>/proc/30475/fd/21 -&amp;gt; socket:[31166317]
+/proc/30475/fd/21 -&amp;gt; socket:[31206486]
+cat /proc/net/tcp |grep 31206486&lt;/code>&lt;/pre>
+&lt;h2 id="qt">Qt&lt;/h2>
+&lt;p>Qt 就结构上也差不多，只不过它把服务端的监听的 socket 抽象成了 &lt;code>QTcpServer&lt;/code>，但有一个区别就是 accept 在 Qt 中的对应是 &lt;code>QTcpSocket *QTcpServer::nextPendingConnection()&lt;/code>，注意这里返回的是一个指针也就是说它现在不再栈中了，而是在堆中，那它是在什么时候建的呢，我是否可以删除它？那就去翻源码咯(doge)&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode cpp">&lt;code class="sourceCode cpp">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="ex">QTcpSocket&lt;/span> *&lt;span class="ex">QTcpServer::&lt;/span>nextPendingConnection()&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> d-&amp;gt;pendingConnections.takeFirst();&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-4">&lt;a href="#cb4-4" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>addPendingConnection(&lt;span class="ex">QTcpSocket&lt;/span>* socket)&lt;/span>
+&lt;span id="cb4-5">&lt;a href="#cb4-5" aria-hidden="true">&lt;/a> d_func()-&amp;gt;pendingConnections.append(socket);&lt;/span>
+&lt;span id="cb4-6">&lt;a href="#cb4-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-7">&lt;a href="#cb4-7" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> &lt;span class="ex">QTcpServer::&lt;/span>incomingConnection(qintptr socketDescriptor)&lt;/span>
+&lt;span id="cb4-8">&lt;a href="#cb4-8" aria-hidden="true">&lt;/a> &lt;span class="ex">QTcpSocket&lt;/span> *socket = &lt;span class="kw">new&lt;/span> &lt;span class="ex">QTcpSocket&lt;/span>(&lt;span class="kw">this&lt;/span>);&lt;/span>
+&lt;span id="cb4-9">&lt;a href="#cb4-9" aria-hidden="true">&lt;/a> socket-&amp;gt;setSocketDescriptor(socketDescriptor);&lt;/span>
+&lt;span id="cb4-10">&lt;a href="#cb4-10" aria-hidden="true">&lt;/a> addPendingConnection(socket);&lt;/span>
+&lt;span id="cb4-11">&lt;a href="#cb4-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb4-12">&lt;a href="#cb4-12" aria-hidden="true">&lt;/a>&lt;span class="dt">void&lt;/span> QTcpServerPrivate::readNotification()&lt;/span>
+&lt;span id="cb4-13">&lt;a href="#cb4-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> descriptor = socketEngine-&amp;gt;accept();&lt;/span>
+&lt;span id="cb4-14">&lt;a href="#cb4-14" aria-hidden="true">&lt;/a> q-&amp;gt;incomingConnection(descriptor);&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们可以看到 &lt;code>pendingConnections&lt;/code> 里面的 &lt;code>socket&lt;/code> 是在 &lt;code>incommingConnection&lt;/code> 那里 &lt;code>new&lt;/code> 的&lt;/p>
+&lt;p>那我们什么时候去 delete 呢，查阅 &lt;a href="https://doc.qt.io/qt-5/implicit-sharing.html">隐式共享&lt;/a>，QAbstractsocket 不在其中，所以需要对它进行手动释放。 在 &lt;a href="https://stackoverflow.com/questions/28820450/how-to-safely-delete-a-qtqtcpsocket">stack overflow 的这个回答&lt;/a> 中就说了，在 QTcpServer 删除的时候会把所有的socket 都释放掉，也就是 Qt 释放时的树状结构。但为了追求高效率，我们可以手动去释放掉。根据 Qt 的 &lt;a href="https://doc.qt.io/archives/qt-4.8/objecttrees.html">手册&lt;/a>: When any QObject in the tree is deleted, if the object has a parent, the destructor automatically removes the object from its parent. 所以你可以放心地删除，而不必担心析构两次。&lt;/p>
+&lt;p>另外在 disconnect 的信号的帮助里也有说到：&lt;/p>
+&lt;pre class="help">&lt;code>[signal] void QAbstractSocket::disconnected()
+Warning: If you need to delete the sender() of this signal in a slot connected to it, use the deleteLater() function.&lt;/code>&lt;/pre></description></item></channel></rss>

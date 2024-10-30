@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>sh on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/sh/</link><description>Recent content in sh on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 12 Jun 2023 11:05:23 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/sh/index.xml" rel="self" type="application/rss+xml"/><item><title>makeself 和 .run 文件</title><link>https://bensyz.github.io/blog/blogs/makeself_run/</link><pubDate>Mon, 12 Jun 2023 11:05:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/makeself_run/</guid><description>&lt;h2 id="什么是-makeself-以及-.run-文件是什么">什么是 makeself 以及 .run 文件是什么&lt;/h2>
+&lt;p>简单来说，makeself 把一些文件打成压缩包，然后把这个压缩包打包成 POSIX sh 脚本。&lt;/p>
+&lt;p>很多巨大 &lt;code>xxx.run&lt;/code> 文件或者 &lt;code>.sh&lt;/code> 就是 &lt;code>makself&lt;/code> 打出来的，它不是简单的一个 shell 脚本，它自包含了压缩包。(当然 Linux 中扩展名无关紧要，只是 .run 通常是)&lt;code>NVIDIA-Linux-xxx.run&lt;/code> 就是用这个打出来的。印象当中 &lt;code>Mathematica&lt;/code> 的 &lt;code>Mathematica_13.2.1_LINUX.sh&lt;/code> 好像也是这个打出来的。&lt;/p>
+&lt;h3 id="如何使用-makeself">如何使用 makeself&lt;/h3>
+&lt;h2 id="如何打包">如何打包：&lt;/h2>
+&lt;p>如下目录结构&lt;/p>
+&lt;pre class="tree">&lt;code>.
+└── dir
+├── file1
+├── file2
+└── install.sh&lt;/code>&lt;/pre>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="ex">makeself&lt;/span> dir test_makeself.run v0.1 ./install.sh&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>就会在当前目录生成 &lt;code>./test_makeself.run&lt;/code>&lt;/p>
+&lt;p>更多参数详见 man.&lt;/p>
+&lt;h2 id="如何查看包">如何查看包&lt;/h2>
+&lt;p>&lt;strong>警告&lt;/strong>：这个脚本是很随意的，所以下面的参数只是通常情况下可能支持的参数。请一定要确保脚本是来自于可信源，否则有可能你只是想查看帮助，实际上执行了恶意程序。&lt;/p>
+&lt;h3 id="帮助">帮助&lt;/h3>
+&lt;pre>&lt;code>./test_makeself.run --help&lt;/code>&lt;/pre>
+&lt;h3 id="查看解包后执行的脚本和参数">查看解包后执行的脚本和参数&lt;/h3>
+&lt;pre class="console">&lt;code> ➜ ./test_makeself.run --info
+Identification: v0.1
+Target directory: dir
+Uncompressed size: 4 KB
+Compression: gzip
+Encryption: n
+Date of packaging: Mon Jun 12 19:23:34 CST 2023
+Built with Makeself version 2.5.0
+Build command was: /usr/bin/makeself \
+&amp;quot;dir&amp;quot; \
+&amp;quot;test_makeself.run&amp;quot; \
+&amp;quot;v0.1&amp;quot; \
+&amp;quot;./install.sh&amp;quot;
+Script run after extraction:
+./install.sh
+dir will be removed after extraction&lt;/code>&lt;/pre>
+&lt;h3 id="解包">解包&lt;/h3>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="ex">./test_makeself.run&lt;/span> --noexec --target extract_dir&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="tree">&lt;code>extract_dir
+├── file1
+├── file2
+└── install.sh&lt;/code>&lt;/pre></description></item></channel></rss>
