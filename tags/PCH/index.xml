@@ -16,7 +16,10 @@
 &lt;h2 id="如何生成-pch-文件">如何生成 PCH 文件？&lt;/h2>
 &lt;p>非常简单，和编译普通的源文件一样，只需对头文件做编译即可：&lt;/p>
 &lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="fu">gcc&lt;/span> blah.h&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>Tips: * &lt;code>gcc&lt;/code>/&lt;code>g++&lt;/code> 会根据扩展名来选择默认的编译选项，对 &lt;code>h&lt;/code> 文件，会默认使用 &lt;code>-x c-header&lt;/code>，我们也可以强制将一个 &lt;code>c&lt;/code> 文件用 &lt;code>-x c-header&lt;/code> 来编译，编译成 PCH （具体请 &lt;code>man 1 gcc&lt;/code> 搜索 &lt;code>-x&lt;/code> 参数）&lt;/p>
+&lt;p>Tips:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>gcc&lt;/code>/&lt;code>g++&lt;/code> 会根据扩展名来选择默认的编译选项，对 &lt;code>h&lt;/code> 文件，会默认使用 &lt;code>-x c-header&lt;/code>，我们也可以强制将一个 &lt;code>c&lt;/code> 文件用 &lt;code>-x c-header&lt;/code> 来编译，编译成 PCH （具体请 &lt;code>man 1 gcc&lt;/code> 搜索 &lt;code>-x&lt;/code> 参数）&lt;/li>
+&lt;/ul>
 &lt;p>我们会发现，经过上一条命令的执行，我们得到了 &lt;code>blah.h.gch&lt;/code> 让我们来看看这个文件是什么：&lt;/p>
 &lt;pre class="console">&lt;code>$ file blah.h.gch
 blah.h.gch: GCC precompiled header (version 014) for C&lt;/code>&lt;/pre>
@@ -79,11 +82,9 @@ blah.c&lt;/code>&lt;/pre>
 &lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode pro">&lt;code class="sourceCode prolog">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="dt">CONFIG&lt;/span> += precompile_header&lt;/span>
 &lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="dt">PRECOMPILED_HEADER&lt;/span> &lt;span class="kw">=&lt;/span> stable&lt;span class="kw">.&lt;/span>h&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
 &lt;p>然后 &lt;code>qmake&lt;/code> 会自动生成对应的 &lt;code>Makefile&lt;/code>，完成以下几件事： 1. 递归地找到所有依赖的头文件，将它们放在 PCH 的 prerequisite，来做到当头文件更新时，PCH 会更新。 2. 在所有 &lt;code>.o&lt;/code> 的 target 中通过 &lt;code>-include&lt;/code> 的方式强制引入 PCH 文件 3. 将 PCH 文件，作为所有 &lt;code>.o&lt;/code> 的 target 的 prerequisite&lt;/p>
-&lt;ul>
-&lt;li>Tips:
+&lt;p>Tips:&lt;/p>
 &lt;ul>
 &lt;li>需要注意的是，通过上面几条 &lt;code>Makefile&lt;/code> 的规则，如果任意一个构成 PCH 的头文件变更，都会导致 PCH 更新，从而导致所有 .o 重编，反而使增量编译时间变长。这也是 Qt 问什么称这个文件为 &lt;code>stable.h&lt;/code> 的原因&lt;/li>
-&lt;/ul>&lt;/li>
 &lt;/ul>
 &lt;h2 id="预编译头文件失效invalid">预编译头文件失效（invalid）&lt;/h2>
 &lt;p>我们前面说到，“会去这个目录下找任意一个可以用的预编译头文件”，那什么时可用的，什么是不可用的呢？&lt;/p>
