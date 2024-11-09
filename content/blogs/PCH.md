@@ -38,7 +38,8 @@ gcc blah.h
 ```
 
 Tips:
-    * `gcc`/`g++` 会根据扩展名来选择默认的编译选项，对 `h` 文件，会默认使用 `-x c-header`，我们也可以强制将一个 `c` 文件用 `-x c-header` 来编译，编译成 PCH （具体请 `man 1 gcc` 搜索 `-x` 参数）
+
+* `gcc`/`g++` 会根据扩展名来选择默认的编译选项，对 `h` 文件，会默认使用 `-x c-header`，我们也可以强制将一个 `c` 文件用 `-x c-header` 来编译，编译成 PCH （具体请 `man 1 gcc` 搜索 `-x` 参数）
 
 我们会发现，经过上一条命令的执行，我们得到了 `blah.h.gch` 让我们来看看这个文件是什么：
 
@@ -155,8 +156,9 @@ PRECOMPILED_HEADER = stable.h
 2. 在所有 `.o` 的 target 中通过 `-include` 的方式强制引入 PCH 文件
 3. 将 PCH 文件，作为所有 `.o` 的 target 的 prerequisite
 
-* Tips:
-    + 需要注意的是，通过上面几条 `Makefile` 的规则，如果任意一个构成 PCH 的头文件变更，都会导致 PCH 更新，从而导致所有 .o 重编，反而使增量编译时间变长。这也是 Qt 问什么称这个文件为 `stable.h` 的原因
+Tips:
+
+* 需要注意的是，通过上面几条 `Makefile` 的规则，如果任意一个构成 PCH 的头文件变更，都会导致 PCH 更新，从而导致所有 .o 重编，反而使增量编译时间变长。这也是 Qt 问什么称这个文件为 `stable.h` 的原因
 
 
 ## 预编译头文件失效（invalid）
