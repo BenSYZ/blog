@@ -4,14 +4,14 @@
 &lt;h2 id="将-demo-跑起来的详细步骤">将 Demo 跑起来的详细步骤&lt;/h2>
 &lt;h3 id="创建工程">创建工程&lt;/h3>
 &lt;figure>
-&lt;img src="./figures/create_project.png" width="500" alt="" />&lt;figcaption>create_project&lt;/figcaption>
+&lt;img src="./figures/create_project.png" alt="" />&lt;figcaption>create_project&lt;/figcaption>
 &lt;/figure>
 &lt;p>因为我们的 OpenHarmony-4.1.2 的 Sdk version 是 11，所以这边我们选择 11&lt;/p>
 &lt;figure>
-&lt;img src="./figures/create_project_conf_proj.png" width="500" alt="" />&lt;figcaption>config project&lt;/figcaption>
+&lt;img src="./figures/create_project_conf_proj.png" alt="" />&lt;figcaption>config project&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
-&lt;img src="./figures/create_project_empty_ability.png" width="500" alt="" />&lt;figcaption>select empty ability&lt;/figcaption>
+&lt;img src="./figures/create_project_empty_ability.png" alt="" />&lt;figcaption>select empty ability&lt;/figcaption>
 &lt;/figure>
 &lt;p>(Native C++) 是一样的配置，只是需要多加一个配置，参考&lt;a href="#配置-abifilters-选的工程是-native-c-时">配置 &lt;code>abiFilters&lt;/code> (选的工程是 Native C++ 时)&lt;/a>&lt;/p>
 &lt;p>重新创建的路径在：&lt;/p>
@@ -21,7 +21,7 @@
 &lt;img src="./figures/download_sdk_1.png" alt="" />&lt;figcaption>download sdk 1&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
-&lt;img src="./figures/download_sdk_2.png" width="500" alt="" />&lt;figcaption>download sdk 2&lt;/figcaption>
+&lt;img src="./figures/download_sdk_2.png" alt="" />&lt;figcaption>download sdk 2&lt;/figcaption>
 &lt;/figure>
 &lt;h3 id="连接开发板">连接开发板&lt;/h3>
 &lt;p>默认下载路径是在这里 &lt;code>C:\Users\username\AppData\Local\OpenHarmony\Sdk&lt;/code>，打开 powershell 输入以下命令&lt;/p>
@@ -38,7 +38,7 @@
 &lt;/ul>
 &lt;p>当 DevEco Studio 右上角的 device 下拉框中是这样时，代表板子连上了。&lt;/p>
 &lt;figure>
-&lt;img src="./figures/connect_board.png" width="500" alt="" />&lt;figcaption>connect board&lt;/figcaption>
+&lt;img src="./figures/connect_board.png" alt="" />&lt;figcaption>connect board&lt;/figcaption>
 &lt;/figure>
 &lt;h3 id="配置-abifilters-选的工程是-native-c-时">配置 &lt;code>abiFilters&lt;/code> (选的工程是 Native C++ 时)&lt;/h3>
 &lt;p>根据&lt;a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-create-new-project-V5">官方文档&lt;/a> 最后所述，需要做如下配置&lt;/p>
@@ -88,16 +88,16 @@
 }&lt;/code>&lt;/pre>
 &lt;p>要把这块的配置&lt;/p>
 &lt;figure>
-&lt;img src="./figures/runtimeOS_to_OHOS_before.png" width="500" alt="" />&lt;figcaption>config with HMOS&lt;/figcaption>
+&lt;img src="./figures/runtimeOS_to_OHOS_before.png" alt="" />&lt;figcaption>config with HMOS&lt;/figcaption>
 &lt;/figure>
 &lt;p>改成：&lt;/p>
 &lt;figure>
-&lt;img src="./figures/runtimeOS_to_OHOS_after.png" width="500" alt="" />&lt;figcaption>config with OHOS&lt;/figcaption>
+&lt;img src="./figures/runtimeOS_to_OHOS_after.png" alt="" />&lt;figcaption>config with OHOS&lt;/figcaption>
 &lt;/figure>
 &lt;p>&lt;strong>注意&lt;/strong>：&lt;code>compatibleSdkVersion&lt;/code> 字段在 &lt;code>runtimeOS&lt;/code> 为 &lt;code>HarmonyOS&lt;/code> 时是 string 类型，但在 &lt;code>runtimeOS&lt;/code> 为 &lt;code>OpenHarmony&lt;/code> 的时候，该字段为 int。&lt;/p>
 &lt;p>改完先不管 Linter 的报错，保存然后点右上角 “Sync Now”，会有弹窗，大概意思是要把板子类型改成 “default” 和 “tablet”，然后点 “Yes”。完了之后，Linter 的报错也会消失。&lt;/p>
 &lt;figure>
-&lt;img src="./figures/runtimeOS_to_OHOS_sync_now.png" width="500" alt="" />&lt;figcaption>sync now&lt;/figcaption>
+&lt;img src="./figures/runtimeOS_to_OHOS_sync_now.png" alt="" />&lt;figcaption>sync now&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
 &lt;img src="./figures/runtimeOS_to_OHOS_sync_now_yes.png" alt="" />&lt;figcaption>click yes&lt;/figcaption>
@@ -113,33 +113,33 @@ OpenHarmony-4.1.2-Release/out/rk3588/packages/phone/system/etc/PCID.sc&lt;/code>
 &lt;p>在 DevEco 中导入上面的 PCID，导入方式，我没找到，但是可以通过 Help 直接跳过去，位置：&lt;/p>
 &lt;pre>&lt;code>ToolBar -&amp;gt; Help -&amp;gt; Find Action -&amp;gt; &amp;quot;Import Product Compatibility ID&amp;quot;&lt;/code>&lt;/pre>
 &lt;figure>
-&lt;img src="./figures/syscap1.png" width="500" alt="" />&lt;figcaption>import syscap 1&lt;/figcaption>
+&lt;img src="./figures/syscap1.png" alt="" />&lt;figcaption>import syscap 1&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
 &lt;img src="./figures/syscap2.png" alt="" />&lt;figcaption>import syscap 2&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
-&lt;img src="./figures/syscap3.png" width="500" alt="" />&lt;figcaption>import syscap 3&lt;/figcaption>
+&lt;img src="./figures/syscap3.png" alt="" />&lt;figcaption>import syscap 3&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
 &lt;img src="./figures/syscap4.png" alt="" />&lt;figcaption>import syscap 4&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
-&lt;img src="./figures/syscap5.png" width="500" alt="" />&lt;figcaption>import syscap 5&lt;/figcaption>
+&lt;img src="./figures/syscap5.png" alt="" />&lt;figcaption>import syscap 5&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
 &lt;img src="./figures/syscap6.png" alt="" />&lt;figcaption>import syscap 6&lt;/figcaption>
 &lt;/figure>
 &lt;p>完了之后，我们需要把最后的 &lt;code>SystemCapbility.Base&lt;/code> 字段去除，它似乎不太兼容，&lt;/p>
 &lt;figure>
-&lt;img src="./figures/syscap7.png" width="500" alt="" />&lt;figcaption>import syscap remove Base before&lt;/figcaption>
+&lt;img src="./figures/syscap7.png" alt="" />&lt;figcaption>import syscap remove Base before&lt;/figcaption>
 &lt;/figure>
 &lt;figure>
-&lt;img src="./figures/syscap8.png" width="500" alt="" />&lt;figcaption>import syscap remove Base after&lt;/figcaption>
+&lt;img src="./figures/syscap8.png" alt="" />&lt;figcaption>import syscap remove Base after&lt;/figcaption>
 &lt;/figure>
 &lt;p>最后保存之后点 Sync Now&lt;/p>
 &lt;figure>
-&lt;img src="./figures/syscap8.png" width="500" alt="" />&lt;figcaption>import syscap sync now&lt;/figcaption>
+&lt;img src="./figures/syscap8.png" alt="" />&lt;figcaption>import syscap sync now&lt;/figcaption>
 &lt;/figure>
 &lt;h3 id="配置签名密钥">配置签名密钥&lt;/h3>
 &lt;figure>
