@@ -130,16 +130,13 @@ OpenHarmony-4.1.2-Release/out/rk3588/packages/phone/system/etc/PCID.sc&lt;/code>
 &lt;figure>
 &lt;img src="./figures/syscap6.png" alt="" />&lt;figcaption>import syscap 6&lt;/figcaption>
 &lt;/figure>
-&lt;p>完了之后，我们需要把最后的 &lt;code>SystemCapbility.Base&lt;/code> 字段去除，它似乎不太兼容，&lt;/p>
+&lt;p>完了之后，我们需要把最后的 &lt;code>SystemCapbility.Base&lt;/code> 字段去除，它似乎不太兼容：&lt;/p>
 &lt;figure>
 &lt;img src="./figures/syscap7.png" alt="" />&lt;figcaption>import syscap remove Base before&lt;/figcaption>
 &lt;/figure>
-&lt;figure>
-&lt;img src="./figures/syscap8.png" alt="" />&lt;figcaption>import syscap remove Base after&lt;/figcaption>
-&lt;/figure>
 &lt;p>最后保存之后点 Sync Now&lt;/p>
 &lt;figure>
-&lt;img src="./figures/syscap8.png" alt="" />&lt;figcaption>import syscap sync now&lt;/figcaption>
+&lt;img src="./figures/syscap8.png" alt="" />&lt;figcaption>import syscap remove Base after&lt;/figcaption>
 &lt;/figure>
 &lt;h3 id="配置签名密钥">配置签名密钥&lt;/h3>
 &lt;figure>
