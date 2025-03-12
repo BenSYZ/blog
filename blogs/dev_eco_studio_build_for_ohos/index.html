@@ -1,0 +1,73 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>为 Open Harmony 编译 Application</title><script src=/js/if_mobile.js></script>
+<script>!function(){$("pre > code").each(function(){var s,n=$(this).parent().attr("class");n==null||n===""?$(this).addClass("hljs"):(s={js:"javascript"},s[n]&&(n=s[n]),$(this).addClass(n))})}</script><link rel=stylesheet href=/css/hljs/snazzy.css><link rel=stylesheet href=/css/hljs/line-numbers.min.css><script src=/js/hljs/highlight.min.js></script>
+<script src=/js/hljs/highlightjs-line-numbers.min.js></script>
+<script>hljs.highlightAll()</script><script>hljs.initLineNumbersOnLoad()</script><link rel=stylesheet href=/css/code.css><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/footer.css><link rel=stylesheet href=/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/js/favicon.js></script></head><body><div class=container><div class=header><h1>为 Open Harmony 编译 Application</h1>Wed, 2025-03-12<hr></div><div class=middle><div id=TitleWithToc><div id=TitleOfToc>为 Open Harmony 编译 Application</div></div><div id=content><h2 id=introduction>Introduction</h2><p>我下载了 OpenHarmony-4.1.2 的 SDK，然后编译了 Hihope/dayu210，并把把生成的镜像烧录到了我们的板子上，板子启动后，现在准备开发上层应用，但是 DevEco Studio 提供的 demo 直接跑不起来，需要做些改动。</p><p><a href=https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-project-V5>这是华为官方的文档</a>。</p><h2 id=将-demo-跑起来的详细步骤>将 Demo 跑起来的详细步骤</h2><h3 id=创建工程>创建工程</h3><figure><img src=./figures/create_project.png width=500 alt><figcaption>create_project</figcaption></figure><p>因为我们的 OpenHarmony-4.1.2 的 Sdk version 是 11，所以这边我们选择 11</p><figure><img src=./figures/create_project_conf_proj.png width=500 alt><figcaption>config project</figcaption></figure><figure><img src=./figures/create_project_empty_ability.png width=500 alt><figcaption>select empty ability</figcaption></figure><p>(Native C++) 是一样的配置，只是需要多加一个配置，参考<a href=#配置-abifilters-选的工程是-native-c-时>配置 <code>abiFilters</code> (选的工程是 Native C++ 时)</a></p><p>重新创建的路径在：</p><pre class=pos><code>ToolBar -&gt; File -&gt; New -&gt; Create Project -&gt; Empty Ability</code></pre><h3 id=下载-sdk>下载 SDK</h3><figure><img src=./figures/download_sdk_1.png alt><figcaption>download sdk 1</figcaption></figure><figure><img src=./figures/download_sdk_2.png width=500 alt><figcaption>download sdk 2</figcaption></figure><h3 id=连接开发板>连接开发板</h3><p>默认下载路径是在这里 <code>C:\Users\username\AppData\Local\OpenHarmony\Sdk</code>，打开 powershell 输入以下命令</p><pre class=ps2><code>.\11\toolchains\hdc.exe kill
+.\11\toolchains\hdc.exe start
+.\11\toolchains\hdc.exe shell</code></pre><p><strong>注意</strong>: 这里需要 start，不要直接 shell，直接 shell，DevEco Studio 那里会始终连不上。</p><ul><li>Notes:<ul><li><code>hdc</code> 和功能和 <code>adb</code> 是一样的</li><li>Linux 上的 SDK 内编译出来的 <code>hdc</code> 在这里 <code>OpenHarmony-4.1.2-Release/prebuilts/ohos-sdk/linux/11/toolchains/hdc</code></li></ul></li></ul><p>当 DevEco Studio 右上角的 device 下拉框中是这样时，代表板子连上了。</p><figure><img src=./figures/connect_board.png width=500 alt><figcaption>connect board</figcaption></figure><h3 id=配置-abifilters-选的工程是-native-c-时>配置 <code>abiFilters</code> (选的工程是 Native C++ 时)</h3><p>根据<a href=https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-create-new-project-V5>官方文档</a> 最后所述，需要做如下配置</p><pre class=json5><code>//&lt;project&gt;/MyApplication/build-profile.json5
+{
+  &quot;app&quot;: {
+  //...
+    &quot;products&quot;: [
+      {
+        //...
+        &quot;buildOption&quot;: {
+          // ...
+          &quot;externalNativeOptions&quot;: {
+            &quot;abiFilters&quot;: [&quot;arm64-v8a&quot;]
+          }
+          // ...
+        }
+        //...
+      }
+    ]
+  //...
+  }
+}</code></pre><figure><img src=./figures/native_cxx_abi_filters_before.png alt><figcaption>native cxx abi filters before</figcaption></figure><figure><img src=./figures/native_cxx_abi_filters_after.png alt><figcaption>native cxx abi filters after</figcaption></figure><h3 id=修改-runtimeos-为-openharmony>修改 <code>runtimeOS</code> 为 <code>OpenHarmony</code></h3><p>根据<a href=https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-create-new-project-V5#section1826317225311>华为官方文档的这节</a> 我们需要配置 <code>RuntimeOS</code> 为 <code>OpenHarmony</code></p><pre class=json5><code>//&lt;project&gt;/MyApplication/build-profile.json5
+{
+  &quot;app&quot;: {
+  //...
+    &quot;products&quot;: [
+      {
+        //...
+        &quot;compatibleSdkVersion&quot;: 11,
+        &quot;compileSdkVersion&quot;: 11,
+        &quot;runtimeOS&quot;: &quot;OpenHarmony&quot;,
+        //...
+      }
+    ]
+  //...
+  }
+}</code></pre><p>要把这块的配置</p><figure><img src=./figures/runtimeOS_to_OHOS_before.png width=500 alt><figcaption>config with HMOS</figcaption></figure><p>改成：</p><figure><img src=./figures/runtimeOS_to_OHOS_after.png width=500 alt><figcaption>config with OHOS</figcaption></figure><p><strong>注意</strong>：<code>compatibleSdkVersion</code> 字段在 <code>runtimeOS</code> 为 <code>HarmonyOS</code> 时是 string 类型，但在 <code>runtimeOS</code> 为 <code>OpenHarmony</code> 的时候，该字段为 int。</p><p>改完先不管 Linter 的报错，保存然后点右上角 “Sync Now”，会有弹窗，大概意思是要把板子类型改成 “default” 和 “tablet”，然后点 “Yes”。完了之后，Linter 的报错也会消失。</p><figure><img src=./figures/runtimeOS_to_OHOS_sync_now.png width=500 alt><figcaption>sync now</figcaption></figure><figure><img src=./figures/runtimeOS_to_OHOS_sync_now_yes.png alt><figcaption>click yes</figcaption></figure><p>否则这里会报 Sign 之类的错误 TODO</p><h3 id=配置-syscap>配置 SYSCAP</h3><p><a href=https://blog.csdn.net/openharmony/article/details/132898745>参考</a></p><p>SYSCAP 大概是系统的能力，比如我是否支持 3D graphics 或者 refs TODO</p><p>去 Linux 下编译好的 SDK 里找 <code>PCID.sc</code> 文件，在以下几个目录（这几个文件都一样）：</p><pre><code>OpenHarmony-4.1.2-Release/out/rk3588/PCID.sc
+OpenHarmony-4.1.2-Release/out/rk3588/obj/developtools/syscap_codec/out/rk3588/PCID.sc
+OpenHarmony-4.1.2-Release/out/rk3588/packages/phone/system/etc/PCID.sc</code></pre><p>在 DevEco 中导入上面的 PCID，导入方式，我没找到，但是可以通过 Help 直接跳过去，位置：</p><pre><code>ToolBar -&gt; Help -&gt; Find Action -&gt; &quot;Import Product Compatibility ID&quot;</code></pre><figure><img src=./figures/syscap1.png width=500 alt><figcaption>import syscap 1</figcaption></figure><figure><img src=./figures/syscap2.png alt><figcaption>import syscap 2</figcaption></figure><figure><img src=./figures/syscap3.png width=500 alt><figcaption>import syscap 3</figcaption></figure><figure><img src=./figures/syscap4.png alt><figcaption>import syscap 4</figcaption></figure><figure><img src=./figures/syscap5.png width=500 alt><figcaption>import syscap 5</figcaption></figure><figure><img src=./figures/syscap6.png alt><figcaption>import syscap 6</figcaption></figure><p>完了之后，我们需要把最后的 <code>SystemCapbility.Base</code> 字段去除，它似乎不太兼容，</p><figure><img src=./figures/syscap7.png width=500 alt><figcaption>import syscap remove Base before</figcaption></figure><figure><img src=./figures/syscap8.png width=500 alt><figcaption>import syscap remove Base after</figcaption></figure><p>最后保存之后点 Sync Now</p><figure><img src=./figures/syscap8.png width=500 alt><figcaption>import syscap sync now</figcaption></figure><h3 id=配置签名密钥>配置签名密钥</h3><figure><img src=./figures/sign_key_1.png alt><figcaption>config signature 1</figcaption></figure><p><strong>不要</strong>勾选 <code>Support HarmonyOS</code>，勾选 <code>Automatically generate signature</code></p><figure><img src=./figures/sign_key_2.png alt><figcaption>config signature 2</figcaption></figure><h3 id=将板子配置成-developer-mode>将板子配置成 developer mode</h3><p><a href=https://blog.csdn.net/userhu2012/article/details/140957908>refs</a></p><p>通过 hdc 连接到板子上，输入以下命令配置 developer mode。</p><pre class=hdc><code>param set const.security.developermode.state 1</code></pre><h3 id=build-run>build & run</h3><p>直接点击右上角的播放符，开始编译然后运行，demo 就起来啦。</p><figure><img src=./figures/run.png alt><figcaption>run</figcaption></figure><h2 id=相关错误>相关错误</h2><h3 id=code9568320>code:9568320</h3><p>不配置签名密钥报错：</p><pre><code>Install Failed: error: failed to install bundle.
+code:9568320
+error: no signature file.</code></pre><p>参考<a href=#配置签名密钥>配置签名密钥</a></p><h3 id=code9568393>code:9568393</h3><pre><code>Install Failed: error: failed to install bundle.
+code:9568393
+error: verify code signature failed.
+The target device does not work with apps with an OpenHarmony signature. Sign the app with a HarmonyOS signature before installing it on the device.</code></pre><p>参考 <a href=#修改-runtimeos-为-openharmony>修改 <code>runtimeOS</code> 为 <code>OpenHarmony</code></a></p><h3 id=右下角弹窗-please-try-to-match-the-api-version>右下角弹窗 Please try to match the API version</h3><pre><code>Please try to match the API version of the device and the app. The current
+device does not contain the following SysCap attributes in the rpcid.json file:
+SystemCapability.ArkUi.Graphics3D. Make sure the device supports all the SysCap
+attributes required for running the app.</code></pre><p>参考 <a href=#配置-syscap>配置 SYSCAP</a></p><h3 id=编译失败>编译失败</h3><pre><code>&gt; hvigor ERROR: Failed :entry:default@PreBuild... 
+&gt; hvigor ERROR: Schema validate failed.
+     Detail: Please check the following fields.
+{
+  instancePath: &#39;devices.custom[0].PCID[242]&#39;,
+  keyword: &#39;pattern&#39;,
+  params: {
+    pattern: &#39;^SystemCapability\\.[a-zA-Z0-9]+\\.[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+){0,2}$&#39;
+  },
+  message: &#39;must match pattern &quot;^SystemCapability\\.[a-zA-Z0-9]+\\.[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+){0,2}$&quot;&#39;,
+  location: &#39;C:/Users/kenexs/DevEcoStudioProjects/MyApplication2/entry/src/main/syscap.json:252:34&#39;
+} 
+
+&gt; hvigor ERROR: BUILD FAILED in 203 ms </code></pre><p>参考 <a href=#配置-syscap>配置 SYSCAP</a> 去除 <code>SystemCapbility.Base</code></p><h3 id=error-failed-to-start-ability.>error: failed to start ability.</h3><pre><code>error: failed to start ability.
+Error while Launching ability</code></pre><p>部分文章包括官方文档的 FAQ 说需要配置 <code>module.json5</code> 中的 <code>exported</code> 为 <code>true</code>，我看了一下都开了，还不行</p><p>在板子上，通过 <code>hilog</code> 命令查看日志，查看报的错：</p><div class=sourceCode id=cb13><pre class="sourceCode sh"><code class="sourceCode bash"><span id=cb13-1><a href=#cb13-1 aria-hidden=true></a><span class=ex>hilog</span> <span class=kw>&amp;</span></span>
+<span id=cb13-2><a href=#cb13-2 aria-hidden=true></a><span class=ex>aa</span> start -a EntryAbility -b com.bensyz.myapplication</span></code></pre></div><p>我们会看到</p><pre class=log><code>03-12 15:28:07.302   905  1127 E C01300/Ability: [ability_manager_service.cpp(CheckDebugAppInDeveloperMode:9026)]Debugging application cannot run in non developer mode.
+03-12 15:28:07.302   905  1127 E C01300/Ability: [ability_manager_service.cpp(StartAbilityInner:861)]Generate ability request local error.
+error: failed to start ability.</code></pre><p>参考 <a href=#将板子配置成-developer-mode>将板子配置成 developer mode</a></p><h3 id=code9568404>code:9568404</h3><p>如果勾选了 Support HarmonyOS，会需要你登录华为帐号，同时编译完会报</p><pre><code>Install Failed: error: failed to install bundle.
+code:9568404
+error: delivery sign profile failed</code></pre><p>参考<a href=#配置签名密钥>配置签名密钥</a>，重新点击 <code>Automatically generate signature</code> 来重新生成密钥。</p><h3 id=code9568332>code:9568332</h3><pre><code>Install Failed: error: failed to install bundle.
+code:9568332
+error: install sign info inconsistent.</code></pre><p>同名包不同的签名，在板子上卸掉即可</p></div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/avatar.jpg></div><ul><li><a href=/about>About Me</a></li><li><a href=/donate>Donate Me</a></li><li><a href=/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div></div><div class=footer><div id=tags><a href=https://bensyz.github.io/blog/tags><i class="fas fa-tags"></i></a>
+Keywords:<ul><li><a href=https://bensyz.github.io/blog/tags/DevEco-Studio>DevEco Studio</a></li><li><a href=https://bensyz.github.io/blog/tags/ohos>ohos</a></li></ul></div><footer><hr><a href=/>Ben's Blog</a><br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。<br><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/icons/public_safety_icon.png>浙公网安备 33028102001039号</a>
+<a href=https://beian.miit.gov.cn/ target=_blank>浙ICP备2021032097号-1</a></footer></div></div></body></html>
