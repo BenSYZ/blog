@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/</link><description>Recent content in Blogs on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 29 Apr 2021 19:53:43 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
 &lt;p>我下载了 OpenHarmony-4.1.2 的 SDK，然后编译了 Hihope/dayu210，并把把生成的镜像烧录到了我们的板子上，板子启动后，现在准备开发上层应用，但是 DevEco Studio 提供的 demo 直接跑不起来，需要做些改动。&lt;/p>
 &lt;p>&lt;a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-project-V5">这是华为官方的文档&lt;/a>。&lt;/p>
+&lt;h3 id="environments">environments&lt;/h3>
+&lt;ul>
+&lt;li>DevEco Studio: Build Version: 5.0.7.210, built on February 11, 2025&lt;/li>
+&lt;li>Soc: rk3588&lt;/li>
+&lt;li>Board: Custom Board&lt;/li>
+&lt;li>System SDK Version: 4.1.2&lt;/li>
+&lt;/ul>
 &lt;h2 id="将-demo-跑起来的详细步骤">将 Demo 跑起来的详细步骤&lt;/h2>
 &lt;h3 id="创建工程">创建工程&lt;/h3>
 &lt;figure>
