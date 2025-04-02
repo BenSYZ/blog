@@ -26,8 +26,11 @@ $$
 其次，我们求当小球位于 $(x,y)$ 时，它的速度：
 
 $$
-\frac{1}{2} mv^2 = mgh \\
+\frac{1}{2} mv^2 = mg \delta h
+$$
 
+
+$$
 v = \sqrt{2gh} = \sqrt{2g(y-y_1)} = \sqrt{2gy}
 $$
 
@@ -98,6 +101,10 @@ $$
 如何理解这种奇怪的表示，来张图：
 
 ![f_i](./figures/f_i.gif)
+
+
+[geogebra 原始图 点我下载](./figures/f_i.ggb)
+
 
 这四条曲线是
 $$
@@ -242,4 +249,53 @@ $$
 - \frac{d}{dx}\frac{d}{dx}\frac{d}{dx}(\frac{\partial f}{ \partial y_i'''} )
 + \ldots
 $$
+
+### 总结一下
+当路径变化时，这个系统的属性满足：
+
+$$
+P = \int f(y,y',y'',\ldots,x) dx
+$$
+
+当路径满足以下条件时，系统属性 P 会处于稳态。
+
+
+$$
+\frac{\partial f}{ \partial y_i} - \frac{d}{dx}(\frac{\partial f}{ \partial y_i'}) = 0
+$$
+
+### 变更形式
+我们上面讨论的是 $y(x)$ 也就是 $y$ 受 $x$ 变化而变化，给出的是一条路径。很多时候， $y$ 和 $x$ 可以是关于时间 $t$ 的变量，也就是 $y(t)$ 和 $x(t)$，那么上面这个属性的形式就变成了(多元的证法应该是一样的 TODO)：
+
+$$
+P = \int f(y,y',y'',\ldots,x,x',x'',\ldots) dt
+$$
+
+$$
+\left\{\begin{matrix}
+\frac{\partial f}{ \partial x_i} - \frac{d}{dt}(\frac{\partial f}{ \partial x_i'}) = 0 \\
+\frac{\partial f}{ \partial y_j} - \frac{d}{dt}(\frac{\partial f}{ \partial y_j'}) = 0
+\end{matrix}\right.
+$$
+
+这个 $f$ 就是我们说的拉格朗日量 $\mathcal{L}$，这个 $P$ 就是常说作用量（先不管这个名字）的 $S$
+
+
+---
+### 拉格朗日量
+我们凑巧地发现，当 $\mathcal{L}$(就是我们推导的 $f$) 是这个形式，
+
+$$
+\mathcal{L} = T - U
+$$
+
+page 268
+
+时，拉格朗日公式(那个等于0的式子)等价于牛顿的 $F=m\dot{x}$。那么此时对 $\mathcal{L}$ 关于时间 $t$ 求积分有什么含义吗？啥含义都没有。但是我们知道的是，它代表的是系统的某种属性，这种属性是稳定的，什么是稳定的？在各个变量方向的变化下它都是极致点，所以我可以对它关于时间（$t$）求导数，关于位置（$x$ 或者 $y$）求导数，这些导数都应该是 $0$ 。
+从而我们得出
+
+当 $P$ 关于位置求导数时，最终推得 $\frac{d}{dt} p = 0$($p$ 是动量)，满足动量守恒
+
+当 $P$ 关于时间求导数时，最终推得 $\frac{d}{dt} (\sum p_i \dot{q_i} - \mathcal{L})$($p$ 是动量)满足能量守恒
+
 
