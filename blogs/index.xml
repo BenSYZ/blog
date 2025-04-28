@@ -1,4 +1,88 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/</link><description>Recent content in Blogs on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 29 Apr 2021 19:53:43 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/</link><description>Recent content in Blogs on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 29 Apr 2021 19:53:43 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>install NVIDIA supported docker</title><link>https://bensyz.github.io/blog/blogs/install_nvidia_docker/</link><pubDate>Mon, 28 Apr 2025 11:50:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/install_nvidia_docker/</guid><description>&lt;h2 id="docker">docker&lt;/h2>
+&lt;p>&lt;a href="https://docs.docker.com/engine/install/ubuntu/">official doc&lt;/a>&lt;/p>
+&lt;h3 id="装">装&lt;/h3>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="co"># Add Docker&amp;#39;s official GPG key:&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get update&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get install ca-certificates curl&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> install -m 0755 -d /etc/apt/keyrings&lt;/span>
+&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc&lt;/span>
+&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> chmod a+r /etc/apt/keyrings/docker.asc&lt;/span>
+&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-9">&lt;a href="#cb1-9" aria-hidden="true">&lt;/a>&lt;span class="co"># Add the repository to Apt sources:&lt;/span>&lt;/span>
+&lt;span id="cb1-10">&lt;a href="#cb1-10" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb1-11">&lt;a href="#cb1-11" aria-hidden="true">&lt;/a> &lt;span class="st">&amp;quot;deb [arch=&lt;/span>&lt;span class="va">$(&lt;/span>&lt;span class="ex">dpkg&lt;/span> --print-architecture&lt;span class="va">)&lt;/span>&lt;span class="st"> signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \&lt;/span>&lt;/span>
+&lt;span id="cb1-12">&lt;a href="#cb1-12" aria-hidden="true">&lt;/a>&lt;span class="st"> &lt;/span>&lt;span class="va">$(&lt;/span>&lt;span class="bu">.&lt;/span> &lt;span class="ex">/etc/os-release&lt;/span> &lt;span class="kw">&amp;amp;&amp;amp;&lt;/span> &lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${UBUNTU_CODENAME:-$VERSION_CODENAME}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">)&lt;/span>&lt;span class="st"> stable&amp;quot;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb1-13">&lt;a href="#cb1-13" aria-hidden="true">&lt;/a> &lt;span class="fu">sudo&lt;/span> tee /etc/apt/sources.list.d/docker.list &lt;span class="op">&amp;gt;&lt;/span> /dev/null&lt;/span>
+&lt;span id="cb1-14">&lt;a href="#cb1-14" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get update&lt;/span>
+&lt;span id="cb1-15">&lt;a href="#cb1-15" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb1-16">&lt;a href="#cb1-16" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="配">配&lt;/h3>
+&lt;h4 id="user-add-to-docker-group">user add to docker group&lt;/h4>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="ex">useradd&lt;/span> -a -G docker &lt;span class="op">&amp;lt;&lt;/span>username&lt;span class="op">&amp;gt;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>重登&lt;/p>
+&lt;h4 id="add-proxy">add proxy&lt;/h4>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="ex">systemctl&lt;/span> edit docker&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre class="conf">&lt;code>[Service]
+Environment=&amp;quot;HTTP_PROXY=http://localhost:8118&amp;quot;
+Environment=&amp;quot;HTTPS_PROXY=http://localhost:8118&amp;quot;&lt;/code>&lt;/pre>
+&lt;h2 id="nvidia">NVIDIA&lt;/h2>
+&lt;p>分两部分&lt;/p>
+&lt;ul>
+&lt;li>driver：host 机上要能操作 GPU (&lt;a href="https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/index.html">official doc&lt;/a>)&lt;/li>
+&lt;li>container：可以将 GPU 传递到 docker 内 (&lt;a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">official doc&lt;/a>)&lt;/li>
+&lt;/ul>
+&lt;p>可以从 container 的 &lt;a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">official doc&lt;/a> 入手。&lt;/p>
+&lt;h3 id="driver">driver&lt;/h3>
+&lt;p>container 第一节给了一个链接跳转到 &lt;a href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/">cuda-installation doc&lt;/a>，我们不需要在 host 机上装 cuda，所以点右边 &lt;a href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/#driver-installation">4. Driver Installation&lt;/a>，直接给了个 &lt;a href="https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/index.html">tesla 的 driver installation doc&lt;/a>&lt;/p>
+&lt;h4 id="先下-keyring">先下 keyring&lt;/h4>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co"># ubuntu2204/x86_64&lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="fu">wget&lt;/span> https://developer.download.nvidia.com/compute/cuda/repos/&lt;span class="op">&amp;lt;&lt;/span>distro&lt;span class="op">&amp;gt;&lt;/span>/&lt;span class="op">&amp;lt;&lt;/span>arch&lt;span class="op">&amp;gt;&lt;/span>/cuda-keyring_1.1-1_all.deb&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> dpkg -i cuda-keyring_1.1-1_all.deb&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="下">下&lt;/h4>
+&lt;p>选择开源还是闭源驱动可以看 &lt;a href="https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/index.html#kernel-modules">5. Kernel Modules&lt;/a>&lt;/p>
+&lt;p>新的是 open source 的 driver 的&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get update&lt;/span>
+&lt;span id="cb6-2">&lt;a href="#cb6-2" aria-hidden="true">&lt;/a>&lt;span class="ex">apt&lt;/span> install nvidia-open&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="验">验&lt;/h4>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="ex">nvidia-smi&lt;/span>&lt;/span>
+&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="ex">reboot&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="nvidia-container-toolkit">NVIDIA Container Toolkit&lt;/h3>
+&lt;p>&lt;a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">official doc&lt;/a>&lt;/p>
+&lt;h4 id="装-1">装&lt;/h4>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> -fsSL https://nvidia.github.io/libnvidia-container/gpgkey &lt;span class="kw">|&lt;/span> &lt;span class="fu">sudo&lt;/span> gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;amp;&amp;amp;&lt;/span> &lt;span class="ex">curl&lt;/span> -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list &lt;span class="kw">|&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a> &lt;span class="fu">sed&lt;/span> &lt;span class="st">&amp;#39;s#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="kw">\&lt;/span>&lt;/span>
+&lt;span id="cb8-5">&lt;a href="#cb8-5" aria-hidden="true">&lt;/a> &lt;span class="fu">sudo&lt;/span> tee /etc/apt/sources.list.d/nvidia-container-toolkit.list&lt;/span>
+&lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a>&lt;span class="fu">sed&lt;/span> -i -e &lt;span class="st">&amp;#39;/experimental/ s/^#//g&amp;#39;&lt;/span> /etc/apt/sources.list.d/nvidia-container-toolkit.list&lt;/span>
+&lt;span id="cb8-7">&lt;a href="#cb8-7" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get update&lt;/span>
+&lt;span id="cb8-8">&lt;a href="#cb8-8" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get install -y nvidia-container-toolkit&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="配-1">配&lt;/h3>
+&lt;h4 id="nvidia-container-runtime">nvidia-container-runtime&lt;/h4>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
+&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> nvidia-ctk runtime configure --runtime=docker&lt;/span>
+&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a>&lt;span class="co"># /etc/docker/daemon.json&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="btrfs">btrfs&lt;/h4>
+&lt;p>&lt;code>/etc/docker/daemon.json&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode json">&lt;code class="sourceCode json">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="fu">{&lt;/span>&lt;/span>
+&lt;span id="cb10-2">&lt;a href="#cb10-2" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;storage-driver&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="st">&amp;quot;btrfs&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb10-3">&lt;a href="#cb10-3" aria-hidden="true">&lt;/a>&lt;span class="fu">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="results">results&lt;/h4>
+&lt;p>&lt;code>/etc/docker/daemon.json&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb11">&lt;pre class="sourceCode json">&lt;code class="sourceCode json">&lt;span id="cb11-1">&lt;a href="#cb11-1" aria-hidden="true">&lt;/a>&lt;span class="fu">{&lt;/span>&lt;/span>
+&lt;span id="cb11-2">&lt;a href="#cb11-2" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;storage-driver&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="st">&amp;quot;btrfs&amp;quot;&lt;/span>&lt;span class="fu">,&lt;/span>&lt;/span>
+&lt;span id="cb11-3">&lt;a href="#cb11-3" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;runtimes&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="fu">{&lt;/span>&lt;/span>
+&lt;span id="cb11-4">&lt;a href="#cb11-4" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;nvidia&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="fu">{&lt;/span>&lt;/span>
+&lt;span id="cb11-5">&lt;a href="#cb11-5" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;args&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="ot">[]&lt;/span>&lt;span class="fu">,&lt;/span>&lt;/span>
+&lt;span id="cb11-6">&lt;a href="#cb11-6" aria-hidden="true">&lt;/a> &lt;span class="dt">&amp;quot;path&amp;quot;&lt;/span>&lt;span class="fu">:&lt;/span> &lt;span class="st">&amp;quot;nvidia-container-runtime&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb11-7">&lt;a href="#cb11-7" aria-hidden="true">&lt;/a> &lt;span class="fu">}&lt;/span>&lt;/span>
+&lt;span id="cb11-8">&lt;a href="#cb11-8" aria-hidden="true">&lt;/a> &lt;span class="fu">}&lt;/span>&lt;/span>
+&lt;span id="cb11-9">&lt;a href="#cb11-9" aria-hidden="true">&lt;/a>&lt;span class="fu">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="测">测&lt;/h3>
+&lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
+&lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="ex">docker&lt;/span> run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;code>--runtime=nvidia&lt;/code> 通过这个将显卡传递到 docker 里&lt;/p></description></item><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
 &lt;p>我下载了 OpenHarmony-4.1.2 的 SDK，然后编译了 Hihope/dayu210，并把把生成的镜像烧录到了我们的板子上，板子启动后，现在准备开发上层应用，但是 DevEco Studio 提供的 demo 直接跑不起来，需要做些改动。&lt;/p>
 &lt;p>&lt;a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-project-V5">这是华为官方的文档&lt;/a>。&lt;/p>
 &lt;h3 id="environments">environments&lt;/h3>
@@ -2586,109 +2670,4 @@ P_\text{L} = \frac{U_\text{emf}}{4 R_\text{L}}
 &lt;p>参照 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker&lt;/p>
 &lt;p>这里有一点是 20.04 是指向 18.04 的源，文档里也有说，然后就 ok 了。&lt;/p>
 &lt;p>由于已开始 rsync 那里敲错了，之前的几个 container, image 都没找到，所以怀疑是迁移出了问题，然后就看到了这个。。。如何迁移？删除。。。不过，有可能是提交成一个 image 再新开 container 就可以了，由于我们以前用的是 nvidia-docker 2 的，就没关系了。&lt;/p>
-&lt;p>https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/migrating-from-1.0.html#migration-1-0&lt;/p></description></item><item><title>polkit</title><link>https://bensyz.github.io/blog/blogs/polkit/</link><pubDate>Mon, 06 Jun 2022 08:55:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/polkit/</guid><description>&lt;h1 id="polkit">polkit&lt;/h1>
-&lt;h2 id="introduction">Introduction&lt;/h2>
-&lt;h3 id="问题的出现">问题的出现&lt;/h3>
-&lt;p>&lt;code>udisks2&lt;/code> 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 &lt;code>/etc/fstab&lt;/code> 来自动挂载的分区。但由 &lt;code>/etc/fstab&lt;/code> 挂载的分区却不能直接用 &lt;code>udisks2&lt;/code> 卸载。(虽然加上 &lt;code>users&lt;/code> 这个 option 可以不用 sudo 直接 umount，但 &lt;code>udisks2&lt;/code> 限制了这种动作,后面会提到的 &lt;code>org.freedesktop.udisks2.filesystem-unmount-others&lt;/code>)。又由于 File explorer 中点击卸载，使用的是 &lt;code>udisks2&lt;/code>，所以对于前述的情况，便不能通过鼠标点击卸载。&lt;/p>
-&lt;h3 id="about-polkit">about polkit&lt;/h3>
-&lt;p>polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘&lt;/p>
-&lt;p>polkit 配置有两种方式，一种是应用自带的，叫Action，(&lt;code>.policy&lt;/code>)；另一种是类似补丁的形式，叫Authorization rules,(&lt;code>.rules&lt;/code> or &lt;code>.pkla&lt;/code>)&lt;/p>
-&lt;h2 id="action">Action:&lt;/h2>
-&lt;p>policy file 文件位置：&lt;/p>
-&lt;p>&lt;code>/usr/share/polkit-1/actions/*.policy&lt;/code>&lt;/p>
-&lt;p>在 default section 中，有这几个选项:&lt;/p>
-&lt;ul>
-&lt;li>keys:
-&lt;ul>
-&lt;li>&lt;code>allow_any&lt;/code>: 所有&lt;/li>
-&lt;li>&lt;code>allow_inactive&lt;/code>: 远程的 session(ssh vnc, etc.)&lt;/li>
-&lt;li>&lt;code>allow_active&lt;/code>: 本地 tty, X display&lt;/li>
-&lt;/ul>&lt;/li>
-&lt;li>values:
-&lt;ul>
-&lt;li>&lt;code>no&lt;/code>: 无权限&lt;/li>
-&lt;li>&lt;code>yes&lt;/code>: 有权限&lt;/li>
-&lt;li>&lt;code>auth_self[_keep]&lt;/code>: 对 non-sudoer [keep some minutes] 开放权限&lt;/li>
-&lt;li>&lt;code>auth_admin[_keep]&lt;/code>: sudoer 开放权限&lt;/li>
-&lt;/ul>&lt;/li>
-&lt;/ul>
-&lt;h2 id="authorization-rules">Authorization rules&lt;/h2>
-&lt;p>文件位置：&lt;/p>
-&lt;p>&lt;code>/etc/polkit-1/rules.d/*.rules&lt;/code>&lt;/p>
-&lt;p>Tips:&lt;/p>
-&lt;ul>
-&lt;li>顺序是 &lt;code>00-test.rules&lt;/code> 比 &lt;code>99-test.rules&lt;/code> 更早验证，即，后面的不会覆写前面的。（区别于 &lt;code>/etc/udev/hwdb.d/&lt;/code>）因为这里直接 return 了&lt;/li>
-&lt;li>&lt;code>subject.local: true/false&lt;/code> responding to &lt;code>allow_active&lt;/code>, etc in policy&lt;/li>
-&lt;li>&lt;code>systemctl status polkit&lt;/code> 可以查看 &lt;code>Action name&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;h3 id="examples">examples:&lt;/h3>
-&lt;ul>
-&lt;li>&lt;p>&lt;code>addAdminRule()&lt;/code> 需要特权时，使用何种身份验证是否有特权&lt;/p>
-&lt;pre class="rules">&lt;code># wheel 组的用户就可以使用这个特权
-polkit.addAdminRule(function(action, subject) {
-return [&amp;quot;unix-group:wheel&amp;quot;];
-});&lt;/code>&lt;/pre>
-&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
-==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
-Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
-Authenticating as: ben (ben is in wheel)&lt;/code>&lt;/pre>
-&lt;pre class="rules">&lt;code># root 用户才可以使用这个特权
-polkit.addAdminRule(function(action, subject) {
-return [&amp;quot;unix-user:root&amp;quot;];
-});&lt;/code>&lt;/pre>
-&lt;pre class="console">&lt;code>$ systemctl restart polkit.service
-==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====
-Authentication is required to restart &amp;#39;polkit.service&amp;#39;.
-Authenticating as: root&lt;/code>&lt;/pre>&lt;/li>
-&lt;li>&lt;p>&lt;code>addRule()&lt;/code>&lt;/p>
-&lt;ul>
-&lt;li>&lt;p>change rule&lt;/p>
-&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
-if (action.id == &amp;quot;org.gnome.gparted&amp;quot; &amp;amp;&amp;amp;
-subject.isInGroup(&amp;quot;admin&amp;quot;)) {
-return polkit.Result.YES;
-}
-});&lt;/code>&lt;/pre>&lt;/li>
-&lt;li>&lt;p>log&lt;/p>
-&lt;pre class="rules">&lt;code>polkit.addRule(function(action, subject) {
-if (action.id == &amp;quot;org.freedesktop.policykit.exec&amp;quot;) {
-polkit.log(&amp;quot;action=&amp;quot; + action);
-polkit.log(&amp;quot;subject=&amp;quot; + subject);
-}
-});&lt;/code>&lt;/pre>&lt;/li>
-&lt;/ul>&lt;/li>
-&lt;/ul>
-&lt;h3 id="old-authorization-rules">old Authorization rules&lt;/h3>
-&lt;p>&lt;code>pkaction --version&lt;/code>, rules not work for pkaction less then 106&lt;/p>
-&lt;p>&lt;a href="https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect" class="uri">https://askubuntu.com/questions/536591/policykit-rules-never-come-into-effect&lt;/a>&lt;/p>
-&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
-# section: random name
-# man pklocalauthority(8)
-[Allow]
-Identity=unix-user:*
-Action=org.freedesktop.udisks2.filesystem-unmount-others
-ResultAny=yes
-ResultInactive=no
-ResultActive=yes&lt;/code>&lt;/pre>
-&lt;p>(似乎 &lt;code>ResultAny&lt;/code> 和 &lt;code>ResultActive&lt;/code> 有优先级，如果这里只设置 &lt;code>ResultAny=yes&lt;/code>，默认的 &lt;code>ResultActive&lt;/code> 还是 &lt;code>no&lt;/code>，还是不生效)&lt;/p>
-&lt;h2 id="问题的解决">问题的解决&lt;/h2>
-&lt;p>&lt;code>pkaction --version&lt;/code> 106 及以上的&lt;/p>
-&lt;pre class="rules">&lt;code>#/etc/polkit-1/rules.d/00-udisk-unmount-others.rules
-polkit.addRule(function(action, subject) {
-if (action.id == &amp;quot;org.freedesktop.udisks2.filesystem-unmount-others&amp;quot; ){
-return polkit.Result.YES;
-}
-});&lt;/code>&lt;/pre>
-&lt;p>&lt;code>pkaction --version&lt;/code> 低于 106 的&lt;/p>
-&lt;pre class="conf">&lt;code>#/etc/polkit-1/localauthority/50-local.d/00-udisk-umount.pkla
-[Allow]
-Identity=unix-user:*
-Action=org.freedesktop.udisks2.filesystem-unmount-others
-ResultAny=yes
-ResultInactive=no
-ResultActive=yes&lt;/code>&lt;/pre>
-&lt;h2 id="refs">refs:&lt;/h2>
-&lt;ul>
-&lt;li>&lt;a href="https://wiki.archlinux.org/title/Polkit" class="uri">https://wiki.archlinux.org/title/Polkit&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html" class="uri">https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html&lt;/a>&lt;/li>
-&lt;/ul></description></item></channel></rss>
+&lt;p>https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/migrating-from-1.0.html#migration-1-0&lt;/p></description></item></channel></rss>
