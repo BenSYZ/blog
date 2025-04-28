@@ -58,7 +58,7 @@ Environment=&amp;quot;HTTPS_PROXY=http://localhost:8118&amp;quot;&lt;/code>&lt;/
 &lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a>&lt;span class="fu">sed&lt;/span> -i -e &lt;span class="st">&amp;#39;/experimental/ s/^#//g&amp;#39;&lt;/span> /etc/apt/sources.list.d/nvidia-container-toolkit.list&lt;/span>
 &lt;span id="cb8-7">&lt;a href="#cb8-7" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get update&lt;/span>
 &lt;span id="cb8-8">&lt;a href="#cb8-8" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> apt-get install -y nvidia-container-toolkit&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h3 id="配-1">配&lt;/h3>
+&lt;h4 id="配-1">配&lt;/h4>
 &lt;h4 id="nvidia-container-runtime">nvidia-container-runtime&lt;/h4>
 &lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
 &lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="fu">sudo&lt;/span> nvidia-ctk runtime configure --runtime=docker&lt;/span>
@@ -79,7 +79,7 @@ Environment=&amp;quot;HTTPS_PROXY=http://localhost:8118&amp;quot;&lt;/code>&lt;/
 &lt;span id="cb11-7">&lt;a href="#cb11-7" aria-hidden="true">&lt;/a> &lt;span class="fu">}&lt;/span>&lt;/span>
 &lt;span id="cb11-8">&lt;a href="#cb11-8" aria-hidden="true">&lt;/a> &lt;span class="fu">}&lt;/span>&lt;/span>
 &lt;span id="cb11-9">&lt;a href="#cb11-9" aria-hidden="true">&lt;/a>&lt;span class="fu">}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h3 id="测">测&lt;/h3>
+&lt;h4 id="测">测&lt;/h4>
 &lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
 &lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="ex">docker&lt;/span> run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
 &lt;p>&lt;code>--runtime=nvidia&lt;/code> 通过这个将显卡传递到 docker 里&lt;/p></description></item><item><title>migrate from ubuntu16.04 to ubuntu20.04</title><link>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</link><pubDate>Thu, 13 Apr 2023 11:13:20 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</guid><description>&lt;p>公司服务器需要升级系统&lt;/p>
