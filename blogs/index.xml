@@ -82,7 +82,203 @@ Environment=&amp;quot;HTTPS_PROXY=http://localhost:8118&amp;quot;&lt;/code>&lt;/
 &lt;h4 id="测">测&lt;/h4>
 &lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 拷自 official doc&lt;/span>&lt;/span>
 &lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="ex">docker&lt;/span> run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>&lt;code>--runtime=nvidia&lt;/code> 通过这个将显卡传递到 docker 里&lt;/p></description></item><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>&lt;code>--runtime=nvidia&lt;/code> 通过这个将显卡传递到 docker 里&lt;/p></description></item><item><title>Euler–Lagrange equation</title><link>https://bensyz.github.io/blog/blogs/Euler_Lagrange_equation/</link><pubDate>Tue, 25 Mar 2025 08:14:16 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/Euler_Lagrange_equation/</guid><description>&lt;h2 id="最速降线">最速降线&lt;/h2>
+&lt;p>以最速降线为例：一个小球从 &lt;span class="math inline">\(A\)&lt;/span> 点&lt;span class="math inline">\((x_1, y_1)\)&lt;/span> 移动到 &lt;span class="math inline">\(B\)&lt;/span> 点 &lt;span class="math inline">\((x_2, y_2)\)&lt;/span>，它耗时最少的路径是怎么样的？不妨设 &lt;span class="math inline">\((x_1,y_1)\)&lt;/span> 为 &lt;span class="math inline">\((0,0)\)&lt;/span> 点，记为 A 点，&lt;/p>
+&lt;p>首先，我们求当小球位于 &lt;span class="math inline">\((x,y)\)&lt;/span> 时，它的位移微分：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+ds = \sqrt{(dx)^2+(dy)^2}
+\]&lt;/span>&lt;/p>
+&lt;p>其次，我们求当小球位于 &lt;span class="math inline">\((x,y)\)&lt;/span> 时，它的速度：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{1}{2} mv^2 = mg \delta h
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+v = \sqrt{2gh} = \sqrt{2g(y-y_1)} = \sqrt{2gy}
+\]&lt;/span>&lt;/p>
+&lt;p>所以，我们求当小球位于 &lt;span class="math inline">\((x,y)\)&lt;/span> 时，走过 &lt;code>ds&lt;/code> 所需的时间：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+dt = \frac{ds}{v} = \frac{\sqrt{(dx)^2+(dy)^2}}{\sqrt{2gy}}
+\]&lt;/span>&lt;/p>
+&lt;p>提取出分子里的 &lt;span class="math inline">\(dx\)&lt;/span> 可得：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+dt = \frac{\sqrt{1+(\frac{dy}{dx})^2}}{\sqrt{2gy}} dx
+\]&lt;/span>&lt;/p>
+&lt;p>通常，我们记 &lt;span class="math inline">\(\frac{dy}{dx} = y&amp;#39;\)&lt;/span>，所以：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+dt = \frac{\sqrt{1+(y&amp;#39;)^2}}{\sqrt{2gy}} dx
+\]&lt;/span>&lt;/p>
+&lt;p>所以，从 &lt;span class="math inline">\(A\)&lt;/span> 点到 &lt;span class="math inline">\(B\)&lt;/span> 点的总耗时是：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+T = \int_{0}^{T} dt = \int_{x_1}^{x_2} \frac{\sqrt{1+(y&amp;#39;)^2}}{\sqrt{2gy}} dx
+\]&lt;/span>&lt;/p>
+&lt;p>先放一下，因为到这一步我们没法解下去了，怎么求 &lt;span class="math inline">\(T\)&lt;/span>？更遑论 &lt;span class="math inline">\(T\)&lt;/span> 的最小值了。&lt;/p>
+&lt;h2 id="euler-lagrange-equation">Euler-Lagrange Equation&lt;/h2>
+&lt;h3 id="核心思想">核心思想&lt;/h3>
+&lt;p>其实 Euler-Lagrange Equation 的核心思想就是反推。&lt;/p>
+&lt;p>对类似最速降线的问题，我们有什么？&lt;/p>
+&lt;ol type="1">
+&lt;li>一个积分式子，这个积分式子代表了系统中的某种属性，例如在最速降线中，这个积分式子代表的就是 &lt;span class="math inline">\(A\)&lt;/span> 点到 &lt;span class="math inline">\(B\)&lt;/span> 点的时间。&lt;/li>
+&lt;li>这个属性最终需要满足的一个条件，例如属性有最小值。&lt;/li>
+&lt;/ol>
+&lt;p>我们要求的是什么？&lt;/p>
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 之间的关系。&lt;/li>
+&lt;/ul>
+&lt;!--
+正常的解法是先去求这个积分方程，然后去算这个属性的最小值，可能可以，得出 $y$ 和 $x$ 的关系。
+但是现在的情况是，我本身就不知道 $y$ 和 $x$ 的关系，我就求不出这个属性的最小值，求不出这个属性的最小值，我就不知道 $y$ 和 $x$ 的关系，像是“鸡生蛋，蛋生鸡”的问题。但是事实真的是这样吗？我们是不是可以
+-->
+&lt;p>这个问题很奇怪，常见的问题是：我知道 &lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 的关系，然后我求得这个属性的值。也就是第二个条件其实是常规问题的最后一步，而我们需要求的东西是常规问题的中间步骤。而第二个条件在从前向后的推导中用不上，我们就对它束手无策。那转变思路，我们是不是可以让这个最后一步向我们这个方向推进一下，从结果反地推回来。也就是说，我们转变目标，先不求这个条件的最小值，我们先求如果要满足这个属性是最小值时，我们需要达到什么条件。这就是我所说的“反推”&lt;/p>
+&lt;p>那么，我们再来看挡在路中间的 “&lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 之间的关系”，这是啥？我们该如何表述这种关系？就像学微积分一样，我们先从离散的点开始：&lt;/p>
+&lt;ul>
+&lt;li>&lt;span class="math inline">\(y_1 = f_1(x)\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(y_2 = f_2(x)\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(y_3 = f_3(x)\)&lt;/span>&lt;/li>
+&lt;li>&lt;span class="math inline">\(y_4 = f_4(x)\)&lt;/span>&lt;/li>
+&lt;li>…&lt;/li>
+&lt;/ul>
+&lt;p>我们可以看到，这种所谓的 “&lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 之间的关系” 被我们用不同的 &lt;span class="math inline">\(f\)&lt;/span> 的下标给区分开来了，也就是说，&lt;span class="math inline">\(x\)&lt;/span> 映射到 &lt;span class="math inline">\(y\)&lt;/span> 关系可以是 &lt;span class="math inline">\(f_1\)&lt;/span>, &lt;span class="math inline">\(f_2\)&lt;/span>, &lt;span class="math inline">\(f_3\)&lt;/span>, … 我们可以记这种关系为 &lt;span class="math inline">\(f_i\)&lt;/span>，也就是&lt;/p>
+&lt;p>&lt;span class="math display">\[
+y_i = f_i(x)
+\]&lt;/span>&lt;/p>
+&lt;p>如何理解这种奇怪的表示，来张图：&lt;/p>
+&lt;figure>
+&lt;img src="./figures/f_i.gif" alt="" />&lt;figcaption>f_i&lt;/figcaption>
+&lt;/figure>
+&lt;p>&lt;a href="./figures/f_i.ggb">geogebra 原始图 点我下载&lt;/a>&lt;/p>
+&lt;p>这四条曲线是 &lt;span class="math display">\[
+z = \frac{1}{5} y^3 - x y + 3 \text{, where } x = 0,1,2,3
+\]&lt;/span>&lt;/p>
+&lt;p>（由于 geogebra 中只能是 z 轴作为纵轴，所以请将 图中的 &lt;span class="math inline">\(z\)&lt;/span> 当作 &lt;span class="math inline">\(y\)&lt;/span>，图中的 &lt;span class="math inline">\(y\)&lt;/span> 当作 &lt;span class="math inline">\(x\)&lt;/span>，图中的 &lt;span class="math inline">\(x\)&lt;/span> 当作 &lt;span class="math inline">\(i\)&lt;/span> ）&lt;/p>
+&lt;p>我们可以看到，当 &lt;span class="math inline">\(i\)&lt;/span> 取不同值时，&lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 之间成不同的关系。这个 &lt;span class="math inline">\(i\)&lt;/span> 其实就是多出的一个维度。&lt;/p>
+&lt;p>回到我们的问题，我们想知道，在 &lt;span class="math inline">\(i\)&lt;/span> 取何值时，我们的属性（记作 &lt;span class="math inline">\(P\)&lt;/span>）可以取到极值。发现没有，除了常规的 &lt;span class="math inline">\(x\)&lt;/span> 和 &lt;span class="math inline">\(y\)&lt;/span> 这两个维度之外，多了两个维度，&lt;span class="math inline">\(i\)&lt;/span> 和 &lt;span class="math inline">\(P\)&lt;/span>：随着 &lt;span class="math inline">\(i\)&lt;/span> 的变化 &lt;span class="math inline">\(P\)&lt;/span> 会发生变化。用数学的式子表示就是：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = g(i)
+\]&lt;/span>&lt;/p>
+&lt;p>很自然地，当 &lt;span class="math inline">\(i\)&lt;/span> 取何值时，&lt;span class="math inline">\(P\)&lt;/span> 取极值这个问题可以用求导来解，也就是：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{dP}{di}
+\]&lt;/span>&lt;/p>
+&lt;p>要求导，我们肯定得知道 &lt;span class="math inline">\(g(i)\)&lt;/span> 的形式。&lt;/p>
+&lt;hr />
+&lt;p>什么是“属性”呢？属性就像一个加权和，权重是什么呢？像是空间中的场，密布在这片空间中，不同的位置（或受其他因素影响）会有不同的属性值。当选择某一条路径时，你就会受到这条路径上的“场”的影响，最终加起来得到最后的属性。&lt;/p>
+&lt;p>比如，最简单的场：均匀的场，空间中每一处的加权均是 &lt;span class="math inline">\(1\)&lt;/span> ，那么从 A 点到 B 点的属性是什么？就是 &lt;span class="math inline">\(A\)&lt;/span> 到 &lt;span class="math inline">\(B\)&lt;/span> 之间作一条线，然后这条线被向第三个方向整体偏移 &lt;span class="math inline">\(1\)&lt;/span>，属性就是这条曲线到 &lt;span class="math inline">\(x-y\)&lt;/span> 平面的积分，对一个均匀的场来说，这个积分就是，曲线的长度乘以高度，什么时候积分最小？取线段时。&lt;/p>
+&lt;p>等于其实属性是，在路径走到 &lt;span class="math inline">\((x,y)\)&lt;/span> 点时，这点的属性乘以这点附近的路径微元&lt;/p>
+&lt;p>&lt;span class="math display">\[
+dP = g(\ldots) ds
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = \int g ds
+\]&lt;/span>&lt;/p>
+&lt;p>就像在最速降线中，&lt;/p>
+&lt;p>&lt;span class="math display">\[
+dt = \frac{1}{v}ds
+\]&lt;/span>&lt;/p>
+&lt;p>其中，&lt;span class="math inline">\(g = \frac{1}{v} = \frac{1}{\sqrt{2gy}}\)&lt;/span>，而 &lt;span class="math inline">\(ds\)&lt;/span> 往往可以写成 &lt;span class="math inline">\(\sqrt{1+dy&amp;#39;} dx\)&lt;/span>，也就是 &lt;span class="math inline">\(ds\)&lt;/span> 中包含了路径是怎么样的。&lt;span class="math inline">\(P\)&lt;/span> 可以写成&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = \int g(y) f(y&amp;#39;) dx
+\]&lt;/span>&lt;/p>
+&lt;p>可以将 &lt;span class="math inline">\(g\)&lt;/span> 和 &lt;span class="math inline">\(f\)&lt;/span> 整合起来，并且以更通用的形式表示：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = \int f(y,y&amp;#39;,y&amp;#39;&amp;#39;,\ldots,x) dx
+\]&lt;/span>&lt;/p>
+&lt;hr />
+&lt;p>从前文，我们可以知道 &lt;span class="math inline">\(i\)&lt;/span> 是 &lt;span class="math inline">\(y_i\)&lt;/span> 中的下标，它代表 &lt;span class="math inline">\(y(x)\)&lt;/span> 取不同的表达式，所以上面的式子又可以写成&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P_i = \int f(y_i,y_i&amp;#39;,y_i&amp;#39;&amp;#39;,\ldots,x) dx
+\]&lt;/span>&lt;/p>
+&lt;p>那么 &lt;span class="math inline">\(P\)&lt;/span> 关于 &lt;span class="math inline">\(i\)&lt;/span> 的导数又是什么呢？&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+\frac{dP_i}{di}
+&amp;amp;= \frac{d}{di} \int_{x_1}^{x_2} f(y_i,y_i&amp;#39;,y_i&amp;#39;&amp;#39;,\ldots,x) dx \\
+&amp;amp;= \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i} \frac{dy_i}{di} +
+\frac{\partial f}{ \partial y_i&amp;#39;} \frac{dy_i&amp;#39;}{di} + \ldots dx
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;ul>
+&lt;li>先不写二阶导往上的，&lt;/li>
+&lt;li>&lt;span class="math inline">\(y_i\)&lt;/span> 项没啥好处理的&lt;/li>
+&lt;li>&lt;span class="math inline">\(\partial y_i&amp;#39;\)&lt;/span> 在分母也没什么好处理的&lt;/li>
+&lt;/ul>
+&lt;p>而 &lt;span class="math inline">\(d y_i&amp;#39;\)&lt;/span> 在分子可以玩些花样，它首先可以写成 &lt;span class="math inline">\(d (\frac{dy_i}{dx})\)&lt;/span>，我们再假设它的性质足够好，可以和 &lt;span class="math inline">\(\frac{d}{di}\)&lt;/span> 互换顺序，第二项就成了&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+&amp;amp; \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i&amp;#39;} \frac{dy_i&amp;#39;}{di} dx \\
+=&amp;amp; \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i&amp;#39;} \frac{d}{di} \frac{d}{dx}y_i dx \\
+=&amp;amp; \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i&amp;#39;} \frac{d}{dx} \frac{d}{di} y_idx \\
+=&amp;amp; \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i&amp;#39;} \frac{d}{dx} \frac{d y_i}{di}dx \\
+=&amp;amp; \int_{A}^{B} \frac{\partial f}{ \partial y_i&amp;#39;} d(\frac{d y_i}{di}) \\
+=&amp;amp; (\frac{\partial f}{ \partial y_i&amp;#39;} \frac{d y_i}{di})|_{A}^B -
+\int_{A}^{B} \frac{d y_i}{di} d(\frac{\partial f}{ \partial y_i&amp;#39;} ) \\
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>因为，在 A，B 两点，由边界条件可知，&lt;span class="math inline">\(y_i\)&lt;/span> 在 &lt;span class="math inline">\(i\)&lt;/span> 方向上，是不变的，所有的 &lt;span class="math inline">\(y_i\)&lt;/span> 都得满足经过 A，B 两点。虽然，在 &lt;span class="math inline">\(x\)&lt;/span> 方向上 &lt;span class="math inline">\(y_i\)&lt;/span> 的导数的确可以不为 &lt;span class="math inline">\(0\)&lt;/span>，也就是 &lt;span class="math inline">\(\frac{dy_i}{dx} \neq 0\)&lt;/span>，但 &lt;span class="math inline">\(\frac{dy_i}{di} \equiv 0\)&lt;/span>，所以第一项为 &lt;span class="math inline">\(0\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+&amp;amp; (\frac{\partial f}{ \partial y_i&amp;#39;} \frac{d y_i}{di})|_{A}^B -
+\int_{x_1}^{x_2} \frac{d y_i}{di} d(\frac{\partial f}{ \partial y_i&amp;#39;} ) \\
+=&amp;amp; - \int_{x_1}^{x_2} \frac{d y_i}{di} \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;} ) dx\\
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>那么原来的 &lt;span class="math inline">\(\frac{dP_i}{di}\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\begin{aligned}
+\frac{dP_i}{di}
+&amp;amp;= \frac{d}{di} \int_{x_1}^{x_2} f(y_i,y_i&amp;#39;,y_i&amp;#39;&amp;#39;,\ldots,x) dx \\
+&amp;amp;= \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i} \frac{dy_i}{di} +
+\frac{\partial f}{ \partial y_i&amp;#39;} \frac{dy_i&amp;#39;}{di} + \ldots dx \\
+&amp;amp;= \int_{x_1}^{x_2} \frac{\partial f}{ \partial y_i} \frac{dy_i}{di}
+- \frac{d y_i}{di} \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;} ) +\ldots dx\\
+&amp;amp;= \int_{x_1}^{x_2} \frac{dy_i}{di}
+(\frac{\partial f}{ \partial y_i}
+- \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;}) )
++\ldots dx\\
+\end{aligned}
+\]&lt;/span>&lt;/p>
+&lt;p>对于任意的 &lt;span class="math inline">\(y_i\)&lt;/span>，在 &lt;span class="math inline">\(A\)&lt;/span> 到 &lt;span class="math inline">\(B\)&lt;/span> 的路径中 &lt;span class="math inline">\(\frac{dy_i}{di}\)&lt;/span> 不一定等于0，而且大部分都不等于 &lt;span class="math inline">\(0\)&lt;/span>，因为我需要 &lt;span class="math inline">\(y_i\)&lt;/span> 之间是不同的，否则我就找不到最优解了，所以为使 &lt;span class="math inline">\(\frac{dP_i}{di}=0\)&lt;/span>，下式必须为 &lt;span class="math inline">\(0\)&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{\partial f}{ \partial y_i} - \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;})
+\]&lt;/span>&lt;/p>
+&lt;p>而这就是 Euler-Lagrange 方程。对于高阶项，同理可以推得：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{\partial f}{ \partial y_i}
+- \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;})
++ \frac{d}{dx}\frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;&amp;#39;} )
+- \frac{d}{dx}\frac{d}{dx}\frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;&amp;#39;&amp;#39;} )
++ \ldots
+\]&lt;/span>&lt;/p>
+&lt;h3 id="总结一下">总结一下&lt;/h3>
+&lt;p>当路径变化时，这个系统的属性满足：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = \int f(y,y&amp;#39;,y&amp;#39;&amp;#39;,\ldots,x) dx
+\]&lt;/span>&lt;/p>
+&lt;p>当路径满足以下条件时，系统属性 P 会处于稳态。&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\frac{\partial f}{ \partial y_i} - \frac{d}{dx}(\frac{\partial f}{ \partial y_i&amp;#39;}) = 0
+\]&lt;/span>&lt;/p>
+&lt;h3 id="变更形式">变更形式&lt;/h3>
+&lt;p>我们上面讨论的是 &lt;span class="math inline">\(y(x)\)&lt;/span> 也就是 &lt;span class="math inline">\(y\)&lt;/span> 受 &lt;span class="math inline">\(x\)&lt;/span> 变化而变化，给出的是一条路径。很多时候， &lt;span class="math inline">\(y\)&lt;/span> 和 &lt;span class="math inline">\(x\)&lt;/span> 可以是关于时间 &lt;span class="math inline">\(t\)&lt;/span> 的变量，也就是 &lt;span class="math inline">\(y(t)\)&lt;/span> 和 &lt;span class="math inline">\(x(t)\)&lt;/span>，那么上面这个属性的形式就变成了(多元的证法应该是一样的 TODO)：&lt;/p>
+&lt;p>&lt;span class="math display">\[
+P = \int f(y,y&amp;#39;,y&amp;#39;&amp;#39;,\ldots,x,x&amp;#39;,x&amp;#39;&amp;#39;,\ldots) dt
+\]&lt;/span>&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\left\{\begin{matrix}
+\frac{\partial f}{ \partial x_i} - \frac{d}{dt}(\frac{\partial f}{ \partial x_i&amp;#39;}) = 0 \\
+\frac{\partial f}{ \partial y_j} - \frac{d}{dt}(\frac{\partial f}{ \partial y_j&amp;#39;}) = 0
+\end{matrix}\right.
+\]&lt;/span>&lt;/p>
+&lt;p>这个 &lt;span class="math inline">\(f\)&lt;/span> 就是我们说的拉格朗日量 &lt;span class="math inline">\(\mathcal{L}\)&lt;/span>，这个 &lt;span class="math inline">\(P\)&lt;/span> 就是常说作用量（先不管这个名字）的 &lt;span class="math inline">\(S\)&lt;/span>&lt;/p>
+&lt;hr />
+&lt;h3 id="拉格朗日量">拉格朗日量&lt;/h3>
+&lt;p>我们凑巧地发现，当 &lt;span class="math inline">\(\mathcal{L}\)&lt;/span>(就是我们推导的 &lt;span class="math inline">\(f\)&lt;/span>) 是这个形式，&lt;/p>
+&lt;p>&lt;span class="math display">\[
+\mathcal{L} = T - U
+\]&lt;/span>&lt;/p>
+&lt;p>page 268&lt;/p>
+&lt;p>时，拉格朗日公式(那个等于0的式子)等价于牛顿的 &lt;span class="math inline">\(F=m\dot{x}\)&lt;/span>。那么此时对 &lt;span class="math inline">\(\mathcal{L}\)&lt;/span> 关于时间 &lt;span class="math inline">\(t\)&lt;/span> 求积分有什么含义吗？啥含义都没有。但是我们知道的是，它代表的是系统的某种属性，这种属性是稳定的，什么是稳定的？在各个变量方向的变化下它都是极致点，所以我可以对它关于时间（&lt;span class="math inline">\(t\)&lt;/span>）求导数，关于位置（&lt;span class="math inline">\(x\)&lt;/span> 或者 &lt;span class="math inline">\(y\)&lt;/span>）求导数，这些导数都应该是 &lt;span class="math inline">\(0\)&lt;/span> 。 从而我们得出&lt;/p>
+&lt;p>当 &lt;span class="math inline">\(P\)&lt;/span> 关于位置求导数时，最终推得 &lt;span class="math inline">\(\frac{d}{dt} p = 0\)&lt;/span>(&lt;span class="math inline">\(p\)&lt;/span> 是动量)，满足动量守恒&lt;/p>
+&lt;p>当 &lt;span class="math inline">\(P\)&lt;/span> 关于时间求导数时，最终推得 &lt;span class="math inline">\(\frac{d}{dt} (\sum p_i \dot{q_i} - \mathcal{L})\)&lt;/span>(&lt;span class="math inline">\(p\)&lt;/span> 是动量)满足能量守恒&lt;/p></description></item><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
 &lt;p>我下载了 OpenHarmony-4.1.2 的 SDK，然后编译了 Hihope/dayu210，并把把生成的镜像烧录到了我们的板子上，板子启动后，现在准备开发上层应用，但是 DevEco Studio 提供的 demo 直接跑不起来，需要做些改动。&lt;/p>
 &lt;p>&lt;a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-project-V5">这是华为官方的文档&lt;/a>。&lt;/p>
 &lt;h3 id="environments">environments&lt;/h3>
@@ -2607,67 +2803,4 @@ P_\text{L} = \frac{U_\text{emf}}{4 R_\text{L}}
 &lt;p>&lt;img src="./figures/Maximum_Power_Transfer_Graph.svg" />&lt;/p>
 &lt;h2 id="ac-case-todo">AC case (TODO)&lt;/h2>
 &lt;p>in AC we could use complex number to describe the impedance of capacitor and inductance, whose effects is shift the phases.&lt;/p>
-&lt;p>and we can convert the voltage to be effect voltage.&lt;/p></description></item><item><title>migrate from ubuntu16.04 to ubuntu20.04</title><link>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</link><pubDate>Thu, 13 Apr 2023 11:13:20 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</guid><description>&lt;p>公司服务器需要升级系统&lt;/p>
-&lt;ol type="1">
-&lt;li>系统升级&lt;/li>
-&lt;li>docker 迁移&lt;/li>
-&lt;/ol>
-&lt;h2 id="系统升级">系统升级&lt;/h2>
-&lt;ol type="1">
-&lt;li>download and extra to new root&lt;/li>
-&lt;/ol>
-&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="ex">curl&lt;/span> https://cdimage.ubuntu.com/ubuntu-base/releases/focal/release/ubuntu-base-20.04.5-base-amd64.tar.gz &lt;span class="kw">|&lt;/span> &lt;span class="fu">sudo&lt;/span> tar -xzvf - -C /mnt&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;ol start="2" type="1">
-&lt;li>update and install grub and other needs&lt;/li>
-&lt;/ol>
-&lt;ul>
-&lt;li>&lt;code>grub-efi-amd64&lt;/code> # 可能直接 grub 就好，不知道这种基础组建要怎么一下安装&lt;/li>
-&lt;li>&lt;code>ubuntu-minimal&lt;/code>&lt;/li>
-&lt;li>&lt;code>linux-image-generic&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;ol start="3" type="1">
-&lt;li>然后参考 archlinux wiki installation guide 做些必要的动作，不要忘了 &lt;code>systemd-networkd&lt;/code> 和 &lt;code>sshd&lt;/code>&lt;/li>
-&lt;/ol>
-&lt;p>特别关注 grub&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>grub-install&lt;/code>&lt;/li>
-&lt;li>&lt;code>grub-config&lt;/code>&lt;/li>
-&lt;li>&lt;code>efibootmgr&lt;/code> check 一下&lt;/li>
-&lt;/ul>
-&lt;h2 id="docker-迁移">docker 迁移&lt;/h2>
-&lt;h3 id="rsync">1. &lt;code>rsync&lt;/code>&lt;/h3>
-&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="co"># https://blog.lilydjwg.me/2013/12/29/rsync-btrfs-dm-crypt-full-backup.42219.html&lt;/span>&lt;/span>
-&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="fu">rsync&lt;/span> --archive --one-file-system --inplace --hard-links &lt;span class="kw">\&lt;/span>&lt;/span>
-&lt;span id="cb2-3">&lt;a href="#cb2-3" aria-hidden="true">&lt;/a> &lt;span class="ex">--human-readable&lt;/span> --numeric-ids --delete --delete-excluded &lt;span class="kw">\&lt;/span>&lt;/span>
-&lt;span id="cb2-4">&lt;a href="#cb2-4" aria-hidden="true">&lt;/a> &lt;span class="ex">--acls&lt;/span> --xattrs --sparse &lt;span class="kw">\&lt;/span>&lt;/span>
-&lt;span id="cb2-5">&lt;a href="#cb2-5" aria-hidden="true">&lt;/a> &lt;span class="ex">--itemize-changes&lt;/span> --verbose --progress &lt;span class="kw">\&lt;/span>&lt;/span>
-&lt;span id="cb2-6">&lt;a href="#cb2-6" aria-hidden="true">&lt;/a> &lt;span class="ex">/var/lib/docker&lt;/span> /mnt/var/lib&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>注意最后 不要变成 &lt;code>/mnt/var/lib&lt;/code> 否则就变成 &lt;code>/mnt/var/lib/docker/docker&lt;/code>….&lt;/p>
-&lt;h3 id="docker-复杂的点在-nvidia">2. Docker 复杂的点在 nvidia&lt;/h3>
-&lt;p>Copy /etc/docker/&lt;/p>
-&lt;p>然后 docker 就 起不来了。日志&lt;/p>
-&lt;pre class="log">&lt;code>E: Unable to locate package nvidia-container-toolkit-base&lt;/code>&lt;/pre>
-&lt;p>然后找到这个&lt;/p>
-&lt;p>https://gitlab.com/nvidia/container-toolkit/container-toolkit/-/tree/main/&lt;/p>
-&lt;blockquote>
-&lt;p>The NVIDIA Container Toolkit allows users to build and run GPU accelerated containers. The toolkit includes a container runtime library and utilities to automatically configure containers to leverage NVIDIA GPUs.&lt;/p>
-&lt;/blockquote>
-&lt;p>也就时说 container 要使用 &lt;code>nvidia&lt;/code> 需要装 &lt;code>nvidia-container-toolkit&lt;/code>(也就是 &lt;code>/etc/docker/daemon.json&lt;/code> 中这行的作用 &lt;code>"path": "nvidia-container-runtime"&lt;/code>)&lt;/p>
-&lt;p>安装分两个&lt;/p>
-&lt;ol type="1">
-&lt;li>nvidia driver https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#nvidia-drivers&lt;/li>
-&lt;li>nvidia-container-toolkit https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installation-guide&lt;/li>
-&lt;/ol>
-&lt;p>其实是一篇文档…关于安装 &lt;code>nvidia-container-toolkit&lt;/code> 的&lt;/p>
-&lt;h4 id="安装-nvidia-container-toolkit">安装 &lt;code>nvidia-container-toolkit&lt;/code>&lt;/h4>
-&lt;h5 id="pre-requests">pre-requests&lt;/h5>
-&lt;p>注意左侧目录层次，Pre-Requisites 只包含两个 （我看走眼了 Container Device Interface (CDI) Support 这个不是必须的，这节说要装 &lt;code>nvidia-container-toolkit-base&lt;/code> 不是很明白）&lt;/p>
-&lt;ul>
-&lt;li>NVIDIA Drivers （这个选用包管理器安装的 https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#package-manager , 并且不用管 post-installation steps 这个是 cuda 的，我们这里不需要 cuda，只要 driver)&lt;/li>
-&lt;li>Platform Requirements (默认够了)&lt;/li>
-&lt;/ul>
-&lt;h5 id="nvidia-container-toolkit">&lt;code>nvidia-container-toolkit&lt;/code>&lt;/h5>
-&lt;p>参照 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker&lt;/p>
-&lt;p>这里有一点是 20.04 是指向 18.04 的源，文档里也有说，然后就 ok 了。&lt;/p>
-&lt;p>由于已开始 rsync 那里敲错了，之前的几个 container, image 都没找到，所以怀疑是迁移出了问题，然后就看到了这个。。。如何迁移？删除。。。不过，有可能是提交成一个 image 再新开 container 就可以了，由于我们以前用的是 nvidia-docker 2 的，就没关系了。&lt;/p>
-&lt;p>https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/migrating-from-1.0.html#migration-1-0&lt;/p></description></item></channel></rss>
+&lt;p>and we can convert the voltage to be effect voltage.&lt;/p></description></item></channel></rss>
