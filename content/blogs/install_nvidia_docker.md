@@ -10,7 +10,7 @@ draft: false
 author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
-description: "更随官方文档，整理了 docker、NVIDIA 驱动和NVIDIA Container Toolkit 的安装配置"
+description: "跟随官方文档，整理了 docker、NVIDIA 驱动和NVIDIA Container Toolkit 的安装配置"
 tags: ["NVIDIA", "driver", "docker"]
 ---
 
