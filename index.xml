@@ -1,4 +1,133 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ben's Blog</title><link>https://bensyz.github.io/blog/</link><description>Recent content on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Gerrit Replication</title><link>https://bensyz.github.io/blog/blogs/gerrit_replication/</link><pubDate>Tue, 27 May 2025 16:02:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gerrit_replication/</guid><description>&lt;p>[toc]&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ben's Blog</title><link>https://bensyz.github.io/blog/</link><description>Recent content on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>file descriptor and fd redirection in bash</title><link>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</link><pubDate>Fri, 18 Jul 2025 16:18:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</guid><description>&lt;h2 id="文件描述符">文件描述符&lt;/h2>
+&lt;p>文件描述符（file descriptor，简称 fd）在 Linux 中表示文件的句柄（file handle）但它到底是个啥呢？我们知道在 Linux 中，我们可以用 &lt;code>open&lt;/code> 函数打开一个文件，返回的是 &lt;code>int&lt;/code>，所以 fd 就是一个整型数组。我们可以在 &lt;code>/proc/&amp;lt;pid&amp;gt;/fd&lt;/code> 中看到某个进程当前打开的文件。如果是磁盘上的文件，那就是一个 symbolic link 指向那个文件。当然还有其他管道文件。&lt;/p>
+&lt;p>那这个整型变量 fd 到底是什么呢？我们会发现 fd 的来源 &lt;code>open&lt;/code> 其实不是普通的函数，它其实是一个系统调用，是 Linux 内核提供给应用程序的 API。在内核中 fd 这个整型是指该进程（&lt;code>struct task&lt;/code>）打开的文件列表（（&lt;code>struct task -&amp;gt; struct files_struct -&amp;gt; struct file *&lt;/code>））数组的下标。应用程序将来要操作这个文件只需要将这个 &lt;code>int&lt;/code> 丢给操作系统，操作系统就会代替程序去读取写入实际的文件。&lt;/p>
+&lt;h2 id="标准输入标准输出和错误输出">标准输入、标准输出和错误输出&lt;/h2>
+&lt;p>在 Linux 中有三个较为特殊的文件描述符，它们是&lt;/p>
+&lt;ul>
+&lt;li>标准输入（stdin）：&lt;code>fd=0&lt;/code>&lt;/li>
+&lt;li>标准输出（stdout）：&lt;code>fd=1&lt;/code>&lt;/li>
+&lt;li>标准错误输出（stderr）：&lt;code>fd=2&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>我们在用 &lt;code>fprintf&lt;/code> 的时候会用到他们，因为对应用程序来说，往屏幕上输出东西，也非它所能做的，也需要操作系统这个代理来实现。因为他们太基础了，所以默认这三个是开给所有的进程的。&lt;/p>
+&lt;h2 id="bash-中的-fd">bash 中的 fd&lt;/h2>
+&lt;p>man bash 中 REDIRECTION 节有详细的介绍&lt;/p>
+&lt;ul>
+&lt;li>Tips: 在下面的例子中，我们可以用 &lt;code>echo $$&lt;/code> 得到当前进程的 PID，在合适的地方 &lt;code>sleep&lt;/code>，然后外部去访问 &lt;code>/proc/&amp;lt;pid&amp;gt;/fd&lt;/code> 查看当前 &lt;code>fd&lt;/code> 的情况。&lt;/li>
+&lt;/ul>
+&lt;h3 id="fd-的表示">fd 的表示&lt;/h3>
+&lt;ul>
+&lt;li>输入：&lt;code>[fd]&amp;lt;&lt;/code>&lt;/li>
+&lt;li>输出：&lt;code>[fd]&amp;gt;&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h3 id="fd-的新建">fd 的新建&lt;/h3>
+&lt;h4 id="输入">输入&lt;/h4>
+&lt;p>&lt;code>[fd]&amp;lt; input_file&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;lt;&lt;/span> /etc/os-release&lt;/span>
+&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a>&lt;span class="kw">while&lt;/span> &lt;span class="bu">read&lt;/span> -r -u 3 &lt;span class="va">line&lt;/span>;&lt;span class="kw">do&lt;/span>&lt;/span>
+&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$line&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span>&lt;/span>
+&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;lt;&lt;/span>&lt;span class="kw">&amp;amp;&lt;/span>&lt;span class="ex">-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h4 id="输出">输出&lt;/h4>
+&lt;p>&lt;code>[fd]&amp;gt; output_file&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb2">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb2-1">&lt;a href="#cb2-1" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">1&amp;gt;&lt;/span> ./stdout.txt&lt;/span>
+&lt;span id="cb2-2">&lt;a href="#cb2-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">2&amp;gt;&lt;/span> ./stderr.txt&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="fd-的复制">fd 的复制&lt;/h3>
+&lt;p>由于大部分的程序，输入输出只有三个标准输入，标准输出，标准错误输出，那我如何将标准输出重定向到任意一个 fd 上呢？&lt;/p>
+&lt;p>取出 fd 中当前真正的输出对象(并将其赋值)&lt;/p>
+&lt;p>&lt;code>bash&lt;/code> 中用 &lt;code>&amp;amp;fd&lt;/code> 来表示真正的输入输出通道，这个 &lt;code>&amp;amp;&lt;/code> 大概是指 fd 1 2 3 只是 alias，我要取出 alias 原本的值，也就是真正的输入输出通道，然后传递给其他 fd alias。（这么看来 bash 的 fd 和变量的 fd 不对应，&amp;amp; 符号太反人类了。。。&lt;del>不应是 &lt;code>*1&lt;/code> &lt;code>*2&lt;/code> 吗&lt;/del>）&lt;/p>
+&lt;h4 id="输入-1">输入&lt;/h4>
+&lt;p>&lt;code>[fd_dst]&amp;lt;&amp;amp;fd_src&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;lt;&lt;/span> /etc/os-release&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">0&amp;lt;&amp;amp;3&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;lt;&lt;/span>&lt;span class="kw">&amp;amp;&lt;/span>&lt;span class="ex">-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;code>cat&lt;/code> 只接收标准输入，那么我可以用 &lt;code>0&amp;lt;&amp;amp;3&lt;/code> 将 &lt;code>fd3&lt;/code> 实质的输入通道传递给 &lt;code>fd0&lt;/code>，接到 &lt;code>fd0&lt;/code> 上。&lt;/p>
+&lt;h4 id="输出-1">输出&lt;/h4>
+&lt;p>&lt;code>[fd_dst]&amp;gt;&amp;amp;fd_src&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb4">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb4-1">&lt;a href="#cb4-1" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;gt;&lt;/span> ./fd3.txt&lt;/span>
+&lt;span id="cb4-2">&lt;a href="#cb4-2" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">1&amp;gt;&amp;amp;3&lt;/span>&lt;/span>
+&lt;span id="cb4-3">&lt;a href="#cb4-3" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;gt;&lt;/span>&lt;span class="kw">&amp;amp;&lt;/span>&lt;span class="ex">-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;code>echo&lt;/code> 输出到标准输出，所以我可以用 &lt;code>1&amp;gt;&amp;amp;3&lt;/code> 将 &lt;code>fd3&lt;/code> 实质的输出通道传递给 &lt;code>fd1&lt;/code>，接到 &lt;code>fd1&lt;/code> 的后面&lt;/p>
+&lt;h3 id="fd-的关闭">fd 的关闭&lt;/h3>
+&lt;h4 id="输入-2">输入&lt;/h4>
+&lt;p>&lt;code>[fd]&amp;lt;&amp;amp;-&lt;/code>&lt;/p>
+&lt;p>我们已经看到过好多次 &lt;code>[fd]&amp;lt;&amp;amp;-&lt;/code> 它代表关闭这个 &lt;code>fd&lt;/code>。&lt;/p>
+&lt;h4 id="输出-2">输出&lt;/h4>
+&lt;p>&lt;code>[fd]&amp;gt;&amp;amp;-&lt;/code>&lt;/p>
+&lt;p>和输入一样 &lt;code>[fd]&amp;gt;&amp;amp;-&lt;/code> 它代表关闭这个 &lt;code>fd&lt;/code>。&lt;/p>
+&lt;h3 id="fd-的移动">fd 的移动&lt;/h3>
+&lt;p>相较于 复制，就是在后面加一个 &lt;code>-&lt;/code> #### 输入 &lt;code>[fd_dst]&amp;amp;&amp;lt;fd_src-&lt;/code>&lt;/p>
+&lt;h4 id="输出-3">输出&lt;/h4>
+&lt;p>&lt;code>[fd_dst]&amp;amp;&amp;gt;fd_src-&lt;/code>&lt;/p>
+&lt;p>这在交换 stdout stderr 时很有用，无需反复开关&lt;/p>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">3&amp;gt;&amp;amp;1-&lt;/span> # stdout(fd1) 接到 &lt;span class="ex">fd3&lt;/span> 上&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">1&amp;gt;&amp;amp;2-&lt;/span> # stderr(fd2) 接到 &lt;span class="ex">fd1&lt;/span> 上&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="op">2&amp;gt;&amp;amp;3-&lt;/span> # stderr(fd3) 接到 &lt;span class="ex">fd2&lt;/span> 上&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stdout&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">&amp;gt;&lt;/span> &lt;span class="ex">/dev/null&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="tips">Tips:&lt;/h3>
+&lt;h5 id="单行的重定向">单行的重定向&lt;/h5>
+&lt;p>上文中我们用 exec 去新建、修改 fd，我们也可以在单行中新建和修改 fd。注意： &lt;strong>Bash 中单行的重定向讲究顺序，从左到右执行&lt;/strong>&lt;/p>
+&lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">3&amp;gt;&lt;/span> ./fd3.txt &lt;span class="op">1&amp;gt;&amp;amp;3&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>先定义一个 &lt;code>fd3&lt;/code>，在将 echo 的 &lt;code>fd1&lt;/code> 重定向到 &lt;code>fd3&lt;/code>，倘若是下面这样，第一步 &lt;code>1&amp;gt;&amp;amp;3&lt;/code> 时 &lt;code>&amp;amp;3&lt;/code> 还没有定义，就会报 &lt;code>3: Bad file descriptor&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">1&amp;gt;&amp;amp;3&lt;/span> &lt;span class="op">3&amp;gt;&lt;/span> ./fd3.txt&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>所以常见的将所有的输入输出全输出到 &lt;code>/dev/null&lt;/code> 是需要 &lt;code>&amp;gt;/dev/null 2&amp;gt;&amp;amp;1&lt;/code> 而不能 &lt;code>2&amp;gt;&amp;amp;1 &amp;gt;/dev/null&lt;/code>，后者先将 &lt;code>fd2&lt;/code> 接到 &lt;code>fd1&lt;/code> 此时也就是标准输出的通道，再将标准输出接到 &lt;code>/dev/null&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stdout&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span> &lt;span class="co"># 重定向输出到 stdout&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">&amp;gt;&lt;/span>&lt;span class="ex">/dev/null&lt;/span> &lt;span class="op">2&amp;gt;&amp;amp;1&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h5 id="为避免冲突让-bash-分配-fd">为避免冲突让 bash 分配 fd&lt;/h5>
+&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="dt">{fd}&lt;/span>&lt;span class="op">&amp;lt;&lt;/span> /etc/os-release&lt;/span>
+&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="kw">while&lt;/span> &lt;span class="bu">read&lt;/span> -r -u &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">${fd}&lt;/span>&lt;span class="st">&amp;quot;&lt;/span> &lt;span class="va">line&lt;/span>;&lt;span class="kw">do&lt;/span>&lt;/span>
+&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$line&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb9-4">&lt;a href="#cb9-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span>&lt;/span>
+&lt;span id="cb9-5">&lt;a href="#cb9-5" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="dt">{fd}&lt;/span>&lt;span class="op">&amp;lt;&lt;/span>&lt;span class="kw">&amp;amp;&lt;/span>&lt;span class="ex">-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h5 id="其他各种箭头">其他各种箭头&lt;/h5>
+&lt;h6 id="output-append">&lt;code>&amp;gt;&amp;gt;&lt;/code>: Output Append&lt;/h6>
+&lt;p>&lt;code>&amp;gt;&amp;gt;&lt;/code> 很常见，append 到文件上&lt;/p>
+&lt;h6 id="here-documents">&lt;code>&amp;lt;&amp;lt;&lt;/code>: Here Documents&lt;/h6>
+&lt;p>输入没有 append 的概念，bash 就将这个当作 Here Documents，最常见的就是生成一个 shell 脚本时可以用，免得一行一行 echo&lt;/p>
+&lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">&amp;lt;&amp;lt; EOF&lt;/span> &lt;span class="op">&amp;gt;&lt;/span> &lt;span class="ex">here_doc.sh&lt;/span>&lt;/span>
+&lt;span id="cb10-2">&lt;a href="#cb10-2" aria-hidden="true">&lt;/a>#!/bin/bash&lt;/span>
+&lt;span id="cb10-3">&lt;a href="#cb10-3" aria-hidden="true">&lt;/a>echo &amp;quot;arg1=&lt;span class="dt">\$&lt;/span>1&amp;quot;&lt;/span>
+&lt;span id="cb10-4">&lt;a href="#cb10-4" aria-hidden="true">&lt;/a>echo test text&lt;/span>
+&lt;span id="cb10-5">&lt;a href="#cb10-5" aria-hidden="true">&lt;/a>EOF&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>还可以输入给 bc&lt;/p>
+&lt;ul>
+&lt;li>这里的 &lt;code>EOF&lt;/code> 可以是任意字符串&lt;/li>
+&lt;li>here documents 会展开变量，如果希望在生成的脚本中展开时这里需要 &lt;code>\&lt;/code>，或者将 &lt;code>EOF&lt;/code> 用单引号包起来，可以避免转义 &lt;code>$1&lt;/code> 等变量&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb11">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb11-1">&lt;a href="#cb11-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">&amp;lt;&amp;lt; &amp;#39;EOF&amp;#39;&lt;/span> &lt;span class="op">&amp;gt;&lt;/span> &lt;span class="ex">here_doc.sh&lt;/span>&lt;/span>
+&lt;span id="cb11-2">&lt;a href="#cb11-2" aria-hidden="true">&lt;/a>#!/bin/bash&lt;/span>
+&lt;span id="cb11-3">&lt;a href="#cb11-3" aria-hidden="true">&lt;/a>echo &amp;quot;arg1=$1&amp;quot;&lt;/span>
+&lt;span id="cb11-4">&lt;a href="#cb11-4" aria-hidden="true">&lt;/a>echo test text&lt;/span>
+&lt;span id="cb11-5">&lt;a href="#cb11-5" aria-hidden="true">&lt;/a>EOF&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h6 id="here-string">&lt;code>&amp;lt;&amp;lt;&amp;lt;&lt;/code>: Here String&lt;/h6>
+&lt;p>上文中的输入输出的对象都是文件，here string 可以将后面的 string 直接输入到 stdin&lt;/p>
+&lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">&amp;lt;&amp;lt;&amp;lt;&lt;/span> &lt;span class="st">&amp;quot;here string&amp;quot;&lt;/span>&lt;/span>
+&lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="fu">wc&lt;/span> &lt;span class="op">&amp;lt;&amp;lt;&amp;lt;&lt;/span> &lt;span class="st">&amp;quot;here string&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h6 id="cmd-和-cmd-process-substitution">&lt;code>&amp;lt;(cmd)&lt;/code> 和 &lt;code>&amp;gt;(cmd)&lt;/code>: Process Substitution&lt;/h6>
+&lt;ul>
+&lt;li>输入 &lt;code>&amp;lt;(cmd)&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>如果想要将命令的结果输入到 stdin，当然最简单的是管道，但管道有一个限制，管道后面的进程在 sub-shell 里，里面变量的修改影响不到当前 shell。此时 &lt;code>&amp;lt;(cmd)&lt;/code> 就有用了。Process Substitution 本质也是管道或者说也是 fd，只是将 &lt;code>&amp;lt;(cmd)&lt;/code> 的输出做一个 fd，然后这个 fd 可以用 stdin &lt;code>&amp;lt;&lt;/code> 来接收&lt;/p>
+&lt;div class="sourceCode" id="cb13">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb13-1">&lt;a href="#cb13-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ls&lt;/span> -la &lt;span class="op">&amp;lt;(&lt;/span>&lt;span class="bu">echo&lt;/span> bar&lt;span class="op">)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb14">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb14-1">&lt;a href="#cb14-1" aria-hidden="true">&lt;/a>&lt;span class="va">nic_8168=()&lt;/span>&lt;/span>
+&lt;span id="cb14-2">&lt;a href="#cb14-2" aria-hidden="true">&lt;/a>&lt;span class="kw">while&lt;/span> &lt;span class="bu">read&lt;/span> -r &lt;span class="va">nic&lt;/span>;&lt;span class="kw">do&lt;/span>&lt;/span>
+&lt;span id="cb14-3">&lt;a href="#cb14-3" aria-hidden="true">&lt;/a> &lt;span class="va">nic_8168+=(&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$nic&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">)&lt;/span>&lt;/span>
+&lt;span id="cb14-4">&lt;a href="#cb14-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span> &lt;span class="op">&amp;lt;&lt;/span> &lt;span class="op">&amp;lt;(&lt;/span> &lt;span class="fu">find&lt;/span> /sys/bus/pci/drivers/r816&lt;span class="dt">{8,9}&lt;/span>/*:*:*/net/ -maxdepth 1 -mindepth 1 -exec basename {} &lt;span class="dt">\;&lt;/span> &lt;span class="op">2&amp;gt;&lt;/span>&lt;span class="ex">/dev/null&lt;/span>&lt;span class="op">)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;ul>
+&lt;li>输出 &lt;code>&amp;gt;(cmd)&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>如果想要将命令的结果输入给另一个程序，最简单的还是是管道，但管道只能接 stdout，当然你也可以像上面一样交换 fd1 fd2 和 stdout stderr 的对应。但更简单的方式是 &lt;code>&amp;gt;(cmd)&lt;/code>&lt;/p>
+&lt;div class="sourceCode" id="cb15">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb15-1">&lt;a href="#cb15-1" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
+&lt;span id="cb15-2">&lt;a href="#cb15-2" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stdout&lt;/span>
+&lt;span id="cb15-3">&lt;a href="#cb15-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr1 &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
+&lt;span id="cb15-4">&lt;a href="#cb15-4" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr2 &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
+&lt;span id="cb15-5">&lt;a href="#cb15-5" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">2&amp;gt;&lt;/span> &lt;span class="op">&amp;gt;(&lt;/span> &lt;span class="fu">grep&lt;/span> -c stderr &lt;span class="op">&amp;gt;&amp;amp;2)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>[toc]&lt;/p></description></item><item><title>Gerrit Replication</title><link>https://bensyz.github.io/blog/blogs/gerrit_replication/</link><pubDate>Tue, 27 May 2025 16:02:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gerrit_replication/</guid><description>&lt;p>[toc]&lt;/p>
 &lt;h2 id="introduction">Introduction&lt;/h2>
 &lt;p>&lt;a href="https://gerrit.googlesource.com/plugins/replication/+doc/master/src/main/resources/Documentation/config.md">Gerrit 官方文档&lt;/a>&lt;/p>
 &lt;p>&lt;code>replication&lt;/code> 是 Gerrit 提供的插件：当“主服务器”中的相关仓库更新时，会自动同步到“从服务器”，因而可以实现备份，只允许单向流动。它的实现是：用本地的 Unix 帐号，通过 git 向其他服务器 push “本地 Gerrit 工作目录下 git 子目录下的目录仓库”。&lt;/p>
@@ -2857,58 +2986,4 @@ $2 = (void *) 0x7fffffffd5d0
 &lt;p>Member c is declared inside inside strut i. And you are not creating any variable for struct i&lt;/p>
 &lt;/blockquote>
 &lt;p>这个回答看起来没说什么，其实说明了 &lt;code>struct i&lt;/code> 在 struct 内部的声明（可能不叫声明）等同于放在外面，也解释了 warning 的问题。（其实不等同，不然不会有这个 warning 了）&lt;/p>
-&lt;p>&lt;a href="./res/example.c">example.c&lt;/a>&lt;/p></description></item><item><title>about effective voltage and rms</title><link>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</link><pubDate>Fri, 21 Apr 2023 15:18:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</guid><description>&lt;h2 id="effective-voltage-of-sinusoidal">Effective voltage of sinusoidal&lt;/h2>
-&lt;p>In alternating current, to simplify the calculation, we often use effective voltage or current.&lt;/p>
-&lt;p>Since I haven’t touched these knowledge points for a long time. I almost forgot how to get the effective voltage and what’s the relation of effective voltage with rms (root mean square). So this is about the derivation of effective voltage.&lt;/p>
-&lt;p>Effective voltage is always used in calculating power or energy during a time. So we start from the expression of power, because voltage and current change with time, we first calculate the energy in time &lt;span class="math inline">\(dt\)&lt;/span>, then integrate.&lt;/p>
-&lt;p>&lt;span class="math display">\[
-P(t) = U(t)^2 / R
-\]&lt;/span>&lt;/p>
-&lt;p>Energy expose in &lt;span class="math inline">\(dt\)&lt;/span> is&lt;/p>
-&lt;p>&lt;span class="math display">\[
-P(t) dt = \frac{1}{R} U(t)^2dt
-\]&lt;/span>&lt;/p>
-&lt;p>Integrate it:&lt;/p>
-&lt;p>&lt;span class="math display">\[
-E_\text{one period} = \int_{0}^{T} \frac{1}{R} U(t)^2 dt
-\]&lt;/span>&lt;/p>
-&lt;p>While &lt;span class="math inline">\(U(t)\)&lt;/span> is sinusoidal function in A.C we assume it to be &lt;span class="math inline">\(U(t) = U_\text{m}\sin(2\pi/T \times t)\)&lt;/span>(when &lt;span class="math inline">\(t=T\)&lt;/span>, sine goes to its end of one period &lt;span class="math inline">\(2\pi\)&lt;/span>), in which &lt;span class="math inline">\(U_\text{m}\)&lt;/span> is maximum voltage, or we can call it amplitude, thus,&lt;/p>
-&lt;p>&lt;span class="math display">\[
-\begin{aligned}
-E_\text{one period}
-&amp;amp;= \frac{U_\text{m}^2}{R} \int_{0}^{T} \sin^2(\frac{2\pi}{T}t) dt \\
-&amp;amp;= \frac{U_\text{m}^2}{R} \times \frac{1}{2} \int_{0}^{T} (1-\cos(2\frac{2\pi}{T}t)) dt \\
-&amp;amp;= \frac{U_\text{m}^2}{2R}\left(T-0 + \frac{T}{4\pi} \sin(\frac{4\pi}{T} \times T) -0\right) \\
-&amp;amp;=\frac{U_\text{m}^2}{2R} \times T
-\end{aligned}
-\]&lt;/span>&lt;/p>
-&lt;p>What is a effective voltage? With this we can treat AC as DC, thus&lt;/p>
-&lt;p>&lt;span class="math display">\[
-E_\text{one period} = U_\text{eff}^2 / R \times T
-\]&lt;/span>&lt;/p>
-&lt;p>Thus for a sinusoidal voltage,&lt;/p>
-&lt;p>&lt;span class="math display">\[
-U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{R \frac{U_\text{m}^2}{2R} \times T /T}
-= \frac{1}{\sqrt{2}} U_m
-\]&lt;/span>&lt;/p>
-&lt;h3 id="rms">RMS&lt;/h3>
-&lt;p>If we not introduce sinusoidal, the effective U is &lt;span class="math display">\[
-U_\text{eff} = \sqrt{R E_\text{one period}/T} = \sqrt{\frac{1}{T} \int_{0}^{T}U(t)^2dt}
-\]&lt;/span>&lt;/p>
-&lt;p>which happens to be the root mean square:&lt;/p>
-&lt;p>&lt;span class="math display">\[
-U_\text{rms} \equiv \sqrt{\frac{\sum U^2}{n}}
-\]&lt;/span>&lt;/p>
-&lt;p>or&lt;/p>
-&lt;p>&lt;span class="math display">\[
-U_\text{rms} \equiv \sqrt{ \frac{1}{T} \int_{0}^{T} U(t)^2 dt }
-\]&lt;/span>&lt;/p>
-&lt;p>So in general, if we want to calculate a quantity which is related to square periodic quantity, we can use the rms as its “average”(effective) variable to simplify it.&lt;/p>
-&lt;p>&lt;span class="math display">\[
-z \propto Y(x)^2
-\]&lt;/span>&lt;/p>
-&lt;p>where &lt;span class="math inline">\(z\)&lt;/span> is a quantity we want to get, &lt;span class="math inline">\(Y(x)\)&lt;/span> is periodic, we can use its rms which does not vary with &lt;span class="math inline">\(x\)&lt;/span>, to simplify the calculation.&lt;/p>
-&lt;p>&lt;span class="math display">\[
-z \propto Y_\text{rms}^2
-\]&lt;/span>&lt;/p>
-&lt;p>I feel that we’ve been talk rms is very useful, but now I cannot find it…&lt;/p></description></item></channel></rss>
+&lt;p>&lt;a href="./res/example.c">example.c&lt;/a>&lt;/p></description></item></channel></rss>
