@@ -67,7 +67,7 @@
 &lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stdout&lt;/span>
 &lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
 &lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">&amp;gt;&lt;/span> &lt;span class="ex">/dev/null&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h3 id="tips">Tips:&lt;/h3>
+&lt;h3 id="tips">Tips&lt;/h3>
 &lt;h5 id="单行的重定向">单行的重定向&lt;/h5>
 &lt;p>上文中我们用 exec 去新建、修改 fd，我们也可以在单行中新建和修改 fd。注意： &lt;strong>Bash 中单行的重定向讲究顺序，从左到右执行&lt;/strong>&lt;/p>
 &lt;div class="sourceCode" id="cb6">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb6-1">&lt;a href="#cb6-1" aria-hidden="true">&lt;/a>&lt;span class="bu">echo&lt;/span> stdout &lt;span class="op">3&amp;gt;&lt;/span> ./fd3.txt &lt;span class="op">1&amp;gt;&amp;amp;3&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
@@ -84,10 +84,10 @@
 &lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> &lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$line&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;/span>
 &lt;span id="cb9-4">&lt;a href="#cb9-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span>&lt;/span>
 &lt;span id="cb9-5">&lt;a href="#cb9-5" aria-hidden="true">&lt;/a>&lt;span class="bu">exec&lt;/span> &lt;span class="dt">{fd}&lt;/span>&lt;span class="op">&amp;lt;&lt;/span>&lt;span class="kw">&amp;amp;&lt;/span>&lt;span class="ex">-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h5 id="其他各种箭头">其他各种箭头&lt;/h5>
-&lt;h6 id="output-append">&lt;code>&amp;gt;&amp;gt;&lt;/code>: Output Append&lt;/h6>
+&lt;h4 id="其他各种箭头">其他各种箭头&lt;/h4>
+&lt;h5 id="output-append">&lt;code>&amp;gt;&amp;gt;&lt;/code>: Output Append&lt;/h5>
 &lt;p>&lt;code>&amp;gt;&amp;gt;&lt;/code> 很常见，append 到文件上&lt;/p>
-&lt;h6 id="here-documents">&lt;code>&amp;lt;&amp;lt;&lt;/code>: Here Documents&lt;/h6>
+&lt;h5 id="here-documents">&lt;code>&amp;lt;&amp;lt;&lt;/code>: Here Documents&lt;/h5>
 &lt;p>输入没有 append 的概念，bash 就将这个当作 Here Documents，最常见的就是生成一个 shell 脚本时可以用，免得一行一行 echo&lt;/p>
 &lt;div class="sourceCode" id="cb10">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb10-1">&lt;a href="#cb10-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">&amp;lt;&amp;lt; EOF&lt;/span> &lt;span class="op">&amp;gt;&lt;/span> &lt;span class="ex">here_doc.sh&lt;/span>&lt;/span>
 &lt;span id="cb10-2">&lt;a href="#cb10-2" aria-hidden="true">&lt;/a>#!/bin/bash&lt;/span>
@@ -104,30 +104,25 @@
 &lt;span id="cb11-3">&lt;a href="#cb11-3" aria-hidden="true">&lt;/a>echo &amp;quot;arg1=$1&amp;quot;&lt;/span>
 &lt;span id="cb11-4">&lt;a href="#cb11-4" aria-hidden="true">&lt;/a>echo test text&lt;/span>
 &lt;span id="cb11-5">&lt;a href="#cb11-5" aria-hidden="true">&lt;/a>EOF&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h6 id="here-string">&lt;code>&amp;lt;&amp;lt;&amp;lt;&lt;/code>: Here String&lt;/h6>
+&lt;h5 id="here-string">&lt;code>&amp;lt;&amp;lt;&amp;lt;&lt;/code>: Here String&lt;/h5>
 &lt;p>上文中的输入输出的对象都是文件，here string 可以将后面的 string 直接输入到 stdin&lt;/p>
 &lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="fu">cat&lt;/span> &lt;span class="op">&amp;lt;&amp;lt;&amp;lt;&lt;/span> &lt;span class="st">&amp;quot;here string&amp;quot;&lt;/span>&lt;/span>
 &lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="fu">wc&lt;/span> &lt;span class="op">&amp;lt;&amp;lt;&amp;lt;&lt;/span> &lt;span class="st">&amp;quot;here string&amp;quot;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;h6 id="cmd-和-cmd-process-substitution">&lt;code>&amp;lt;(cmd)&lt;/code> 和 &lt;code>&amp;gt;(cmd)&lt;/code>: Process Substitution&lt;/h6>
-&lt;ul>
-&lt;li>输入 &lt;code>&amp;lt;(cmd)&lt;/code>&lt;/li>
-&lt;/ul>
+&lt;h5 id="cmd-和-cmd-process-substitution">&lt;code>&amp;lt;(cmd)&lt;/code> 和 &lt;code>&amp;gt;(cmd)&lt;/code>: Process Substitution&lt;/h5>
+&lt;h6 id="输入-cmd">输入 &lt;code>&amp;lt;(cmd)&lt;/code>&lt;/h6>
 &lt;p>如果想要将命令的结果输入到 stdin，当然最简单的是管道，但管道有一个限制，管道后面的进程在 sub-shell 里，里面变量的修改影响不到当前 shell。此时 &lt;code>&amp;lt;(cmd)&lt;/code> 就有用了。Process Substitution 本质也是管道或者说也是 fd，只是将 &lt;code>&amp;lt;(cmd)&lt;/code> 的输出做一个 fd，然后这个 fd 可以用 stdin &lt;code>&amp;lt;&lt;/code> 来接收&lt;/p>
 &lt;div class="sourceCode" id="cb13">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb13-1">&lt;a href="#cb13-1" aria-hidden="true">&lt;/a>&lt;span class="fu">ls&lt;/span> -la &lt;span class="op">&amp;lt;(&lt;/span>&lt;span class="bu">echo&lt;/span> bar&lt;span class="op">)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
 &lt;div class="sourceCode" id="cb14">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb14-1">&lt;a href="#cb14-1" aria-hidden="true">&lt;/a>&lt;span class="va">nic_8168=()&lt;/span>&lt;/span>
 &lt;span id="cb14-2">&lt;a href="#cb14-2" aria-hidden="true">&lt;/a>&lt;span class="kw">while&lt;/span> &lt;span class="bu">read&lt;/span> -r &lt;span class="va">nic&lt;/span>;&lt;span class="kw">do&lt;/span>&lt;/span>
 &lt;span id="cb14-3">&lt;a href="#cb14-3" aria-hidden="true">&lt;/a> &lt;span class="va">nic_8168+=(&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">$nic&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>&lt;span class="va">)&lt;/span>&lt;/span>
 &lt;span id="cb14-4">&lt;a href="#cb14-4" aria-hidden="true">&lt;/a>&lt;span class="kw">done&lt;/span> &lt;span class="op">&amp;lt;&lt;/span> &lt;span class="op">&amp;lt;(&lt;/span> &lt;span class="fu">find&lt;/span> /sys/bus/pci/drivers/r816&lt;span class="dt">{8,9}&lt;/span>/*:*:*/net/ -maxdepth 1 -mindepth 1 -exec basename {} &lt;span class="dt">\;&lt;/span> &lt;span class="op">2&amp;gt;&lt;/span>&lt;span class="ex">/dev/null&lt;/span>&lt;span class="op">)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;ul>
-&lt;li>输出 &lt;code>&amp;gt;(cmd)&lt;/code>&lt;/li>
-&lt;/ul>
+&lt;h6 id="输出-cmd">输出 &lt;code>&amp;gt;(cmd)&lt;/code>&lt;/h6>
 &lt;p>如果想要将命令的结果输入给另一个程序，最简单的还是是管道，但管道只能接 stdout，当然你也可以像上面一样交换 fd1 fd2 和 stdout stderr 的对应。但更简单的方式是 &lt;code>&amp;gt;(cmd)&lt;/code>&lt;/p>
 &lt;div class="sourceCode" id="cb15">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb15-1">&lt;a href="#cb15-1" aria-hidden="true">&lt;/a>&lt;span class="kw">{&lt;/span>&lt;/span>
 &lt;span id="cb15-2">&lt;a href="#cb15-2" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stdout&lt;/span>
 &lt;span id="cb15-3">&lt;a href="#cb15-3" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr1 &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
 &lt;span id="cb15-4">&lt;a href="#cb15-4" aria-hidden="true">&lt;/a> &lt;span class="bu">echo&lt;/span> stderr2 &lt;span class="op">&amp;gt;&amp;amp;2&lt;/span>&lt;/span>
-&lt;span id="cb15-5">&lt;a href="#cb15-5" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">2&amp;gt;&lt;/span> &lt;span class="op">&amp;gt;(&lt;/span> &lt;span class="fu">grep&lt;/span> -c stderr &lt;span class="op">&amp;gt;&amp;amp;2)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>[toc]&lt;/p></description></item><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>&lt;h2 id="pcie-基础介绍">PCIe 基础介绍&lt;/h2>
+&lt;span id="cb15-5">&lt;a href="#cb15-5" aria-hidden="true">&lt;/a>&lt;span class="kw">}&lt;/span> &lt;span class="op">2&amp;gt;&lt;/span> &lt;span class="op">&amp;gt;(&lt;/span> &lt;span class="fu">grep&lt;/span> -c stderr &lt;span class="op">&amp;gt;&amp;amp;2)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>&lt;h2 id="pcie-基础介绍">PCIe 基础介绍&lt;/h2>
 &lt;p>Wikipedia 上对 &lt;a href="https://zh.wikipedia.org/wiki/PCI_Express">PCI_Express&lt;/a> 的介绍 如下：&lt;/p>
 &lt;blockquote>
 &lt;p>Peripheral Component Interconnect Express，简称 PCI-E，官方简称 PCIe，是计算机总线的一个重要分支，它沿用既有的 PCI 编程概念及信号标准，并且构建了更加高速的串行通信系统标准。目前这一标准由 PCI-SIG 组织制定和维护。PCIe 仅应用于内部互连。由于 PCIe 是基于既有的 PCI 系统，所以只需修改物理层而无须修改软件就可将现有 PCI 系统转换为 PCIe。&lt;/p>
