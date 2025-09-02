@@ -1,4 +1,4664 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ben's Blog</title><link>https://bensyz.github.io/blog/</link><description>Recent content on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>file descriptor and fd redirection in bash</title><link>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</link><pubDate>Fri, 18 Jul 2025 16:18:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</guid><description>&lt;h2 id="文件描述符">文件描述符&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ben's Blog</title><link>https://bensyz.github.io/blog/</link><description>Recent content on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 01 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://bensyz.github.io/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>NVIDIA GPU components version selection</title><link>https://bensyz.github.io/blog/blogs/NVIDIA_GPU_components_version_selection/</link><pubDate>Tue, 02 Sep 2025 16:17:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/NVIDIA_GPU_components_version_selection/</guid><description>&lt;p>[toc]&lt;/p>
+&lt;h2 id="big-picture">Big Picture&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Components Level&lt;/th>
+&lt;th>Examples&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>PyTorch&lt;/td>
+&lt;td>&lt;code>import torch&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA Toolkit&lt;/td>
+&lt;td>&lt;code>nvcc&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA driver&lt;/td>
+&lt;td>&lt;code>libcuda.so&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>device driver&lt;/td>
+&lt;td>&lt;code>nvidia.ko&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>GPU hardware&lt;/td>
+&lt;td>Architecture and Compute Capability&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>各个层之间以 ABI 对接&lt;/p>
+&lt;figure>
+&lt;img src="./figures/CUDA-components.png" alt="" />&lt;figcaption>&lt;a href="https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/_images/CUDA-components.png">CUDA-components (by NVIDIA)&lt;/a>&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="gpu-hardware-and-compute-capabilitycc">GPU hardware and Compute Capability(CC)&lt;/h2>
+&lt;blockquote>
+&lt;p>Compute Capability (CC) defines the hardware features and supported instructions for each NVIDIA GPU architecture.&lt;/p>
+&lt;/blockquote>
+&lt;p>Compute Capability 其实就是指令集，可能高等级的指令集比低等级的指令更多。硬件定下来了，指令集也就定下来了。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Compute Capability Major Revision Number&lt;/th>
+&lt;th>NVIDIA GPU Architecture&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>11&lt;/td>
+&lt;td>NVIDIA Blackwell GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>10&lt;/td>
+&lt;td>NVIDIA Blackwell GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>9&lt;/td>
+&lt;td>NVIDIA Hopper GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>8&lt;/td>
+&lt;td>NVIDIA Ampere GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>7&lt;/td>
+&lt;td>NVIDIA Volta GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>6&lt;/td>
+&lt;td>NVIDIA Pascal GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>5&lt;/td>
+&lt;td>NVIDIA Maxwell GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>3&lt;/td>
+&lt;td>NVIDIA Kepler GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Compute Capability&lt;/th>
+&lt;th>NVIDIA GPU Architecture&lt;/th>
+&lt;th>Based On&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>7.5&lt;/td>
+&lt;td>NVIDIA Turing GPU Architecture&lt;/td>
+&lt;td>NVIDIA Volta GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>8.9&lt;/td>
+&lt;td>NVIDIA Ada GPU Architecture&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;blockquote>
+&lt;p>Compared to Ampere, Ada delivers more than double the FP16, BF16, TF32, INT8, and INT4 Tensor TFLOPS, and also includes the Hopper FP8 Transformer Engine, delivering over 1.45 PetaFLOPS of tensor processing in the RTX 6000 Ada Generation.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf">Ref&lt;/a>&lt;/p>
+&lt;p>关于 Blackwell，从 “Compute Capability 和显卡”中我们也可以看到，10 是 for data center， 11 是 Jetson， 12 是 GeForce/RTX&lt;/p>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability">compute-capability&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/ada-compatibility-guide/#building-applications-using-cuda-toolkit-11-8">NVIDIA Ada GPU architecture (compute capability 8.9)&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/blackwell-compatibility-guide/#building-applications-using-cuda-toolkit-12-8">Blackwell architecture (compute capability 10.0)&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="abi-兼容性">ABI 兼容性&lt;/h3>
+&lt;p>对于 cubin (cuda binary) 用的 CC 版本和运行时 GPU 的 CC，也就是编译时的 CC 和运行时的 CC，这两种 ABI：&lt;/p>
+&lt;ul>
+&lt;li>大版本之间是不兼容的&lt;/li>
+&lt;li>小版本之间，低版本的 cubin 可以跑到高版本 GPU 上&lt;/li>
+&lt;/ul>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/ampere-compatibility-guide/" class="uri">https://docs.nvidia.com/cuda/ampere-compatibility-guide/&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="compute-capability-和显卡">Compute Capability 和显卡&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 14%" />
+&lt;col style="width: 32%" />
+&lt;col style="width: 40%" />
+&lt;col style="width: 13%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Compute Capability&lt;/th>
+&lt;th>Data Center&lt;/th>
+&lt;th>GeForce/RTX&lt;/th>
+&lt;th>Jetson&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>12 (Blackwell)&lt;/td>
+&lt;td>NVIDIA RTX PRO 6000 Blackwell Server Edition&lt;/td>
+&lt;td>NVIDIA RTX PRO 6000 Blackwell Workstation Edition&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX PRO 5000 Blackwell&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX PRO 4500 Blackwell&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX PRO 4000 Blackwell&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5090&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5080&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5070 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5070&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5060 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5060&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 5050&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>11.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson T5000&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson T4000&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>10 (Blackwell)&lt;/td>
+&lt;td>NVIDIA GB200&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA B200&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>9 (Hopper)&lt;/td>
+&lt;td>NVIDIA GH200&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA H200&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA H100&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>8.9 (Ada)&lt;/td>
+&lt;td>NVIDIA L4&lt;/td>
+&lt;td>NVIDIA RTX 6000 Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA L40&lt;/td>
+&lt;td>NVIDIA RTX 5000 Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX 4500 Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX 4000 Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX 4000 SFF Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX 2000 Ada&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4090&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4080&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4070 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4070&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4060 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4060&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 4050&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>8.7&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson AGX Orin&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson Orin NX&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson Orin Nano&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>8.6&lt;/td>
+&lt;td>NVIDIA A40&lt;/td>
+&lt;td>NVIDIA RTX A6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA A10&lt;/td>
+&lt;td>NVIDIA RTX A5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA A16&lt;/td>
+&lt;td>NVIDIA RTX A4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA A2&lt;/td>
+&lt;td>NVIDIA RTX A3000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA RTX A2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3090 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3090&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3080 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3080&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3070 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3070&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3060 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3060&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3050 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 3050&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>8 (Ampere)&lt;/td>
+&lt;td>NVIDIA A100&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>NVIDIA A30&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>7.5 (Turing)&lt;/td>
+&lt;td>NVIDIA T4&lt;/td>
+&lt;td>QUADRO RTX 8000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>QUADRO RTX 6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>QUADRO RTX 5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>QUADRO RTX 4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>QUADRO RTX 3000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>QUADRO  T2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA T1200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA T1000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA T600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA T500&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA T400&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1650 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA TITAN RTX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 2080 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 2080&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 2070&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce RTX 2060&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>7.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson AGX Xavier&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson Xavier NX&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>7 (Volta)&lt;/td>
+&lt;td>NVIDIA V100&lt;/td>
+&lt;td>Quadro GV100&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA TITAN V&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>6.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson TX2&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>6.1&lt;/td>
+&lt;td>Tesla P40&lt;/td>
+&lt;td>Quadro P6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla P4&lt;/td>
+&lt;td>Quadro P5200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P4200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P3200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P3000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P2200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P1000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P620&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P500&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro P400&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>P620&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>P520&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA TITAN Xp&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA TITAN X&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1080 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1080&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1070 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1070&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1060&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 1050&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>6 (Pascal)&lt;/td>
+&lt;td>Tesla P100&lt;/td>
+&lt;td>Quadro GP100&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>5.3&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson Nano&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>5.2&lt;/td>
+&lt;td>Tesla M60&lt;/td>
+&lt;td>Quadro M6000 24GB&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla M40&lt;/td>
+&lt;td>Quadro M6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M5500M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M2200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M620&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX TITAN X&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 980 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 980&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 970&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 960&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 950&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 980M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 970M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 965M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 910M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>5 (Maxwell)&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K2200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K1200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K620&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M1200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M520&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M5000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M4000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M3000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M2000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M1000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K620M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M600M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro M500M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 810&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 750 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 750&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 960M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 950M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 940M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 930M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 850M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 840M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 830M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>3.7&lt;/td>
+&lt;td>Tesla K80&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>3.5&lt;/td>
+&lt;td>Tesla K40&lt;/td>
+&lt;td>Quadro K6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla K20&lt;/td>
+&lt;td>Quadro K5200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K610M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K510M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX TITAN Z&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX TITAN Black&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX TITAN&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 780 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 780&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 730&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 720&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 705*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 640 (GDDR5)&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 920M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>3.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Tegra K1&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Jetson TK1&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>3 (Kepler)&lt;/td>
+&lt;td>Tesla K10&lt;/td>
+&lt;td>Quadro K5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K4200&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K2000D&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K420&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 410&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K6000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K5200M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K5100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K500M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K4200M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K4100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K3100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K2200M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K2100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro K1100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 510&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 770&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 760&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 690&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 680&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 670&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 660 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 660&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 650 Ti BOOST&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 650 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 650&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 740&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 880M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 870M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 780M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 770M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 765M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 760M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 680MX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 680M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 675MX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 670MX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 660M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 755M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 750M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 650M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 745M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 645M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 740M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 730M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 640M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 640M LE&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 735M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 730M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>2.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 315&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 310&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 5400M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 5200M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 4200M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 2000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 2000D&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 4000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 3000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 2000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 1000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 560 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 550 Ti&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 460&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 450&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 450*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 730 DDR3,128bit&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 640 (GDDR3)&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 630&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 620&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 610&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 520&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 440&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 440*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 430&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 430*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 820M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 800M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 675M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 670M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 635M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 630M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 625M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 720M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 620M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 710M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 705M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 610M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 580M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 570M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 560M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 555M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 550M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 540M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 525M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 520MX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 520M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 485M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 470M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 460M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 445M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 435M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 420M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 415M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 710M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 410M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>2&lt;/td>
+&lt;td>Tesla C2075&lt;/td>
+&lt;td>Quadro Plex 7000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>Tesla C2050&lt;/td>
+&lt;td>Quadro 6000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla C2070&lt;/td>
+&lt;td>Quadro 5000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>Tesla M2050&lt;/td>
+&lt;td>Quadro 4000&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla M2070&lt;/td>
+&lt;td>Quadro 4000 for Mac&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>Tesla M2075&lt;/td>
+&lt;td>Quadro 5010M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla M2090&lt;/td>
+&lt;td>Quadro 5000M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 590&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 580&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 570&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 480&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 470&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 465&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 480M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1.3&lt;/td>
+&lt;td>Tesla C1060&lt;/td>
+&lt;td>Quadro FX 5800&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>Tesla S1070&lt;/td>
+&lt;td>Quadro FX 4800&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla M1060&lt;/td>
+&lt;td>Quadro FX 4800 for Mac&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 3800&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro CX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro Plex 2200 D2&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 295&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 285&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 285 for Mac&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 280&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 275&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 260&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro 400&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 380 Low Profile&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 300&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 1800M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 880M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 380M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVIDIA NVS 300&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 5100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 3100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>NVS 2100M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 240&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 220*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 210*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 360M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 350M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 335M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 330M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 325M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 240M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce G210M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 310M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 305M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 4700 X2&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 3700&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 1800&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 1700&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 580&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 570&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 470&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 380&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 370&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 370 Low Profile&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 450&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 420&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 295&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro Plex 2100 D4&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 3800M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 3700M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 3600M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 2800M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 2700M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 1700M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 1600M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 770M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 570M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 370M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro FX 360M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 320M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 160M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 150M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 140M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 135M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 130M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 450&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 420&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Quadro NVS 295&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 250&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 150&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 130*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 120*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce G100*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800 GX2&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800 GTX+&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800 GTX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9600 GSO&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9500 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800 GTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800 GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8600 GTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8600 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8500 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8400 GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9400 mGPU&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9300 mGPU&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8300 mGPU&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8200 mGPU&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8100 mGPU&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 285M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 280M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTX 260M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800M GTX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800M GTX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 260M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GTS 250M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9600M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800M GTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800M GTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 230M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9700M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9650M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9700M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9650M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9600M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9600M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9500M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8700M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8600M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8600M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9500M G&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9300M G&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8400M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce G210M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce G110M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9300M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9200M GS&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9100M G&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8400M GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce G105M&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1&lt;/td>
+&lt;td>Tesla C870&lt;/td>
+&lt;td>Quadro FX 5600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>Tesla D870&lt;/td>
+&lt;td>Quadro FX 4600&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>Tesla S870&lt;/td>
+&lt;td>Quadro Plex 2100 S4&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 420*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800 Ultra&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 8800 GTX&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 340*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 330*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce GT 320*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 315*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 310*&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9800 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9600 GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>GeForce 9400GT&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://developer.nvidia.com/cuda-gpus" class="uri">https://developer.nvidia.com/cuda-gpus&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://developer.nvidia.com/cuda-legacy-gpus" class="uri">https://developer.nvidia.com/cuda-legacy-gpus&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>Related links:
+&lt;ul>
+&lt;li>&lt;a href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported" class="uri">https://en.wikipedia.org/wiki/CUDA#GPUs_supported&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="设备驱动device-driver内核模块">设备驱动（Device Driver)（内核模块）&lt;/h2>
+&lt;p>NVIDIA 的设备驱动不是一个设备一个驱动，而是独立的，一个大版本一个分支。一个大版本的设备驱动会支持一系列的设备，大版本更新迭代就会逐渐放弃对旧版设备的支持。就像 515 分支 README 中会提到：&lt;/p>
+&lt;blockquote>
+&lt;p>GeForce and Workstation support is still considered alpha-quality.&lt;/p>
+&lt;/blockquote>
+&lt;p>对于一个特定硬件，我们需要找到哪个驱动大版本支持该硬件，然后下载该大版本驱动中的最新小版本。&lt;/p>
+&lt;blockquote>
+&lt;p>Open GPU kernel modules are supported only on Turing and newer generations.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/index.html#kernel-modules">Ref&lt;/a>&lt;/p>
+&lt;blockquote>
+&lt;p>The NVIDIA open kernel modules can be used on any Turing or later GPU (see the table below).&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://github.com/NVIDIA/open-gpu-kernel-modules">Ref&lt;/a>&lt;/p>
+&lt;p>GeForce 系列中，20 系列是 Turing 架构的，所以，从 20 系列起的显卡，可以使用 Open GPU kernel modules&lt;/p>
+&lt;h3 id="设备驱动版本的选择">设备驱动版本的选择&lt;/h3>
+&lt;p>&lt;a href="https://download.nvidia.com/XFree86/Linux-x86_64/">该目录&lt;/a>下，有所有的驱动版本。在各个版本下的 &lt;code>README/supportedchips.html&lt;/code> 页面中，有记录特定版本的驱动支持哪些型号的 GPU，例如，&lt;a href="https://download.nvidia.com/XFree86/Linux-x86_64/580.76.05/README/supportedchips.html">这&lt;/a>是 580.76.05 版本的驱动支持的 GPU 列表。（不要使用 run 来安装，会搞乱系统的，安装时还是使用包管理器来安装）&lt;/p>
+&lt;p>当然，我们也可以去下载的 &lt;code>Supported Products&lt;/code> 里面查看支持的 GPU 型号，相关链接如下&lt;/p>
+&lt;ul>
+&lt;li>Linux:
+&lt;ul>
+&lt;li>&lt;a href="https://www.nvidia.com/en-us/drivers/unix/" class="uri">https://www.nvidia.com/en-us/drivers/unix/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.nvidia.com/en-us/drivers/details/252613/" class="uri">https://www.nvidia.com/en-us/drivers/details/252613/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.nvidia.com/en-us/drivers/details/226760/" class="uri">https://www.nvidia.com/en-us/drivers/details/226760/&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>Windows:
+&lt;ul>
+&lt;li>&lt;a href="https://www.nvidia.cn/drivers/details/253167/" class="uri">https://www.nvidia.cn/drivers/details/253167/&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>这些界面的入口都在 &lt;a href="https://www.nvidia.com/en-us/drivers/">此&lt;/a>&lt;/p>
+&lt;p>我们可以看到 RTX 20/30/40/50 系列都能使用 580 版本的驱动。&lt;/p>
+&lt;h3 id="ubuntu-上的驱动版本依赖">Ubuntu 上的驱动版本依赖&lt;/h3>
+&lt;pre>&lt;code>nvidia-open
+nvidia-driver-570-open
+nvidia-kernel-source-570-open(dkms ko source)&lt;/code>&lt;/pre>
+&lt;h3 id="旧版-gpu-驱动的选择">旧版 GPU 驱动的选择&lt;/h3>
+&lt;p>上文说到 Turing 架构起都能使用 nvidia-open，那么旧版的呢？&lt;a href="https://wiki.archlinux.org/title/NVIDIA">Arch Wiki&lt;/a> 这里有个表&lt;/p>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 24%" />
+&lt;col style="width: 38%" />
+&lt;col style="width: 36%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>GPU family&lt;/th>
+&lt;th>Driver&lt;/th>
+&lt;th>Status&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>Turing (NV160/TUXXX) and newer&lt;/td>
+&lt;td>nvidia-open for linux, nvidia-open-lts for linux-lts, nvidia-open-dkms for any kernel(s)&lt;/td>
+&lt;td>Recommended by upstream Current, supported Possible power management issue on Turing&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Maxwell (NV110/GMXXX) through Ada Lovelace (NV190/ADXXX)&lt;/td>
+&lt;td>nvidia for linux, nvidia-lts for linux-lts, nvidia-dkms for any kernel(s)&lt;/td>
+&lt;td>Current, supported&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Kepler (NVE0/GKXXX)&lt;/td>
+&lt;td>nvidia-470xx-dkms&lt;/td>
+&lt;td>Legacy, unsupported&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Fermi (NVC0/GF1XX)&lt;/td>
+&lt;td>nvidia-390xx-dkms&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Tesla (NV50/G80-90-GT2XX)&lt;/td>
+&lt;td>nvidia-340xx-dkms&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>Curie (NV40/G70) and older&lt;/td>
+&lt;td>No longer packaged&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>这里的 GPU Family 就是指的 NVIDIA GPU architecture.&lt;/p>
+&lt;p>如何知晓自己的 GPU 的 GPU Family 呢？Arch Wiki 也说明了，首先找到自己的 GPU 型号&lt;/p>
+&lt;pre class="console">&lt;code>lspci -k -d ::03xx
+0d:00.0 VGA compatible controller: NVIDIA Corporation GK208B [GeForce GT 730] (rev a1)
+------ ----------------
+code name GPU Model&lt;/code>&lt;/pre>
+&lt;p>有两种方式：&lt;/p>
+&lt;ul>
+&lt;li>根据 GPU 型号查上面的表，可以看到他的 CC 是 3.5，是基于 Kepler 架构的，所以我们需要装的是 &lt;code>nvidia-470xx-dkms&lt;/code>&lt;/li>
+&lt;li>根据 code name，去 &lt;a href="https://nouveau.freedesktop.org/CodeNames.html">nouveau codenames&lt;/a> 找属于那个 GPU Family，可以看到是属于 &lt;code>NVE0 family (Kepler)&lt;/code>，所以我们需要装的是 &lt;code>nvidia-470xx-dkms&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h4 id="关于-code-name">关于 Code Name&lt;/h4>
+&lt;p>&lt;code>drivers/gpu/drm/nouveau/nvkm/engine/device/base.c&lt;/code> 中是有关于 code name 的信息的，但是 &lt;code>lspci&lt;/code> 不是从这里取的，我们通过 &lt;code>strace&lt;/code> 查看到会去读 &lt;code>/sys/bus/pci/devices/0000:0d:00.0/device&lt;/code>，然后将具体的设备对应到什么名字是在这里查的 &lt;code>/usr/share/hwdata/pci.ids&lt;/code>。修改这个文件中的名字，&lt;code>lspci&lt;/code> 确实会变成我们修改后的名字。&lt;/p>
+&lt;p>而如果这个文件中没有对应的名字，&lt;code>lspci&lt;/code> 就直接显示 device id 到 &lt;code>lspci&lt;/code> 的结果中了，就像 Ubuntu 中没有 5090 D 的信息，就会直接显示 &lt;code>2b87&lt;/code>，如果新增 &lt;code>2b87 GB202 [GeForce RTX 5090 D]&lt;/code> 到该文件中，就会更新啦。&lt;/p>
+&lt;p>PCI ID 可以去 &lt;a href="https://github.com/NVIDIA/open-gpu-kernel-modules">NVIDIA/open-gpu-kernel-modules&lt;/a> 找。&lt;/p>
+&lt;h2 id="cuda-驱动libcuda.so">CUDA 驱动（&lt;code>libcuda.so&lt;/code>）&lt;/h2>
+&lt;ul>
+&lt;li>CUDA：Compute Unified Devices Architecture&lt;/li>
+&lt;li>CUDA core 就是 GPU 的渲染核心，只是 nvidia 提供了访问这些核心的 API 即 cuda。 &lt;a href="https://superuser.com/a/856434/1227634">refs&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>CUDA is a driver that lets other apps use the GPU for processing things other than graphics. Like for doing math processing and encoding. It doesn’t affect graphics performance.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://www.reddit.com/r/macgaming/comments/3nguex/follow_up_questionsorry_what_is_the_difference/">Ref&lt;/a>&lt;/p>
+&lt;p>&lt;code>libcuda.so&lt;/code> 是对 Device Driver 的一层封装，以提供 CUDA API。一般只用于管理（是吗？？？）&lt;/p>
+&lt;blockquote>
+&lt;p>While the CUDA driver API provides (CUDA Driver API) a low-level programming interface for applications to target NVIDIA hardware.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-driver-api/index.html">CUDA Driver API&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#cuda-toolkit-versioning">Ref&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>&lt;span class="co">// By ChatGPT&lt;/span>&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="co">// gcc -I /usr/local/cuda-12.8/targets/x86_64-linux/include a.c -lcuda&lt;/span>&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a>&lt;span class="co">// nvcc cu_driver_version.c -o cu_driver_version -lcuda&lt;/span>&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;cuda.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main() {&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a> CUresult res;&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> driverVersion = &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb3-10">&lt;a href="#cb3-10" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-11">&lt;a href="#cb3-11" aria-hidden="true">&lt;/a> &lt;span class="co">// Initialize the CUDA driver API&lt;/span>&lt;/span>
+&lt;span id="cb3-12">&lt;a href="#cb3-12" aria-hidden="true">&lt;/a> res = cuInit(&lt;span class="dv">0&lt;/span>);&lt;/span>
+&lt;span id="cb3-13">&lt;a href="#cb3-13" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (res != CUDA_SUCCESS) {&lt;/span>
+&lt;span id="cb3-14">&lt;a href="#cb3-14" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;Failed to initialize CUDA driver API (error code %d)&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, res);&lt;/span>
+&lt;span id="cb3-15">&lt;a href="#cb3-15" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> -&lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb3-16">&lt;a href="#cb3-16" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb3-17">&lt;a href="#cb3-17" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-18">&lt;a href="#cb3-18" aria-hidden="true">&lt;/a> &lt;span class="co">// Get CUDA driver version&lt;/span>&lt;/span>
+&lt;span id="cb3-19">&lt;a href="#cb3-19" aria-hidden="true">&lt;/a> res = cuDriverGetVersion(&amp;amp;driverVersion);&lt;/span>
+&lt;span id="cb3-20">&lt;a href="#cb3-20" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (res == CUDA_SUCCESS) {&lt;/span>
+&lt;span id="cb3-21">&lt;a href="#cb3-21" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> major = driverVersion / &lt;span class="dv">1000&lt;/span>;&lt;/span>
+&lt;span id="cb3-22">&lt;a href="#cb3-22" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> minor = (driverVersion % &lt;span class="dv">1000&lt;/span>) / &lt;span class="dv">10&lt;/span>;&lt;/span>
+&lt;span id="cb3-23">&lt;a href="#cb3-23" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;CUDA Driver Version: %d (Major %d, Minor %d)&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, driverVersion, major, minor);&lt;/span>
+&lt;span id="cb3-24">&lt;a href="#cb3-24" aria-hidden="true">&lt;/a> } &lt;span class="cf">else&lt;/span> {&lt;/span>
+&lt;span id="cb3-25">&lt;a href="#cb3-25" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;Failed to get CUDA driver version (error code %d)&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, res);&lt;/span>
+&lt;span id="cb3-26">&lt;a href="#cb3-26" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> -&lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb3-27">&lt;a href="#cb3-27" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb3-28">&lt;a href="#cb3-28" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-29">&lt;a href="#cb3-29" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb3-30">&lt;a href="#cb3-30" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="cuda-驱动版本的选择">CUDA 驱动版本的选择&lt;/h3>
+&lt;p>&lt;em>CUDA 驱动&lt;/em> 版本是需要和 &lt;em>设备驱动&lt;/em> 版本统一的。&lt;/p>
+&lt;p>只有以下三种系统支持“旧版设备驱动” + “新版cuda驱动”&lt;/p>
+&lt;ul>
+&lt;li>NVIDIA Data Center GPUs.&lt;/li>
+&lt;li>Select NGC Server Ready SKUs of RTX cards.&lt;/li>
+&lt;li>Jetson boards.&lt;/li>
+&lt;/ul>
+&lt;figure>
+&lt;img src="./figures/forward-compatibility-upgrade-path.png" alt="" />&lt;figcaption>&lt;a href="https://docs.nvidia.com/deploy/cuda-compatibility/_images/forward-compatibility-upgrade-path.png">forward-compatibility-upgrade-path(by NVIDIA)&lt;/a>&lt;/figcaption>
+&lt;/figure>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/deploy/cuda-compatibility/forward-compatibility.html" class="uri">https://docs.nvidia.com/deploy/cuda-compatibility/forward-compatibility.html&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>Related links:
+&lt;ul>
+&lt;li>&lt;a href="https://hackmd.io/@JiangJianGuo/HJYOaAWfA" class="uri">https://hackmd.io/@JiangJianGuo/HJYOaAWfA&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="ubuntu-上的驱动版本依赖-1">Ubuntu 上的驱动版本依赖&lt;/h3>
+&lt;pre>&lt;code>nvidia-open
+nvidia-driver-570-open
+libnvidia-compute-570 (libcuda.so)&lt;/code>&lt;/pre>
+&lt;p>所以这里我们可以看到 &lt;code>libcuda.so&lt;/code> 和 &lt;code>nvidia.ko&lt;/code> 都是 &lt;code>nvidia-driver-570-open&lt;/code> 的依赖，而且看到版本号要求是 &lt;code>=&lt;/code>，所以 &lt;em>CUDA 驱动&lt;/em> 版本是需要和 &lt;em>设备驱动&lt;/em> 版本统一的。&lt;/p>
+&lt;h4 id="其他依赖">其他依赖&lt;/h4>
+&lt;pre>&lt;code>nvidia-open
+nvidia-driver-570-open
+libnvidia-gl-570 (= 570.172.08-0ubuntu1)
+nvidia-dkms-570-open (= 570.172.08-0ubuntu1) &amp;lt;- /usr/src 中提供 patch
+nvidia-kernel-common-570 (= 570.172.08-0ubuntu1)
+nvidia-firmware-570 (= 570.172.08-0ubuntu1)
+nvidia-modprobe (&amp;gt;= 570.172.08-0ubuntu1)
+nvidia-kernel-source-570-open (= 570.172.08-0ubuntu1) &amp;lt;- nvidia.ko and other ko
+libnvidia-compute-570 (= 570.172.08-0ubuntu1) &amp;lt;- libcuda.so
+libnvidia-extra-570 (= 570.172.08-0ubuntu1)
+nvidia-compute-utils-570 (= 570.172.08-0ubuntu1)
+libnvidia-decode-570 (= 570.172.08-0ubuntu1)
+libnvidia-encode-570 (= 570.172.08-0ubuntu1)
+nvidia-utils-570 (= 570.172.08-0ubuntu1)
+xserver-xorg-video-nvidia-570 (= 570.172.08-0ubuntu1)
+libnvidia-fbc1-570 (= 570.172.08-0ubuntu1)&lt;/code>&lt;/pre>
+&lt;h2 id="cuda-toolkit">CUDA Toolkit&lt;/h2>
+&lt;p>CUDA toolkit 提供了 &lt;code>nvcc&lt;/code> 等各种上层应用。&lt;/p>
+&lt;p>CUDA toolkit 的版本依赖 CUDA 驱动的版本&lt;/p>
+&lt;ul>
+&lt;li>API: not compatible(old toolkit may not compile with new cuda driver )&lt;/li>
+&lt;li>ABI: compatible(old toolkit can run on new cuda driver)( since cuda 10 )&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>Starting with CUDA 11, the toolkit versions are based on an industry-standard semantic versioning scheme: .X.Y.Z, where: .X stands for the major version - APIs have changed and binary compatibility is broken. .Y stands for the minor version - Introduction of new APIs, deprecation of old APIs, and source compatibility might be broken but binary compatibility is maintained. .Z stands for the release/patch version - new updates and patches will increment this.&lt;/p>
+&lt;/blockquote>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#cuda-compatibility-and-upgrades" class="uri">https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#cuda-compatibility-and-upgrades&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h3 id="cuda-toolkit-版本的选择">CUDA Toolkit 版本的选择&lt;/h3>
+&lt;p>Table 2 CUDA Toolkit and Minimum Required Driver Version for CUDA Minor Version Compatibility&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>CTK Version&lt;/th>
+&lt;th>CUDA Driver Range for Minor Version Compatibility&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>13.x&lt;/td>
+&lt;td>&lt;code>580&amp;lt;= CUDA driver version&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>12.x&lt;/td>
+&lt;td>&lt;code>525&amp;lt;= CUDA driver version &amp;lt;580&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>11.x&lt;/td>
+&lt;td>&lt;code>450&amp;lt;= CUDA driver version &amp;lt;525&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr />
+&lt;ul>
+&lt;li>Refs
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#id8" class="uri">https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#id8&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>Table 3 CUDA Toolkit and Corresponding Driver Versions&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>CUDA Toolkit&lt;/th>
+&lt;th>Linux x86_64 Driver Version&lt;/th>
+&lt;th>Windows x86_64 Driver Version&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>CUDA 13.0 GA&lt;/td>
+&lt;td>&amp;gt;=580.65.06&lt;/td>
+&lt;td>N/A&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.9 Update 1&lt;/td>
+&lt;td>&amp;gt;=575.57.08&lt;/td>
+&lt;td>&amp;gt;=576.57&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.9 GA&lt;/td>
+&lt;td>&amp;gt;=575.51.03&lt;/td>
+&lt;td>&amp;gt;=576.02&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.8 Update 1&lt;/td>
+&lt;td>&amp;gt;=570.124.06&lt;/td>
+&lt;td>&amp;gt;=572.61&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.8 GA&lt;/td>
+&lt;td>&amp;gt;=570.26&lt;/td>
+&lt;td>&amp;gt;=570.65&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.6 Update 3&lt;/td>
+&lt;td>&amp;gt;=560.35.05&lt;/td>
+&lt;td>&amp;gt;=561.17&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.6 Update 2&lt;/td>
+&lt;td>&amp;gt;=560.35.03&lt;/td>
+&lt;td>&amp;gt;=560.94&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.6 Update 1&lt;/td>
+&lt;td>&amp;gt;=560.35.03&lt;/td>
+&lt;td>&amp;gt;=560.94&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.6 GA&lt;/td>
+&lt;td>&amp;gt;=560.28.03&lt;/td>
+&lt;td>&amp;gt;=560.76&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.5 Update 1&lt;/td>
+&lt;td>&amp;gt;=555.42.06&lt;/td>
+&lt;td>&amp;gt;=555.85&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.5 GA&lt;/td>
+&lt;td>&amp;gt;=555.42.02&lt;/td>
+&lt;td>&amp;gt;=555.85&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.4 Update 1&lt;/td>
+&lt;td>&amp;gt;=550.54.15&lt;/td>
+&lt;td>&amp;gt;=551.78&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.4 GA&lt;/td>
+&lt;td>&amp;gt;=550.54.14&lt;/td>
+&lt;td>&amp;gt;=551.61&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.3 Update 1&lt;/td>
+&lt;td>&amp;gt;=545.23.08&lt;/td>
+&lt;td>&amp;gt;=546.12&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.3 GA&lt;/td>
+&lt;td>&amp;gt;=545.23.06&lt;/td>
+&lt;td>&amp;gt;=545.84&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.2 Update 2&lt;/td>
+&lt;td>&amp;gt;=535.104.05&lt;/td>
+&lt;td>&amp;gt;=537.13&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.2 Update 1&lt;/td>
+&lt;td>&amp;gt;=535.86.09&lt;/td>
+&lt;td>&amp;gt;=536.67&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.2 GA&lt;/td>
+&lt;td>&amp;gt;=535.54.03&lt;/td>
+&lt;td>&amp;gt;=536.25&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.1 Update 1&lt;/td>
+&lt;td>&amp;gt;=530.30.02&lt;/td>
+&lt;td>&amp;gt;=531.14&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.1 GA&lt;/td>
+&lt;td>&amp;gt;=530.30.02&lt;/td>
+&lt;td>&amp;gt;=531.14&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 12.0 Update 1&lt;/td>
+&lt;td>&amp;gt;=525.85.12&lt;/td>
+&lt;td>&amp;gt;=528.33&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 12.0 GA&lt;/td>
+&lt;td>&amp;gt;=525.60.13&lt;/td>
+&lt;td>&amp;gt;=527.41&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.8 GA&lt;/td>
+&lt;td>&amp;gt;=520.61.05&lt;/td>
+&lt;td>&amp;gt;=520.06&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.7 Update 1&lt;/td>
+&lt;td>&amp;gt;=515.48.07&lt;/td>
+&lt;td>&amp;gt;=516.31&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.7 GA&lt;/td>
+&lt;td>&amp;gt;=515.43.04&lt;/td>
+&lt;td>&amp;gt;=516.01&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.6 Update 2&lt;/td>
+&lt;td>&amp;gt;=510.47.03&lt;/td>
+&lt;td>&amp;gt;=511.65&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.6 Update 1&lt;/td>
+&lt;td>&amp;gt;=510.47.03&lt;/td>
+&lt;td>&amp;gt;=511.65&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.6 GA&lt;/td>
+&lt;td>&amp;gt;=510.39.01&lt;/td>
+&lt;td>&amp;gt;=511.23&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.5 Update 2&lt;/td>
+&lt;td>&amp;gt;=495.29.05&lt;/td>
+&lt;td>&amp;gt;=496.13&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.5 Update 1&lt;/td>
+&lt;td>&amp;gt;=495.29.05&lt;/td>
+&lt;td>&amp;gt;=496.13&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.5 GA&lt;/td>
+&lt;td>&amp;gt;=495.29.05&lt;/td>
+&lt;td>&amp;gt;=496.04&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.4 Update 4&lt;/td>
+&lt;td>&amp;gt;=470.82.01&lt;/td>
+&lt;td>&amp;gt;=472.50&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.4 Update 3&lt;/td>
+&lt;td>&amp;gt;=470.82.01&lt;/td>
+&lt;td>&amp;gt;=472.50&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.4 Update 2&lt;/td>
+&lt;td>&amp;gt;=470.57.02&lt;/td>
+&lt;td>&amp;gt;=471.41&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.4 Update 1&lt;/td>
+&lt;td>&amp;gt;=470.57.02&lt;/td>
+&lt;td>&amp;gt;=471.41&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.4.0 GA&lt;/td>
+&lt;td>&amp;gt;=470.42.01&lt;/td>
+&lt;td>&amp;gt;=471.11&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.3.1 Update 1&lt;/td>
+&lt;td>&amp;gt;=465.19.01&lt;/td>
+&lt;td>&amp;gt;=465.89&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.3.0 GA&lt;/td>
+&lt;td>&amp;gt;=465.19.01&lt;/td>
+&lt;td>&amp;gt;=465.89&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.2.2 Update 2&lt;/td>
+&lt;td>&amp;gt;=460.32.03&lt;/td>
+&lt;td>&amp;gt;=461.33&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.2.1 Update 1&lt;/td>
+&lt;td>&amp;gt;=460.32.03&lt;/td>
+&lt;td>&amp;gt;=461.09&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.2.0 GA&lt;/td>
+&lt;td>&amp;gt;=460.27.03&lt;/td>
+&lt;td>&amp;gt;=460.82&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.1.1 Update 1&lt;/td>
+&lt;td>&amp;gt;=455.32&lt;/td>
+&lt;td>&amp;gt;=456.81&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.1 GA&lt;/td>
+&lt;td>&amp;gt;=455.23&lt;/td>
+&lt;td>&amp;gt;=456.38&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.0.3 Update 1&lt;/td>
+&lt;td>&amp;gt;= 450.51.06&lt;/td>
+&lt;td>&amp;gt;= 451.82&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 11.0.2 GA&lt;/td>
+&lt;td>&amp;gt;= 450.51.05&lt;/td>
+&lt;td>&amp;gt;= 451.48&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 11.0.1 RC&lt;/td>
+&lt;td>&amp;gt;= 450.36.06&lt;/td>
+&lt;td>&amp;gt;= 451.22&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 10.2.89&lt;/td>
+&lt;td>&amp;gt;= 440.33&lt;/td>
+&lt;td>&amp;gt;= 441.22&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 10.1 (10.1.105 general release, and updates)&lt;/td>
+&lt;td>&amp;gt;= 418.39&lt;/td>
+&lt;td>&amp;gt;= 418.96&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 10.0.130&lt;/td>
+&lt;td>&amp;gt;= 410.48&lt;/td>
+&lt;td>&amp;gt;= 411.31&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 9.2 (9.2.148 Update 1)&lt;/td>
+&lt;td>&amp;gt;= 396.37&lt;/td>
+&lt;td>&amp;gt;= 398.26&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 9.2 (9.2.88)&lt;/td>
+&lt;td>&amp;gt;= 396.26&lt;/td>
+&lt;td>&amp;gt;= 397.44&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 9.1 (9.1.85)&lt;/td>
+&lt;td>&amp;gt;= 390.46&lt;/td>
+&lt;td>&amp;gt;= 391.29&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 9.0 (9.0.76)&lt;/td>
+&lt;td>&amp;gt;= 384.81&lt;/td>
+&lt;td>&amp;gt;= 385.54&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 8.0 (8.0.61 GA2)&lt;/td>
+&lt;td>&amp;gt;= 375.26&lt;/td>
+&lt;td>&amp;gt;= 376.51&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 8.0 (8.0.44)&lt;/td>
+&lt;td>&amp;gt;= 367.48&lt;/td>
+&lt;td>&amp;gt;= 369.30&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>CUDA 7.5 (7.5.16)&lt;/td>
+&lt;td>&amp;gt;= 352.31&lt;/td>
+&lt;td>&amp;gt;= 353.66&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>CUDA 7.0 (7.0.28)&lt;/td>
+&lt;td>&amp;gt;= 346.46&lt;/td>
+&lt;td>&amp;gt;= 347.62&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#id9" class="uri">https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#id9&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="pytorch">PyTorch&lt;/h2>
+&lt;blockquote>
+&lt;p>PyTorch is an open-source deep learning framework that’s known for its flexibility and ease-of-use. This is enabled in part by its compatibility with the popular Python high-level programming language favored by machine learning developers and data scientists.&lt;/p>
+&lt;p>PyTorch is a fully featured framework for building deep learning models, which is a type of machine learning that’s commonly used in applications like image recognition and language processing.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://www.nvidia.com/en-us/glossary/pytorch/">Ref&lt;/a>&lt;/p>
+&lt;h3 id="pytorch-版本的选择">PyTorch 版本的选择&lt;/h3>
+&lt;p>从安装方式来看，PyTorch 对 CUDA Toolkit 的小版本都是有要求的，虽然同一版本的 PyTorch 可以跑在不同的 CUDA Toolkit 上，但是安装的二进制都是不同的，所以这里是强依赖。就像我们目前安装 2.7.0 的 PyTorch，它的版本号是 &lt;code>2.7.0+cu128&lt;/code>。显然是限定了 Toolkit 的版本。&lt;/p>
+&lt;p>NVIDIA CUDA Toolkit version&lt;/p>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 10%" />
+&lt;col style="width: 4%" />
+&lt;col style="width: 4%" />
+&lt;col style="width: 4%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 5%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>PyTorch&lt;/th>
+&lt;th>8.0&lt;/th>
+&lt;th>9.0&lt;/th>
+&lt;th>9.2&lt;/th>
+&lt;th>10.0&lt;/th>
+&lt;th>10.1&lt;/th>
+&lt;th>10.2&lt;/th>
+&lt;th>11.0&lt;/th>
+&lt;th>11.1&lt;/th>
+&lt;th>11.2&lt;/th>
+&lt;th>11.3&lt;/th>
+&lt;th>11.6&lt;/th>
+&lt;th>11.7&lt;/th>
+&lt;th>11.8&lt;/th>
+&lt;th>12.1&lt;/th>
+&lt;th>12.4&lt;/th>
+&lt;th>12.6&lt;/th>
+&lt;th>12.8&lt;/th>
+&lt;th>12.9&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>v2.8&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.7.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.7.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.6.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.5.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.5.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.4.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.4.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.3.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.3.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.2.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.2.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.2.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.1.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.1.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.1.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.0.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.0.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.13.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.13.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.12.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.12.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.11.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.10.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.10.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.9.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.9.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.8.2 LTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.8.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.8.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.7.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.7.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.6.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.5.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.5.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.4.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.2.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.1.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.0.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.0.0&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>…&lt;/p>
+&lt;ul>
+&lt;li>Refs:
+&lt;ul>
+&lt;li>&lt;a href="https://pytorch.org/get-started/locally/" class="uri">https://pytorch.org/get-started/locally/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pytorch.org/get-started/previous-versions/" class="uri">https://pytorch.org/get-started/previous-versions/&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>AMD ROCM&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>PyTorch&lt;/th>
+&lt;th>3.10&lt;/th>
+&lt;th>4.0.1&lt;/th>
+&lt;th>4.1&lt;/th>
+&lt;th>4.2&lt;/th>
+&lt;th>4.5.2&lt;/th>
+&lt;th>5.1.1&lt;/th>
+&lt;th>5.2&lt;/th>
+&lt;th>5.4.2&lt;/th>
+&lt;th>5.6&lt;/th>
+&lt;th>5.7&lt;/th>
+&lt;th>6.0&lt;/th>
+&lt;th>6.1&lt;/th>
+&lt;th>6.2&lt;/th>
+&lt;th>6.3&lt;/th>
+&lt;th>6.4&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>v2.8&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.7.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.7.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.6.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.5.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.5.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.4.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.4.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.3.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.3.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.2.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.2.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.2.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.1.2&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.1.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.1.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v2.0.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v2.0.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.13.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.13.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.12.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.11.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.10.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.10.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.9.1&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.9.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.8.2 LTS&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>v1.8.1&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>v1.8.0&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>…&lt;/p>
+&lt;h2 id="怎么选各个组件的版本">怎么选各个组件的版本&lt;/h2>
+&lt;p>GPU 型号确定了可以安装 device driver 的版本范围，从而确定了 CUDA driver 的版本范围，从而确定 CUDA Toolkit 的版本范围，从而确定 PyTorch 的版本范围。&lt;/p>
+&lt;p>所以主要考虑 GPU 型号，但是由于 PyTorch 并不支持最新的 CUDA Toolkit，所以，我们还需要考虑 PyTorch 的对 CUDA Toolkit 的版本范围要求。对于目前最新的 GeForce RTX 5090，device driver、CUDA driver 虽然可以装最新的 &lt;code>580&lt;/code>，但是由于对于该版驱动 CUDA Toolkit 只能安装 &lt;code>13.x&lt;/code>，而 PyTorch 当下还不支持 CUDA Toolkit 13.x，所以我们只能安装 &lt;code>576&lt;/code> 的 driver，&lt;code>12.9&lt;/code> 的 Toolkit 和 &lt;code>2.8&lt;/code> 的 PyTorch。等到 PyTorch 更新支持 &lt;code>13.x&lt;/code> 的 Toolkit 时，就没有这些限制啦。&lt;/p></description></item><item><title>file descriptor and fd redirection in bash</title><link>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</link><pubDate>Fri, 18 Jul 2025 16:18:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</guid><description>&lt;h2 id="文件描述符">文件描述符&lt;/h2>
 &lt;p>文件描述符（file descriptor，简称 fd）在 Linux 中表示文件的句柄（file handle）但它到底是个啥呢？我们知道在 Linux 中，我们可以用 &lt;code>open&lt;/code> 函数打开一个文件，返回的是 &lt;code>int&lt;/code>，所以 fd 就是一个整型数组。我们可以在 &lt;code>/proc/&amp;lt;pid&amp;gt;/fd&lt;/code> 中看到某个进程当前打开的文件。如果是磁盘上的文件，那就是一个 symbolic link 指向那个文件。当然还有其他管道文件。&lt;/p>
 &lt;p>那这个整型变量 fd 到底是什么呢？我们会发现 fd 的来源 &lt;code>open&lt;/code> 其实不是普通的函数，它其实是一个系统调用，是 Linux 内核提供给应用程序的 API。在内核中 fd 这个整型是指该进程（&lt;code>struct task&lt;/code>）打开的文件列表（（&lt;code>struct task -&amp;gt; struct files_struct -&amp;gt; struct file *&lt;/code>））数组的下标。应用程序将来要操作这个文件只需要将这个 &lt;code>int&lt;/code> 丢给操作系统，操作系统就会代替程序去读取写入实际的文件。&lt;/p>
 &lt;h2 id="标准输入标准输出和错误输出">标准输入、标准输出和错误输出&lt;/h2>
@@ -2927,58 +7587,4 @@ $2 = (void *) 0x7fffffffd5d0
 &lt;span id="cb6-16">&lt;a href="#cb6-16" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
 &lt;p>我们会发现，linter 直接在定义结构体的时候就报错了，因为它不知道 &lt;code>myStruct&lt;/code> 有多 大，或者说这种定义本身就是一种矛盾：外部的 &lt;code>myStruct&lt;/code> 一定比内部的 &lt;code>myStruct&lt;/code> 大两个 &lt;code>int&lt;/code> 的大小。&lt;/p>
 &lt;p>其实这个看似“鸡生蛋，蛋生鸡”的问题我们在数据结构中写链表的时候就用到了。&lt;/p>
-&lt;p>另外，对 64 bit 的 Linux 来说，这个 &lt;code>struct myStruct *self&lt;/code> 的本质其实是 &lt;code>long&lt;/code>。 关于各个变量的长度，有机会再聊聊，Linux 的 long 和 Windows 的 long 是不一样的。 （TODO）&lt;/p></description></item><item><title>about nested struct and anonymous struct in c</title><link>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</link><pubDate>Sat, 20 May 2023 16:55:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</guid><description>&lt;p>看书的时候没明白一个 macro 的用法，搜了一下，发现这个&lt;a href="https://stackoverflow.com/questions/58346036/c-c-macro-parameter-containing-dot-member-access-operator">问题&lt;/a>，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个&lt;a href="https://stackoverflow.com/questions/38457109/c-how-to-access-different-types-of-anonymous-or-unnamed-nested-structs/38457240">问题&lt;/a>，一下把我能想到的关于结构体的情况都写出来了&lt;/p>
-&lt;div class="sourceCode" id="cb1">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb1-1">&lt;a href="#cb1-1" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> s {&lt;/span>
-&lt;span id="cb1-2">&lt;a href="#cb1-2" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> abc;&lt;/span>
-&lt;span id="cb1-3">&lt;a href="#cb1-3" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-4">&lt;a href="#cb1-4" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
-&lt;span id="cb1-5">&lt;a href="#cb1-5" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> a;&lt;/span>
-&lt;span id="cb1-6">&lt;a href="#cb1-6" aria-hidden="true">&lt;/a> };&lt;/span>
-&lt;span id="cb1-7">&lt;a href="#cb1-7" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-8">&lt;a href="#cb1-8" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> {&lt;/span>
-&lt;span id="cb1-9">&lt;a href="#cb1-9" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> b;&lt;/span>
-&lt;span id="cb1-10">&lt;a href="#cb1-10" aria-hidden="true">&lt;/a> } intern;&lt;/span>
-&lt;span id="cb1-11">&lt;a href="#cb1-11" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-12">&lt;a href="#cb1-12" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i {&lt;/span>
-&lt;span id="cb1-13">&lt;a href="#cb1-13" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> c;&lt;/span>
-&lt;span id="cb1-14">&lt;a href="#cb1-14" aria-hidden="true">&lt;/a> };&lt;/span>
-&lt;span id="cb1-15">&lt;a href="#cb1-15" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-16">&lt;a href="#cb1-16" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i2 {&lt;/span>
-&lt;span id="cb1-17">&lt;a href="#cb1-17" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> d;&lt;/span>
-&lt;span id="cb1-18">&lt;a href="#cb1-18" aria-hidden="true">&lt;/a> } intern2;&lt;/span>
-&lt;span id="cb1-19">&lt;a href="#cb1-19" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-20">&lt;a href="#cb1-20" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 {&lt;/span>
-&lt;span id="cb1-21">&lt;a href="#cb1-21" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> e;&lt;/span>
-&lt;span id="cb1-22">&lt;a href="#cb1-22" aria-hidden="true">&lt;/a> };&lt;/span>
-&lt;span id="cb1-23">&lt;a href="#cb1-23" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> i3 intern3;&lt;/span>
-&lt;span id="cb1-24">&lt;a href="#cb1-24" aria-hidden="true">&lt;/a>};&lt;/span>
-&lt;span id="cb1-25">&lt;a href="#cb1-25" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-26">&lt;a href="#cb1-26" aria-hidden="true">&lt;/a>&lt;span class="kw">struct&lt;/span> i3 AA;&lt;/span>
-&lt;span id="cb1-27">&lt;a href="#cb1-27" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-28">&lt;a href="#cb1-28" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> &lt;span class="dt">const&lt;/span> *argv[])&lt;/span>
-&lt;span id="cb1-29">&lt;a href="#cb1-29" aria-hidden="true">&lt;/a>{&lt;/span>
-&lt;span id="cb1-30">&lt;a href="#cb1-30" aria-hidden="true">&lt;/a> &lt;span class="kw">struct&lt;/span> s mystruct;&lt;/span>
-&lt;span id="cb1-31">&lt;a href="#cb1-31" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-32">&lt;a href="#cb1-32" aria-hidden="true">&lt;/a> mystruct.abc = &lt;span class="dv">0&lt;/span>;&lt;/span>
-&lt;span id="cb1-33">&lt;a href="#cb1-33" aria-hidden="true">&lt;/a> mystruct.a = &lt;span class="dv">1&lt;/span>;&lt;/span>
-&lt;span id="cb1-34">&lt;a href="#cb1-34" aria-hidden="true">&lt;/a> mystruct.intern.b = &lt;span class="dv">2&lt;/span>;&lt;/span>
-&lt;span id="cb1-35">&lt;a href="#cb1-35" aria-hidden="true">&lt;/a> mystruct.c = &lt;span class="dv">3&lt;/span>; &lt;span class="co">// &amp;lt;-- does not compile&lt;/span>&lt;/span>
-&lt;span id="cb1-36">&lt;a href="#cb1-36" aria-hidden="true">&lt;/a> mystruct.intern2.d = &lt;span class="dv">4&lt;/span>;&lt;/span>
-&lt;span id="cb1-37">&lt;a href="#cb1-37" aria-hidden="true">&lt;/a> mystruct.intern3.e = &lt;span class="dv">5&lt;/span>;&lt;/span>
-&lt;span id="cb1-38">&lt;a href="#cb1-38" aria-hidden="true">&lt;/a> AA.e=&lt;span class="dv">0&lt;/span>;&lt;/span>
-&lt;span id="cb1-39">&lt;a href="#cb1-39" aria-hidden="true">&lt;/a>&lt;/span>
-&lt;span id="cb1-40">&lt;a href="#cb1-40" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
-&lt;span id="cb1-41">&lt;a href="#cb1-41" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>两个回答都很好：&lt;/p>
-&lt;blockquote>
-&lt;p>Regarding anonymous structure, quoting C11, chapter §6.7.2.1, (emphasis mine)&lt;/p>
-&lt;blockquote>
-&lt;p>An unnamed member whose type specifier is a structure specifier with no tag is called an anonymous structure; an unnamed member whose type specifier is a union specifier with no tag is called an anonymous union. The members of an anonymous structure or union are considered to be members of the containing structure or union. This applies recursively if the containing structure or union is also anonymous.&lt;/p>
-&lt;/blockquote>
-&lt;/blockquote>
-&lt;p>说明了 anonymous struct 访问内部变量这种奇怪的 &lt;code>.&lt;/code> 法。&lt;/p>
-&lt;blockquote>
-&lt;p>Member c is declared inside inside strut i. And you are not creating any variable for struct i&lt;/p>
-&lt;/blockquote>
-&lt;p>这个回答看起来没说什么，其实说明了 &lt;code>struct i&lt;/code> 在 struct 内部的声明（可能不叫声明）等同于放在外面，也解释了 warning 的问题。（其实不等同，不然不会有这个 warning 了）&lt;/p>
-&lt;p>&lt;a href="./res/example.c">example.c&lt;/a>&lt;/p></description></item></channel></rss>
+&lt;p>另外，对 64 bit 的 Linux 来说，这个 &lt;code>struct myStruct *self&lt;/code> 的本质其实是 &lt;code>long&lt;/code>。 关于各个变量的长度，有机会再聊聊，Linux 的 long 和 Windows 的 long 是不一样的。 （TODO）&lt;/p></description></item></channel></rss>
