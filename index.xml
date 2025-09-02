@@ -48,34 +48,38 @@
 &lt;/thead>
 &lt;tbody>
 &lt;tr class="odd">
+&lt;td>12&lt;/td>
+&lt;td>NVIDIA Blackwell GPU Architecture&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
 &lt;td>11&lt;/td>
 &lt;td>NVIDIA Blackwell GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="even">
+&lt;tr class="odd">
 &lt;td>10&lt;/td>
 &lt;td>NVIDIA Blackwell GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="odd">
+&lt;tr class="even">
 &lt;td>9&lt;/td>
 &lt;td>NVIDIA Hopper GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="even">
+&lt;tr class="odd">
 &lt;td>8&lt;/td>
 &lt;td>NVIDIA Ampere GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="odd">
+&lt;tr class="even">
 &lt;td>7&lt;/td>
 &lt;td>NVIDIA Volta GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="even">
+&lt;tr class="odd">
 &lt;td>6&lt;/td>
 &lt;td>NVIDIA Pascal GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="odd">
+&lt;tr class="even">
 &lt;td>5&lt;/td>
 &lt;td>NVIDIA Maxwell GPU Architecture&lt;/td>
 &lt;/tr>
-&lt;tr class="even">
+&lt;tr class="odd">
 &lt;td>3&lt;/td>
 &lt;td>NVIDIA Kepler GPU Architecture&lt;/td>
 &lt;/tr>
