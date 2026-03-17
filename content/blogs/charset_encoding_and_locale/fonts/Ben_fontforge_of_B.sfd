@@ -1,0 +1,94 @@
+SplineFontDB: 3.2
+FontName: BenFontB-Regular-Alphabetic
+FullName: BenFontB-Regular Alphabetic
+FamilyName: Ben Font B
+Weight: Regular
+Copyright: Copyright (c) 2026, Ben
+UComments: "2026-3-13: Created with FontForge (http://fontforge.org)"
+Version: 001.000
+ItalicAngle: 0
+UnderlinePosition: -100
+UnderlineWidth: 50
+Ascent: 800
+Descent: 200
+InvalidEm: 0
+LayerCount: 2
+Layer: 0 0 "Back" 1
+Layer: 1 0 "Fore" 0
+XUID: [1021 921 -244080929 11793485]
+StyleMap: 0x0000
+FSType: 0
+OS2Version: 0
+OS2_WeightWidthSlopeOnly: 0
+OS2_UseTypoMetrics: 1
+CreationTime: 1773404111
+ModificationTime: 1773415021
+OS2TypoAscent: 0
+OS2TypoAOffset: 1
+OS2TypoDescent: 0
+OS2TypoDOffset: 1
+OS2TypoLinegap: 90
+OS2WinAscent: 0
+OS2WinAOffset: 1
+OS2WinDescent: 0
+OS2WinDOffset: 1
+HheadAscent: 0
+HheadAOffset: 1
+HheadDescent: 0
+HheadDOffset: 1
+MarkAttachClasses: 1
+DEI: 91125
+Encoding: ISO8859-1
+UnicodeInterp: none
+NameList: AGL For New Fonts
+DisplaySize: -48
+AntiAlias: 1
+FitToEm: 0
+WinInfo: 0 27 10
+BeginPrivate: 0
+EndPrivate
+BeginChars: 256 1
+
+StartChar: B
+Encoding: 66 66 0
+Width: 600
+Flags: HW
+LayerCount: 2
+Fore
+SplineSet
+411 705 m 6
+ 418 729 399 753 374 753 c 4
+ 356 753 342 739 338 724 c 4
+ 263 436 262 436 262 430 c 4
+ 262 386 326 380 337 422 c 6
+ 411 705 l 6
+324 468 m 4
+ 315 468 300 469 300 469 c 4
+ 279 469 262 451 262 430 c 4
+ 262 410 278 395 298 394 c 4
+ 432 382 552 461 552 569 c 4
+ 552 694 388 749 386 750 c 4
+ 186 814 28 655 115 494 c 4
+ 134 460 185 475 185 513 c 4
+ 185 533 166 547 166 587 c 4
+ 166 641 214 689 295 689 c 4
+ 380 689 477 628 477 569 c 4
+ 477 525 422 468 324 468 c 4
+74 62 m 4
+ 74 -15 155 -54 212 -54 c 4
+ 233 -54 249 -36 249 -15 c 4
+ 249 5 234 20 214 21 c 4
+ 136 25 115 95 222 95 c 4
+ 281 95 342 95 401 95 c 4
+ 659 115 649 328 452 412 c 6
+ 313 467 l 6
+ 289 476 262 456 262 430 c 4
+ 262 415 273 402 287 396 c 6
+ 424 343 l 6
+ 527 299 590 186 398 171 c 4
+ 340 171 280 171 222 171 c 4
+ 136 171 74 127 74 62 c 4
+EndSplineSet
+EndChar
+EndChars
+EndSplineFont
