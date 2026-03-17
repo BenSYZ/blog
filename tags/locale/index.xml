@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>locale on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/locale/</link><description>Recent content in locale on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 07 Mar 2026 18:03:16 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/locale/index.xml" rel="self" type="application/rss+xml"/><item><title>charset, encoding and locale</title><link>https://bensyz.github.io/blog/blogs/charset_encoding_and_locale/</link><pubDate>Sat, 07 Mar 2026 18:03:16 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/charset_encoding_and_locale/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>最近遇到了好几次编码的问题，命令行用 &lt;code>printf&lt;/code> 打印 16 进制，top 内存越界，然后正好有时间，就将这块知识了解了一下。&lt;/p>
+&lt;p>以及在安装 Linux 的时候经常会设置语言 &lt;code>zh_CN.UTF-8&lt;/code> 或者 &lt;code>en_US.UTF-8&lt;/code>。&lt;/p>
+&lt;h2 id="tldr">TL;DR;&lt;/h2>
+&lt;p>Unicode 前，人类字符存于计算机只有一次编码：&lt;/p>
+&lt;pre class="mermaid">&lt;code>graph LR
+A[人类字符] --&amp;gt; B[存于计算机的字节]&lt;/code>&lt;/pre>
+&lt;p>Unicode 后，人类字符存于计算机有两次编码：&lt;/p>
+&lt;ol type="1">
+&lt;li>人工将人类字符编码成 Unicode，在计算机中就用 Unicode 就代表人类字符。&lt;/li>
+&lt;li>代表人类字符的 Unicode 存于计算机时，需要编码成其他字节流。&lt;/li>
+&lt;/ol>
+&lt;pre class="mermaid">&lt;code>graph LR
+A[人类字符] &amp;lt;--&amp;gt; B[Unicode] --&amp;gt; C[存于计算机的字节]&lt;/code>&lt;/pre>
+&lt;p>Unicode 是计算机可以描述人类字符的全集。&lt;/p>
+&lt;ul>
+&lt;li>字符集：
+&lt;ul>
+&lt;li>Unicode 前：等同于编码&lt;/li>
+&lt;li>Unicode 后：Unicode UCS-4 的子集，选用其中的部分字符作为字符集&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>编码：Unicode 字符编号如何实际存储&lt;/li>
+&lt;li>字体：Unicode 编号对应的字形&lt;/li>
+&lt;/ul>
+&lt;h2 id="编码和字符集">编码和字符集&lt;/h2>
+&lt;p>我们在学校中学过 ASCII 编码，知道 &lt;code>A&lt;/code> 的 ASCII 码是 &lt;code>65&lt;/code>。中文数字太多，一个字节编码不够，需要用两个字节，用 GB 2312 编码，来表示一个字节不够，而 ASCII 没有用尽一个字节的所有位数，在高位设置一个 bit，来区分原始的 ASCII 还是 GB 2312。&lt;/p>
+&lt;p>那么什么是编码？简单来说就是一个映射关系，计算机的语言和人类的语言之间的映射。计算机的语言是 01 这种二进制，而我们人类的语言有中文英文等等。我如何将人类的文字存储到计算机中呢？就需要一个映射，或者简单来说就是一个翻译，知道存在计算机中的某一个数字代表的是什么字符。譬如，现在在计算机中有一个数字 &lt;code>(0100,0001)b&lt;/code>，转换成十进制就是 &lt;code>65&lt;/code>，对计算机来说它就是一个纯粹的数字，不代表任何什么，你可以对它做加减乘除各种操作。但是除了数字之外，我们还可以赋予它其他意思，就像之前说的，我需要存一个字符到计算机里，我们指定这个数字表示某一个字符。在 ASCII 编码中，这个数字就被指定为字符 &lt;code>A&lt;/code>。我们可以看到这种映射关系是任意的，我们完全可以将 65 指定成其他字符，只是， ASCII 是最早的映射关系，对 ASCII 中字符的编码，现在大部分的其他编码仍旧保持数字一致。这里我们可以看到数字有了类型，或者说，数据类型，就像 char, short，int，long 等等，同样一个数字在不同的数据类型的表示下代表不同的含义。&lt;/p>
+&lt;div class="sourceCode" id="cb3">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb3-1">&lt;a href="#cb3-1" aria-hidden="true">&lt;/a>include &amp;lt;stdio.h&amp;gt;&lt;/span>
+&lt;span id="cb3-2">&lt;a href="#cb3-2" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb3-3">&lt;a href="#cb3-3" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> c = &lt;span class="ch">&amp;#39;A&amp;#39;&lt;/span>;&lt;/span>
+&lt;span id="cb3-4">&lt;a href="#cb3-4" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%c %d&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, c, c);&lt;/span>
+&lt;span id="cb3-5">&lt;a href="#cb3-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb3-6">&lt;a href="#cb3-6" aria-hidden="true">&lt;/a> &lt;span class="dt">unsigned&lt;/span> &lt;span class="dt">char&lt;/span> n = &lt;span class="dv">65&lt;/span>;&lt;/span>
+&lt;span id="cb3-7">&lt;a href="#cb3-7" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%c %d&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, n, n);&lt;/span>
+&lt;span id="cb3-8">&lt;a href="#cb3-8" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb3-9">&lt;a href="#cb3-9" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="cjk-编码和乱码">CJK 编码和乱码&lt;/h3>
+&lt;p>在英文的语境下一切都很不错，ASCII 一个字节足够了，到了中文，一个字节大小的空间总共表示 (2^8=256) 种不同的数字，这远小于中文的字符量。和 short, int 一样，一个字节不够表示一个数字，一个字节不够表示一个字符那怎么办？用两个字节。这就出来了 GB 2312，但是 GB 2312 只表示了中文，繁体中文字符怎么办？日语韩语其他语言怎么办？各家给出了各家不同的编码方案，对于繁体字，我们用了 Big5 编码，查阅资料发现，Big5 也只有两个字节，这够吗？让我们来算一下。这些编码方案为了和 ASCII 保持兼容，会将其中一个字节的 0x00 ~ 0x7F ，即 (0000,0000)b ~ (0111,1111)b 继续用以表示 ASCII，将第一个字节的最高位定位 1，剩下 7 位可以随意变化，第二个字节 8 个也是随意变化，所以总共有总共有 7+8 位，可以有 (2^15=32768) 种数字不同，那么可以映射到这么多个字符。甚至连康熙字典中的四万多个都涵盖不到，更不用说其他异体字和日韩文了。那 Big5 为什么用两字节呢？&lt;/p>
+&lt;blockquote>
+&lt;p>工程师认为虽其技术可行，但是三字节（超过两字节）长度的内码却会造成英文屏幕画面映射成中文画面会发生文字无法对齐的问题&lt;/p>
+&lt;/blockquote>
+&lt;p>当然，只表示常用字符两个字节也够了&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>Encoding&lt;/th>
+&lt;th>Characters&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>Big5&lt;/td>
+&lt;td>~13k&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>GB2312&lt;/td>
+&lt;td>~7k&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Shift JIS&lt;/td>
+&lt;td>~7k&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>所以，为了简单些，一般以只用两字节，但各家有各家自己的字符编码方案，不是统一的，那这就会引入一个问题：乱码。在写入的时候，我用 GB 2312 将中文字符转（编码）成对应的数字，读取的时候我读到这些数字后用 Big5 翻译（解码）。那不是乱套了？事实就是如此，存的、读的是同一个数字，但是显示出来的字符不一样。所以其实不是出错了，而是解码的时候用错了字典，只是看起来是混乱的，底层的数字还是一样的。&lt;/p>
+&lt;h3 id="unicode-的引入字符集和编码的区分">Unicode 的引入，字符集和编码的区分&lt;/h3>
+&lt;p>为了解决乱码问题，出现了 Unicode，早期 UCS-2(Universal Coded Character Set, Unicode；2 表示 2 bytes) 和 GB 2312、Big5 没有本质区别，它也只是一种编码方式，简单来说它的特点是：&lt;/p>
+&lt;ul>
+&lt;li>固定 2 字节长，因此
+&lt;ul>
+&lt;li>最高位的 1 不需要固定，所以相较于 GB 2312、Big5 可用空间多了近一倍，总共可以支持 2^16=65536 个字符&lt;/li>
+&lt;li>和 ASCII 的 1 字节长是不兼容的&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>对各种字符统一编码，因此
+&lt;ul>
+&lt;li>各种字符可以统一使用它来编码，而不会出现看不同的文字要用不同的编码&lt;/li>
+&lt;li>如果统一使用它，那就不会出现乱码。当然它和别的编码之间转还是会有乱码，只是它相较于之前的编码是更全的一个集合&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>可以这么说，早期的 UTF-16 编码就等同于 UCS-2 字符集，唯一有的区别是大小端。但是后面 Unicode 发现两字节不够描述所有的字符，因而扩充到了 4 字节（32 位），照 ASCII 到 UCS-2 的思路，最简单的就是把一个字符的长度翻倍，这就是 UCS-4，UCS-4 的数字直接存到计算机中就是 UTF-32。而 UTF-16 为了支持 UCS-4 就对高位的 UCS-4 重新编码，和 ASCII 到 GB 2312 用两个字节表示一个字符一样，UTF-16 用两个 UTF-16 表示一个字符，也一样为了兼容性，将 UCS-2 中未用到的数字来表示“组合数”。这时， UTF-16 和 UCS-2 的数字关系就不再是一一对应了。&lt;/p>
+&lt;p>类比：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>ASCII 到 GB 2312&lt;/th>
+&lt;th>UTF-16(UCS-2) 到 UTF-16(UCS-4)&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>用原始 ASCII 的大小(1B)表示原始的 ASCII&lt;/td>
+&lt;td>用原始 UTF-16(UCS-2) 的大小(2B)表示原始的 UTF-16(UCS-2)&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>用原始大小(1B)的两倍，即用一对组合数表示扩展字符&lt;/td>
+&lt;td>用原始大小(2B)的两倍，即用一对组合数表示扩展字符&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>取出原 ASCII 中未用的部分数字表示组合数&lt;/td>
+&lt;td>取出原 UTF-16 中未用的部分数字来表示组合数&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>这就很难评了，ASCII 到 UCS-2 不考虑兼容性，UCS-2 到 UCS-4 就考虑兼容性了。那不如一开始就考虑，这就是 UTF-8。只能说设计 UTF-16 时太短视了。&lt;/p>
+&lt;p>就这样，字符集和编码就有了区别，&lt;strong>字符集就是对字符进行数字编码&lt;/strong>；同样的，&lt;strong>对字符集中的数字，我们也一样可以编码，让其有向前的兼容性&lt;/strong>。而现在第一步对字符的编码大家都已经统一成了 Unicode。也就是说 &lt;strong>现在的 GB 2312、BIG 5 在 Linux 中只代表编码方式，不再代表字符集了。字符集统一使用 Unicode UCS-4。&lt;/strong> 当然有时，GB 2312 等被称作字符集(character set)的含义也不再是字符和数字的关系，而是代表在 UCS-4 中的子集（subset)，只代表一个字符范围，而不是重新映射数字。&lt;/p>
+&lt;p>或者说， &lt;strong>字符集 character set 就是字符集合，只是字符的表示用的是字符在 UCS-4 这个全集中的编号，而非自己新定义编号。&lt;/strong>&lt;/p>
+&lt;p>注意：&lt;code>iconv&lt;/code> 中的 &lt;code>UNICODE&lt;/code> 是 UCS-2 的别名，本文的 Unicode 一般指 UCS-4 的字符。&lt;/p>
+&lt;ul>
+&lt;li>Man-Pages
+&lt;ul>
+&lt;li>字符集：&lt;code>man 7 charsets&lt;/code>&lt;/li>
+&lt;li>UTF-8: &lt;code>man 7 UTF-8&lt;/code>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h4 id="utf-16">UTF-16&lt;/h4>
+&lt;blockquote>
+&lt;p>Unicode的编码空间从U+0000到U+10FFFF，共有1,112,064个码位（code point）可用来映射字符。Unicode的编码空间可以划分为17个平面（plane），每个平面包含216（65,536）个码位。17个平面的码位可表示为从U+xx0000到U+xxFFFF，其中xx表示十六进制值从0x00到0x10，共计17个平面。第一个平面称为基本多语言平面（Basic Multilingual Plane, BMP），或称第零平面（Plane 0），其他平面称为辅助平面（Supplementary Planes）。基本多语言平面内，从U+D800到U+DFFF之间的码位区段是永久保留不映射到Unicode字符。UTF-16就利用保留下来的0xD800-0xDFFF区块的码位来对辅助平面的字符的码位进行编码。&lt;/p>
+&lt;p>&lt;a href="https://zh.wikipedia.org/zh-cn/UTF-16" class="uri">https://zh.wikipedia.org/zh-cn/UTF-16&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;p>所谓辅助平面其实就是“扩展平面”，也就是 UTF-16 存不下所有字符时做的扩展。&lt;/p>
+&lt;p>对于 BMP，UTF-16 编码保持不变；对 16（0x01~0x10) 个辅助平面中的所有字符重新编码。编码方式为：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>怎么做&lt;/th>
+&lt;th>拆分前的数字&lt;/th>
+&lt;th>前 10 位数&lt;/th>
+&lt;th>后 10 位数&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>0&lt;/td>
+&lt;td>原始的 16 个辅助平面&lt;/td>
+&lt;td>&lt;code>U+01,0000 ~ U+10,FFFF&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>1&lt;/td>
+&lt;td>先将 BMP 的偏移去掉（减 &lt;code>0x1,0000&lt;/code>）&lt;/td>
+&lt;td>&lt;code>U+00,0000 ~ U+0F,FFFF&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>2&lt;/td>
+&lt;td>将这 20 位数拆分成两个 10 位数。&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>0x000 ~ 0x3FF&lt;/code>&lt;/td>
+&lt;td>&lt;code>0x000 ~ 0x3FFF&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>3&lt;/td>
+&lt;td>前 10 位数加 &lt;code>0xD800&lt;/code>，后 10 位数加 &lt;code>0xDC00&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>0xD800 ~ 0xDBFF&lt;/code>&lt;/td>
+&lt;td>&lt;code>0xDC00 ~ 0xDFFFF&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h5 id="手动转换编码的例子𪜐">手动转换编码的例子：𪜐&lt;/h5>
+&lt;pre>&lt;code> ➜ echo -n 𪜐 | iconv -t UCS-4 | xxd
+00000000: 0002 a710 ....&lt;/code>&lt;/pre>
+&lt;div class="sourceCode" id="cb5">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb5-1">&lt;a href="#cb5-1" aria-hidden="true">&lt;/a>&lt;span class="co">// unicode to UTF-16&lt;/span>&lt;/span>
+&lt;span id="cb5-2">&lt;a href="#cb5-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb5-3">&lt;a href="#cb5-3" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb5-4">&lt;a href="#cb5-4" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> ucs_4_in_sup = &lt;span class="bn">0x2a710&lt;/span>;&lt;/span>
+&lt;span id="cb5-5">&lt;a href="#cb5-5" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;origin text: 0x%x&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, ucs_4_in_sup);&lt;/span>
+&lt;span id="cb5-6">&lt;a href="#cb5-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-7">&lt;a href="#cb5-7" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> ucs_4_in_sup_no_bmp_offset = ucs_4_in_sup - &lt;span class="bn">0x10000&lt;/span>;&lt;/span>
+&lt;span id="cb5-8">&lt;a href="#cb5-8" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;without offset: 0x%x&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, ucs_4_in_sup_no_bmp_offset);&lt;/span>
+&lt;span id="cb5-9">&lt;a href="#cb5-9" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-10">&lt;a href="#cb5-10" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> lead = ucs_4_in_sup_no_bmp_offset &amp;gt;&amp;gt; &lt;span class="dv">10&lt;/span>;&lt;/span>
+&lt;span id="cb5-11">&lt;a href="#cb5-11" aria-hidden="true">&lt;/a> &lt;span class="dt">int&lt;/span> tail = ucs_4_in_sup_no_bmp_offset &amp;amp; &lt;span class="bn">0x3FF&lt;/span>;&lt;/span>
+&lt;span id="cb5-12">&lt;a href="#cb5-12" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;lead: 0x%04x, tail: 0x%04x&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, lead, tail);&lt;/span>
+&lt;span id="cb5-13">&lt;a href="#cb5-13" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-14">&lt;a href="#cb5-14" aria-hidden="true">&lt;/a> lead+=&lt;span class="bn">0xD800&lt;/span>;&lt;/span>
+&lt;span id="cb5-15">&lt;a href="#cb5-15" aria-hidden="true">&lt;/a> tail+=&lt;span class="bn">0xDC00&lt;/span>;&lt;/span>
+&lt;span id="cb5-16">&lt;a href="#cb5-16" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;lead: 0x%04x, tail: 0x%04x&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, lead, tail);&lt;/span>
+&lt;span id="cb5-17">&lt;a href="#cb5-17" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb5-18">&lt;a href="#cb5-18" aria-hidden="true">&lt;/a>}&lt;/span>
+&lt;span id="cb5-19">&lt;a href="#cb5-19" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb5-20">&lt;a href="#cb5-20" aria-hidden="true">&lt;/a>&lt;span class="co">// origin text: 0x2a710&lt;/span>&lt;/span>
+&lt;span id="cb5-21">&lt;a href="#cb5-21" aria-hidden="true">&lt;/a>&lt;span class="co">// without offset: 0x1a710&lt;/span>&lt;/span>
+&lt;span id="cb5-22">&lt;a href="#cb5-22" aria-hidden="true">&lt;/a>&lt;span class="co">// lead: 0x0069, tail: 0x0310&lt;/span>&lt;/span>
+&lt;span id="cb5-23">&lt;a href="#cb5-23" aria-hidden="true">&lt;/a>&lt;span class="co">// lead: 0xd869, tail: 0xdf10&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code> ➜ printf &amp;#39;\xd8\x69\xdf\x10&amp;#39; | iconv -f UTF-16BE
+𪜐&lt;/code>&lt;/pre>
+&lt;h4 id="utf-8">UTF-8&lt;/h4>
+&lt;p>UTF-8 也是 Unicode 字符集的一种编码(encoding)。UTF-8 全称 Unicode Transformation Format – 8-bit，意味着把 Unicode 转成某种格式&lt;/p>
+&lt;p>Code point ↔︎ UTF-8 conversion&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>First code point&lt;/th>
+&lt;th>Last code point&lt;/th>
+&lt;th>Byte 1&lt;/th>
+&lt;th>Byte 2&lt;/th>
+&lt;th>Byte 3&lt;/th>
+&lt;th>Byte 4&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>U+0000&lt;/td>
+&lt;td>U+007F&lt;/td>
+&lt;td>0yyyzzzz&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>U+0080&lt;/td>
+&lt;td>U+07FF&lt;/td>
+&lt;td>110xxxyy&lt;/td>
+&lt;td>10yyzzzz&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>U+0800&lt;/td>
+&lt;td>U+FFFF&lt;/td>
+&lt;td>1110wwww&lt;/td>
+&lt;td>10xxxxyy&lt;/td>
+&lt;td>10yyzzzz&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>U+010000&lt;/td>
+&lt;td>U+10FFFF&lt;/td>
+&lt;td>11110uvv&lt;/td>
+&lt;td>10vvwwww&lt;/td>
+&lt;td>10xxxxyy&lt;/td>
+&lt;td>10yyzzzz&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>&lt;a href="https://en.wikipedia.org/wiki/UTF-8#Description">refs&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;ol type="1">
+&lt;li>对于每一个 byte 的第一位我们都用 1 表示它不是 ASCII。&lt;/li>
+&lt;li>对于第一个 byte 的第二位开始，有几个 1 就代表除了当前 byte 还有几个 byte 需要一起表示一个 Unicode 字符。自然，当表示有几个附加 byte 的 1 结束之后就是 0 了。&lt;/li>
+&lt;li>对于附加 byte，的第二位，我们置 0，用于未来前一个 byte 的位数不够用于表示附加 byte 数量时来使用&lt;/li>
+&lt;/ol>
+&lt;p>p.s. 正常最后 21 位可以表示的范围是 U+010000 ~ U+10FFFF，但因为目前 Unicode 只发布到 17 个平面（高位的 0x01 到 0x10，详见 &lt;a href="https://zh.wikipedia.org/wiki/UTF-16">UTF-16&lt;/a>）也反过来限制了 UTF-8 的定义。&lt;/p>
+&lt;blockquote>
+&lt;p>man 7 utf-8 UTF-8 encoded UCS characters may be up to six bytes long, however the Unicode standard specifies no characters above 0x10ffff, so Unicode characters can be only up to four bytes long in UTF-8.&lt;/p>
+&lt;/blockquote>
+&lt;p>但是 UTF-8 可以完全不受限，甚至未来有需要可以扩展到 8 bytes 的字符 :p，（不过这样的设计，在用 &lt;code>strstr&lt;/code> 搜索字串会有问题）。&lt;/p>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 8%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>First code point&lt;/th>
+&lt;th>Last code point&lt;/th>
+&lt;th>Byte 1&lt;/th>
+&lt;th>Byte 2&lt;/th>
+&lt;th>Byte 3&lt;/th>
+&lt;th>Byte 4&lt;/th>
+&lt;th>Byte 5&lt;/th>
+&lt;th>Byte 6&lt;/th>
+&lt;th>Byte 7&lt;/th>
+&lt;th>Byte 8&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>U+??&lt;/td>
+&lt;td>U+??&lt;/td>
+&lt;td>11111111&lt;/td>
+&lt;td>110pqqqq&lt;/td>
+&lt;td>10rrrrss&lt;/td>
+&lt;td>10sstttt&lt;/td>
+&lt;td>10uuuuvv&lt;/td>
+&lt;td>10vvwwww&lt;/td>
+&lt;td>10xxxxyy&lt;/td>
+&lt;td>10yyzzzz&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>See also: &lt;a href="https://stackoverflow.com/a/27939161/13033234">What is the difference between UTF-8 and Unicode?&lt;/a>&lt;/p>
+&lt;h5 id="手动转换编码的例子𪜐-1">手动转换编码的例子：𪜐&lt;/h5>
+&lt;pre>&lt;code> ➜ echo -n 𪜐 | iconv -t UCS-4 | xxd
+00000000: 0002 a710 ....
+utf-8 need 4 bytes as it locates in U+010000 and U+10FFFF
+| 11110uvv | 10vvwwww | 10xxxxyy | 10yyzzzz |
+| 11110000 | 10101010 | 10011100 | 10010000 |
+F0AA9C90
+➜ printf &amp;#39;\xF0\xAA\x9C\x90&amp;#39;
+𪜐&lt;/code>&lt;/pre>
+&lt;h5 id="strstr-in-gb-2312-and-utf-8">&lt;code>strstr&lt;/code> in GB 2312 and UTF-8&lt;/h5>
+&lt;p>GB 2312 会有个问题：前一个字符的第二个字节和后一个字符的第一个字节 match 上，返回找到了，其实两个字符串并不包含。这个问题在其 utf-8 中是不会出现的：&lt;/p>
+&lt;div class="sourceCode" id="cb8">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb8-1">&lt;a href="#cb8-1" aria-hidden="true">&lt;/a>&lt;span class="co">// save the file to GB2312&lt;/span>&lt;/span>
+&lt;span id="cb8-2">&lt;a href="#cb8-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb8-3">&lt;a href="#cb8-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;locale.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb8-4">&lt;a href="#cb8-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;string.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb8-5">&lt;a href="#cb8-5" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb8-6">&lt;a href="#cb8-6" aria-hidden="true">&lt;/a> setlocale(LC_CTYPE, &lt;span class="st">&amp;quot;zh_CN.GB2312&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb8-7">&lt;a href="#cb8-7" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> s1[&lt;span class="dv">256&lt;/span>]=&lt;span class="st">&amp;quot;你好世界&amp;quot;&lt;/span>; &lt;span class="co">//c4e3 bac3 cac0 bde7&lt;/span>&lt;/span>
+&lt;span id="cb8-8">&lt;a href="#cb8-8" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> s2[&lt;span class="dv">256&lt;/span>]=&lt;span class="st">&amp;quot;愫檬&amp;quot;&lt;/span>; &lt;span class="co">//e3ba c3ca&lt;/span>&lt;/span>
+&lt;span id="cb8-9">&lt;a href="#cb8-9" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s1);&lt;/span>
+&lt;span id="cb8-10">&lt;a href="#cb8-10" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s2);&lt;/span>
+&lt;span id="cb8-11">&lt;a href="#cb8-11" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, strstr(s1, s2)==&lt;span class="dv">0&lt;/span>? &lt;span class="st">&amp;quot;Not found&amp;quot;&lt;/span>: &lt;span class="st">&amp;quot;Founded&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb8-12">&lt;a href="#cb8-12" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb8-13">&lt;a href="#cb8-13" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>在 UTF-8 中 &lt;code>strstr(haystack, needle)&lt;/code>:&lt;/p>
+&lt;p>对于 &lt;code>needle&lt;/code> 的 &lt;strong>字符的第一个字节&lt;/strong>，开头的几个 bits 只有这两种情况：&lt;/p>
+&lt;ul>
+&lt;li>第一位以 &lt;code>0&lt;/code> 开始&lt;/li>
+&lt;li>前两位以 &lt;code>11&lt;/code> 开始&lt;/li>
+&lt;/ul>
+&lt;p>这两种情况不会存在于多字节字符的后续字节中。后续字节均以“10”开头。因此永远不会出现错误的移位，这意味着“needle”中的单词永远不会从“haystack”中的字符中间开始匹配。所以在 UTF-8 中使用 &lt;code>strstr&lt;/code> 是安全的。这就是所谓的 &lt;a href="https://en.wikipedia.org/wiki/Self-synchronizing_code">Self-synchronizing_code&lt;/a>&lt;/p>
+&lt;h4 id="bom-byte-order-mark">BOM (Byte Order Mark)&lt;/h4>
+&lt;p>由于 UTF-16 和 UTF-32 和 ASCII 不兼容，同时它们内部还分了两种，大端存储和小端存储，因此我们需要一个 Magic Number 来表示当前文件的是用什么编码方式存储的，我们借用 ZERO WIDTH NO-BREAK SPACE：&lt;code>U+feff&lt;/code>(&lt;code>1111,1110&lt;/code>) 来表示 BOM（byte-order mark），放在文件的最开头。它既然是一个字符那么它在 UTF-16/UTF-32 中就遵守对应的原则：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>encoding&lt;/th>
+&lt;th>value&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>UTF-16BE&lt;/td>
+&lt;td>&lt;code>feff&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>UTF-16LE&lt;/td>
+&lt;td>&lt;code>fffe&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>UTF-32BE&lt;/td>
+&lt;td>&lt;code>0000 feff&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>UTF-32LE&lt;/td>
+&lt;td>&lt;code>fffe 0000&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>同时，上述所有情况，都不是 UTF-8 的合法字符，也能和现在最常用的 UTF-8 不混淆&lt;/p>
+&lt;h2 id="字体">字体&lt;/h2>
+&lt;p>字符集定义了：字符和编号的映射关系。但是字符的定义是什么？最简单的就是图片，但是我总不能所有字符都当图片渲染吧，这就引入了字体。&lt;/p>
+&lt;p>就这样，字符集和编码就有了区别，字符集就是对字符进行数字编码；同样的，对字符集中的数字，我们也一样可以编码，让其有向前的兼容性。而现在第一步对字符的编码大家都已经统一成了 Unicode。也就是说现在的 GB 2312、BIG 5 在 Linux 中只代表编码方式，不再代表字符集了。字符集统一使用 Unicode UCS-4&lt;/p>
+&lt;p>Unicode 定义了字符的编号，字符的定义是什么？最简单的就是图片，但是我总不能所有字符都当图片渲染吧。这就引入了字体。从 Unicode 的官网上我们可以看到，Unicode 定义的字符标准是以 PDF 发布的出来的，而这些字符都是可以复制的，但对于一些冷门字，我们拷贝出来之后，粘贴到本地或者浏览器中，显示是异常的，也就是说这些字不是图片，而是实实在在，例如位于 &lt;a href="https://www.unicode.org/charts/PDF/U323B0.pdf">CJK Unified Ideographs Extension J&lt;/a> 的 &lt;code>U+324DC&lt;/code>&lt;/p>
+&lt;figure>
+&lt;img src="./figures/U324DC.png" alt="" />&lt;figcaption>glyph of U324DC&lt;/figcaption>
+&lt;/figure>
+&lt;p>从 PDF 复制的字符：&lt;/p>
+&lt;pre>&lt;code>&lt;/code>&lt;/pre>
+&lt;p>从 PDF 复制的字符在 Firefox 中显示&lt;/p>
+&lt;figure>
+&lt;img src="./figures/PDF_copied_U324DC_in_firefox.png" alt="" />&lt;figcaption>character copied from PDF show in firefox&lt;/figcaption>
+&lt;/figure>
+&lt;p>之所以 Firefox 中显示异常，而 PDF 中正常，因为 PDF 中内嵌字体，而 Firefox 使用的字体并不包含这个字符对应的形状（glyph），所以无法显示。不过，这里的显示的 E2F7 显然也是错误的，并非真正的 Unicode 码，即从 PDF 中拷贝出来也是有问题的，用这个字符搜索该 PDF，会找到两个字符也验证了这个说法。通过 &lt;code>gucharmap&lt;/code> 查看 &lt;code>0xU324DC&lt;/code> 的 tofu 可以看到是这个，Saurce Code Pro Nerd Font 虽然没有画正确的字形，但是还是对这些字符画了 tofu 的：&lt;/p>
+&lt;figure>
+&lt;img src="./figures/U324DC_from_saurce_code_nerd_font.png" alt="" />&lt;figcaption>U324DC from saurce code nerd font&lt;/figcaption>
+&lt;/figure>
+&lt;pre>&lt;code>𲓜&lt;/code>&lt;/pre>
+&lt;pre class="console">&lt;code> ➜ echo -n 𲓜 | iconv -f UTF-8 -t UCS-4 |xxd
+00000000: 0003 24dc ..$.&lt;/code>&lt;/pre>
+&lt;p>需要注意的是，从 &lt;code>gucharmap&lt;/code> 中拷的字符其实是该字符用 UTF-8 编码后的数据。&lt;/p>
+&lt;h3 id="bitmap">bitmap&lt;/h3>
+&lt;p>内核 bitmap （点阵字体、位图字体）来打印字符，所谓 bitmap 就是 用 01 来描述一个字符&lt;/p>
+&lt;h4 id="linux-kernel">Linux kernel&lt;/h4>
+&lt;p>&lt;a href="https://github.com/torvalds/linux/blob/master/lib/fonts/font_6x8.c#L668">例如&lt;/a>，大写的 B&lt;/p>
+&lt;div class="sourceCode" id="cb12">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb12-1">&lt;a href="#cb12-1" aria-hidden="true">&lt;/a>&lt;span class="co">// lib/fonts/font_6x8.c&lt;/span>&lt;/span>
+&lt;span id="cb12-2">&lt;a href="#cb12-2" aria-hidden="true">&lt;/a>&lt;span class="dt">static&lt;/span> &lt;span class="dt">const&lt;/span> &lt;span class="kw">struct&lt;/span> font_data fontdata_6x8 = {&lt;/span>
+&lt;span id="cb12-3">&lt;a href="#cb12-3" aria-hidden="true">&lt;/a> { &lt;span class="dv">0&lt;/span>, &lt;span class="dv">0&lt;/span>, FONTDATAMAX, &lt;span class="dv">0&lt;/span> }, {&lt;/span>
+&lt;span id="cb12-4">&lt;a href="#cb12-4" aria-hidden="true">&lt;/a> ...&lt;/span>
+&lt;span id="cb12-5">&lt;a href="#cb12-5" aria-hidden="true">&lt;/a> &lt;span class="co">/* 66 0x42 &amp;#39;B&amp;#39; */&lt;/span>&lt;/span>
+&lt;span id="cb12-6">&lt;a href="#cb12-6" aria-hidden="true">&lt;/a> &lt;span class="bn">0x78&lt;/span>, &lt;span class="co">/* 011110 */&lt;/span>&lt;/span>
+&lt;span id="cb12-7">&lt;a href="#cb12-7" aria-hidden="true">&lt;/a> &lt;span class="bn">0x24&lt;/span>, &lt;span class="co">/* 001001 */&lt;/span>&lt;/span>
+&lt;span id="cb12-8">&lt;a href="#cb12-8" aria-hidden="true">&lt;/a> &lt;span class="bn">0x24&lt;/span>, &lt;span class="co">/* 001001 */&lt;/span>&lt;/span>
+&lt;span id="cb12-9">&lt;a href="#cb12-9" aria-hidden="true">&lt;/a> &lt;span class="bn">0x38&lt;/span>, &lt;span class="co">/* 001110 */&lt;/span>&lt;/span>
+&lt;span id="cb12-10">&lt;a href="#cb12-10" aria-hidden="true">&lt;/a> &lt;span class="bn">0x24&lt;/span>, &lt;span class="co">/* 001001 */&lt;/span>&lt;/span>
+&lt;span id="cb12-11">&lt;a href="#cb12-11" aria-hidden="true">&lt;/a> &lt;span class="bn">0x24&lt;/span>, &lt;span class="co">/* 001001 */&lt;/span>&lt;/span>
+&lt;span id="cb12-12">&lt;a href="#cb12-12" aria-hidden="true">&lt;/a> &lt;span class="bn">0x78&lt;/span>, &lt;span class="co">/* 011110 */&lt;/span>&lt;/span>
+&lt;span id="cb12-13">&lt;a href="#cb12-13" aria-hidden="true">&lt;/a> &lt;span class="bn">0x00&lt;/span>, &lt;span class="co">/* 000000 */&lt;/span>&lt;/span>
+&lt;span id="cb12-14">&lt;a href="#cb12-14" aria-hidden="true">&lt;/a> ...&lt;/span>
+&lt;span id="cb12-15">&lt;a href="#cb12-15" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>再例如在 &lt;a href="https://github.com/zhmars/cjktty-patches/">cjktty-patches&lt;/a> 中“你”的 bitmap&lt;/p>
+&lt;pre class="bitmap">&lt;code>0000100010000000
+0000100010000000
+0000100010000000
+0001000111111110
+0001000100000010
+0011001000000100
+0011010000100000
+0101000000100000
+1001000100101000
+0001000100100100
+0001001000100100
+0001001000100010
+0001010000100010
+0001000000100000
+0001000010100000
+0001000001000000&lt;/code>&lt;/pre>
+&lt;p>./examples/print_bitmap.sh&lt;/p>
+&lt;p>把 01 替换一下，上面两个图案对应的就是&lt;/p>
+&lt;pre>&lt;code> ████
+█ █
+█ █
+███
+█ █
+█ █
+████
+█ █
+█ █
+█ █
+█ ████████
+█ █ █
+██ █ █
+██ █ █
+█ █ █
+█ █ █ █ █
+█ █ █ █
+█ █ █ █
+█ █ █ █
+█ █ █ █
+█ █
+█ █ █
+█ █&lt;/code>&lt;/pre>
+&lt;p>然后内核可以通过将位复制到 framebuffer 来绘制字符。(TODO: how?)&lt;/p>
+&lt;h4 id="bios">BIOS&lt;/h4>
+&lt;div class="sourceCode" id="cb15">&lt;pre class="sourceCode asm">&lt;code class="sourceCode fasm">&lt;span id="cb15-1">&lt;a href="#cb15-1" aria-hidden="true">&lt;/a>// https://github.com/cfenollosa/os-tutorial/tree/master/&lt;span class="dv">02&lt;/span>-bootsector-print&lt;/span>
+&lt;span id="cb15-2">&lt;a href="#cb15-2" aria-hidden="true">&lt;/a>&lt;span class="bu">mov&lt;/span>&lt;span class="bn"> ah, 0x0e &lt;/span>&lt;span class="co">; the higher part of ax ; tty mode&lt;/span>&lt;/span>
+&lt;span id="cb15-3">&lt;a href="#cb15-3" aria-hidden="true">&lt;/a>&lt;span class="bu">mov&lt;/span> &lt;span class="kw">al&lt;/span>, &lt;span class="st">&amp;#39;A&amp;#39;&lt;/span> &lt;span class="co">; lower part of ax&lt;/span>&lt;/span>
+&lt;span id="cb15-4">&lt;a href="#cb15-4" aria-hidden="true">&lt;/a>&lt;span class="bu">int&lt;/span>&lt;span class="bn"> 0x10&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>&lt;code>int 0x10&lt;/code> 触发 &lt;code>0x10&lt;/code> 中断，BIOS 注册了该中断向量，中断服务会识别到寄存器中的 &lt;code>0x0e 0x41&lt;/code> ，将 &lt;code>0x41&lt;/code> 转成内置的 bitmap 刷到屏幕上。&lt;/p>
+&lt;h3 id="矢量图">矢量图&lt;/h3>
+&lt;p>Bitmap 不支持等比例放大缩小，所以需要 8x8，16x16，32x32 等等各种图形，于是人们设计了矢量图，可以等比例放大缩小。&lt;/p>
+&lt;ul>
+&lt;li>轮廓字体（Outline fonts or vector font）：用矢量图描述字形的轮廓&lt;/li>
+&lt;li>基于笔画的字体（Stroke-based fonts）： 用矢量图描述笔画、轮廓、骨架，可以减少贝塞尔曲线的数量。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;a href="https://en.wikipedia.org/wiki/Computer_font" class="uri">https://en.wikipedia.org/wiki/Computer_font&lt;/a>&lt;/p>
+&lt;p>我们可以用 &lt;code>fontforge&lt;/code> 来查看 &lt;code>ttf&lt;/code> 或 &lt;code>ttc&lt;/code>，尝试编辑一下字形。&lt;/p>
+&lt;p>矢量图到显示到屏幕上的像素是额外的代码来实现的而不是直接刷到 frame buffer 就好了（TODO：怎么显示的？Xorg 好像有 glamor 加速，那是啥）&lt;/p>
+&lt;h4 id="制作自己的字体">制作自己的字体&lt;/h4>
+&lt;p>在 fontconfig 中的 alias 会检查字体是否全，如果不全是会忽略的，所以，如果只写了一个字符，需要将其他字符都填充。或者用下面的 match 方法把它强制关联上&lt;/p>
+&lt;div class="sourceCode" id="cb16">&lt;pre class="sourceCode xml">&lt;code class="sourceCode xml">&lt;span id="cb16-1">&lt;a href="#cb16-1" aria-hidden="true">&lt;/a>&lt;span class="kw">&amp;lt;match&lt;/span>&lt;span class="ot"> target=&lt;/span>&lt;span class="st">&amp;quot;pattern&amp;quot;&lt;/span>&lt;span class="kw">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-2">&lt;a href="#cb16-2" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;test&lt;/span>&lt;span class="ot"> name=&lt;/span>&lt;span class="st">&amp;quot;family&amp;quot;&lt;/span>&lt;span class="kw">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-3">&lt;a href="#cb16-3" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;string&amp;gt;&lt;/span>Alacritty Font&lt;span class="kw">&amp;lt;/string&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-4">&lt;a href="#cb16-4" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;/test&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-5">&lt;a href="#cb16-5" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb16-6">&lt;a href="#cb16-6" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;edit&lt;/span>&lt;span class="ot"> name=&lt;/span>&lt;span class="st">&amp;quot;family&amp;quot;&lt;/span>&lt;span class="ot"> mode=&lt;/span>&lt;span class="st">&amp;quot;prepend&amp;quot;&lt;/span>&lt;span class="ot"> binding=&lt;/span>&lt;span class="st">&amp;quot;strong&amp;quot;&lt;/span>&lt;span class="kw">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-7">&lt;a href="#cb16-7" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;string&amp;gt;&lt;/span>Ben Font B&lt;span class="kw">&amp;lt;/string&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-8">&lt;a href="#cb16-8" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;/edit&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-9">&lt;a href="#cb16-9" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb16-10">&lt;a href="#cb16-10" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;edit&lt;/span>&lt;span class="ot"> name=&lt;/span>&lt;span class="st">&amp;quot;family&amp;quot;&lt;/span>&lt;span class="ot"> mode=&lt;/span>&lt;span class="st">&amp;quot;append&amp;quot;&lt;/span>&lt;span class="kw">&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-11">&lt;a href="#cb16-11" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;string&amp;gt;&lt;/span>SauceCodePro Nerd Font&lt;span class="kw">&amp;lt;/string&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-12">&lt;a href="#cb16-12" aria-hidden="true">&lt;/a> &lt;span class="kw">&amp;lt;/edit&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb16-13">&lt;a href="#cb16-13" aria-hidden="true">&lt;/a>&lt;span class="kw">&amp;lt;/match&amp;gt;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>./fonts/&lt;/p>
+&lt;ul>
+&lt;li>Tips:
+&lt;ul>
+&lt;li>可能会出现字符看起来很宽，需要配置字符的宽度，默认是 1000，需改成 600。&lt;a href="https://themissy.com/2018/font-tutorial-renaming-font-files-for-duplicates-and-organization" class="uri">https://themissy.com/2018/font-tutorial-renaming-font-files-for-duplicates-and-organization&lt;/a>&lt;/li>
+&lt;li>在制作自己的字体的时候我们会选择编码方式，是 GB 2312 还是 Latin-1 还是 Unicode，注意，这里的编码方式真实含义是字符子集。我们在主界面选择字符时，还是会显示 Unicode（U+开头) 和它的编码()。现在的字符，其实这里没有 Unicode 什么事了，只是我们需要有一个 index 类似的东西来代表唯一性。&lt;/li>
+&lt;li>现代，选字符集只会影响字符范围，而不影响它继续用 Unicode 做 index。旧版的字体确实会有问题。&lt;a href="https://en.wikipedia.org/wiki/Unicode_font" class="uri">https://en.wikipedia.org/wiki/Unicode_font&lt;/a>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="软件内的字符集和编码">软件内的字符集和编码&lt;/h2>
+&lt;p>理论上，软件内部处理逻辑应该先将 bytes 转成 UCS-4，然后逻辑只操作 UCS-4。但是，事实上，很多软件是用 UTF-8 的逻辑的，这样会更简单。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;/th>
+&lt;th>支持多种 encoding&lt;/th>
+&lt;th>备注&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>gnome-terminal&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;td>Edit-&amp;gt;Preference-&amp;gt;Compatibility-&amp;gt;Encoding&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>alacritty&lt;/td>
+&lt;td>❌(only UTF-8)&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>vim&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;td>&lt;code>:help encoding&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>neovim&lt;/td>
+&lt;td>❌(only UTF-8)&lt;/td>
+&lt;td>&lt;code>:help encoding&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>Windows Kernel&lt;/td>
+&lt;td>❌(only UTF-16) 支持输出时转&lt;/td>
+&lt;td>Windows API 多是 UTF-16 的 WCHAR&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Windows 改用 UTF-8 Encoding: &lt;a href="https://superuser.com/a/1435645/1227634" class="uri">https://superuser.com/a/1435645/1227634&lt;/a> （TODO:如何影响的）&lt;/li>
+&lt;/ul>
+&lt;p>这节，由于我们还未介绍 &lt;code>LC_CTYPE&lt;/code>，故而所有的输入均是固定的字节流。更多编码转换的例子详见 &lt;a href="#lc_ctype">&lt;code>LC_CTYPE&lt;/code>&lt;/a>&lt;/p>
+&lt;h3 id="终端模拟器">终端模拟器&lt;/h3>
+&lt;p>终端模拟器的大致工作原理是：终端模拟器这个窗口软件（pts master）会开一个 pts 设备，然后 fork 一个 shell（pts slave），shell 的输入输出设置为 pts 设备。&lt;/p>
+&lt;ul>
+&lt;li>从键盘输入到终端模拟器的 bytes 会被发送到 pts 设备，pts 设备会将 bytes 发送给 pts slave 也就是 shell。shell 解释运行程序。&lt;/li>
+&lt;li>从 shell 输出的 bytes 会被发送到 pts 设备，pts 设备会将 bytes 发送给 pts master 也就是终端模拟器。终端模拟器对收到的 byte 做渲染。&lt;/li>
+&lt;/ul>
+&lt;p>这里的渲染会先将 bytes 用设置的 encoding 转成 Unicode，然后找到字体里面对应的字形，然后画出来。&lt;/p>
+&lt;p>现在很多终端模拟器都只支持 UTF-8 的编码，而 gnome-terminal 可以支持其他形式的编码(Edit-&amp;gt;Preference-&amp;gt;Compatibility-&amp;gt;Encoding)，所以如果在 gnome-terminal 中选用错误的编码会让显示出问题。&lt;/p>
+&lt;p>直接让 &lt;code>printf&lt;/code> 打印不同的 bytes。不同的终端设置会有不同的表现：&lt;/p>
+&lt;div class="sourceCode" id="cb17">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb17-1">&lt;a href="#cb17-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 你好 UTF-8&lt;/span>&lt;/span>
+&lt;span id="cb17-2">&lt;a href="#cb17-2" aria-hidden="true">&lt;/a>&lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\xe4\xbd\xa0\xe5\xa5\xbd\n&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/terminal_comparison_utf8.png" alt="" />&lt;figcaption>terminal comparison UTF-8&lt;/figcaption>
+&lt;/figure>
+&lt;div class="sourceCode" id="cb18">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb18-1">&lt;a href="#cb18-1" aria-hidden="true">&lt;/a>&lt;span class="co"># 你好 GB2312&lt;/span>&lt;/span>
+&lt;span id="cb18-2">&lt;a href="#cb18-2" aria-hidden="true">&lt;/a>&lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\xc4\xe3\xba\xc3&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;figure>
+&lt;img src="./figures/terminal_comparison_gb2312.png" alt="" />&lt;figcaption>terminal comparison GB2312&lt;/figcaption>
+&lt;/figure>
+&lt;p>在上面的终端模拟器的例子中，我们采用的都是 &lt;code>\xHH&lt;/code> 直接打印，为什么不直接用 &lt;code>printf '你好'&lt;/code> 这样呢？因为输入到 shell 里的 &lt;code>你好&lt;/code> 是由终端模拟器发送给 shell 的，字符串的 bytes 是受输入法和终端模拟器的 &lt;code>LC_CTYPE&lt;/code> 的影响。详见 &lt;a href="#locale">locale&lt;/a>&lt;/p>
+&lt;h3 id="vim">vim&lt;/h3>
+&lt;p>vim 有两种 “encoding”：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>encoding&lt;/code>：输出到终端模拟器的字节序，从终端模拟器接收的字节序
+&lt;ul>
+&lt;li>neovim 目前将 encoding 固定成了 UTF-8，这导致了在 GB2312 中的终端模拟器将无法正确显示，毕竟它只会 输出/输入 UTF-8。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;li>&lt;code>fileencoding&lt;/code>: 读取文件时，如何解析字节序。fileencoding 的使用有两种：
+&lt;ul>
+&lt;li>在打开一个文件之后，如果设置 &lt;code>set fileencoding=gdk&lt;/code> 为其他，那么我们写下去的时候就会用新的编码方式存入。&lt;/li>
+&lt;li>通过 &lt;code>:e ++encoding=gbk&lt;/code> 用特定的编码方式去打开文件，这种方式常用于解决打开文件是乱码的情况，虽然大部分文件的 fileencoding 是可以通过 Magic Number 识别的，但还是会有识别出错的情况。
+&lt;ul>
+&lt;li>详见 &lt;code>:help :e&lt;/code> 和 &lt;code>:help ++opt&lt;/code>。&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;h2 id="locale">locale&lt;/h2>
+&lt;p>在明白字符集和编码之后，我们可以来看看最初的问题了。&lt;code>zh_CN.UTF-8&lt;/code> 这些究竟是什么。在 Arch 中我们通过配置 &lt;code>/etc/locale.gen&lt;/code>，然后使用 &lt;code>locale-gen&lt;/code> 来启用对应的语言和本地化支持。但是这个配置到底是什么呢？&lt;/p>
+&lt;p>在&lt;code>/etc/locale.gen&lt;/code>的最顶上,我们会看到&lt;/p>
+&lt;pre class="conf">&lt;code># Configuration file for locale-gen
+#
+# lists of locales that are to be generated by the locale-gen command.
+#
+# Each line is of the form:
+#
+# &amp;lt;locale&amp;gt; &amp;lt;charset&amp;gt;
+#
+# where &amp;lt;locale&amp;gt; is one of the locales given in /usr/share/i18n/locales
+# and &amp;lt;charset&amp;gt; is one of the character sets listed in /usr/share/i18n/charmaps
+#
+# The locale-gen command will generate all the locales,
+# placing them in /usr/lib/locale.
+#
+# A list of supported locales is given in /usr/share/i18n/SUPPORTED
+# and is included in this file. Uncomment the needed locales below.
+#
+en_US.UTF-8 UTF-8
+zh_CN GB2312
+zh_CN.UTF-8 UTF-8&lt;/code>&lt;/pre>
+&lt;p>所以 zh_CN.UTF-8 是 &lt;strong>locale&lt;/strong>, &lt;code>GB2312&lt;/code> 是 &lt;strong>charset&lt;/strong>。&lt;/p>
+&lt;p>我们前面说过，在 Unicode 引入之后，字符集和编码就区分开来了。locale.gen 这里的 &lt;code>charset&lt;/code> 指的是 &lt;code>/usr/share/i18n/charmaps&lt;/code> 其实，这里的 &lt;code>charset&lt;/code> 的含义是：Unicode 字符集的子集和编码方式。&lt;/p>
+&lt;p>什么是 locale？&lt;/p>
+&lt;blockquote>
+&lt;p>A locale is a set of language and cultural rules. These cover aspects such as language for messages, different character sets, lexicographic conventions, and so on. A program needs to be able to determine its locale and act accordingly to be portable to different cultures.&lt;/p>
+&lt;p>man 7 locale&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>Locales are used by glibc and other locale-aware programs or libraries for rendering text, correctly displaying regional monetary values, time and date formats, alphabetic idiosyncrasies, and other locale-specific standards.&lt;/p>
+&lt;p>&lt;a href="https://wiki.archlinux.org/title/Locale" class="uri">https://wiki.archlinux.org/title/Locale&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;p>所以 locale 就是一组语言和文化规则，glibc 提供了一些库函数方便转化。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>LC_ADDRESS&lt;/code>: 地址格式。&lt;/li>
+&lt;li>&lt;code>LC_COLLATE&lt;/code>: 字符在字符表中的顺序。&lt;/li>
+&lt;li>&lt;code>LC_CTYPE&lt;/code>: 选择的字符表 UTF-8/GB 2312，定义了 &lt;code>char *&lt;/code> bytes 的编码，会影响 bytes 到 unicode 的解码或其他各种情况的编解码。&lt;code>upper&lt;/code>, &lt;code>lower&lt;/code> 等字符的转换规则。&lt;/li>
+&lt;li>&lt;code>LC_IDENTIFICATION&lt;/code>: 当前 locale 的 meta data 或者说当前 locale 的属性。&lt;/li>
+&lt;li>&lt;code>LC_MONETARY&lt;/code>: 货币格式。&lt;/li>
+&lt;li>&lt;code>LC_MESSAGES&lt;/code>: &lt;code>gettext&lt;/code> 时选择的翻译文件，以及“是”或“不是” 的翻译。&lt;/li>
+&lt;li>&lt;code>LC_MEASUREMENT&lt;/code>:国际单位还是英制。&lt;/li>
+&lt;li>&lt;code>LC_NAME&lt;/code>: 人名、称呼的格式。&lt;/li>
+&lt;li>&lt;code>LC_NUMERIC&lt;/code>: 数字的格式，逗号、点。&lt;/li>
+&lt;li>&lt;code>LC_PAPER&lt;/code>:纸张的大小, A4 或其他。&lt;/li>
+&lt;li>&lt;code>LC_TELEPHONE&lt;/code>: 电话的格式。&lt;/li>
+&lt;li>&lt;code>LC_TIME&lt;/code>: 时间格式。&lt;/li>
+&lt;li>&lt;code>LC_ALL&lt;/code>: 以上所有。&lt;/li>
+&lt;/ul>
+&lt;p>可以尝试看看 &lt;a href="https://github.com/bminor/glibc/blob/master/localedata/locales/zh_CN">&lt;code>/usr/share/i18n/locales/zh_CN&lt;/code>&lt;/a>, 大部分都非常好看懂 (man 5 locale)。&lt;/p>
+&lt;p>其中 &lt;code>LC_CTYPE&lt;/code> 和 &lt;code>LC_COLLATE&lt;/code> 相对不好理解:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>LC_CTYPE&lt;/code> 的作用是如何解释 bytes，在我们用 &lt;code>mb2wc&lt;/code> 将 &lt;code>char *&lt;/code> 这个 &lt;code>bytes&lt;/code> 转成 unicode 时，我们需要知道该用哪个编码表，使用 UTF-8 呢，还是用 GB 2312 还是其他的码表，确定了编码表，我们才知道这几个 bytes 对应的 unicode 是什么。&lt;/li>
+&lt;li>&lt;code>LC_COLLATE&lt;/code> 就会涉及到字符在字符表中的顺序问题，比如我们都知道英文的 26 字母表，但是还有其他字符如 café 中的 é，它在字母表中的顺序是怎么样的呢？中文的字符呢？这些也有一个规则。&lt;/li>
+&lt;/ul>
+&lt;p>那为什么要分出两个来呢？&lt;code>LC_CTYPE&lt;/code> 在给出编码表的同时给出顺序不就好了？因为不正交，同样的 UTF-8 字符集在 zh_CN 是这个顺序，在 en_US 是另一个顺序。并且 &lt;code>LC_CTYPE&lt;/code> 定义的是 unicode 和 bytes 之间的关系，而 LC_COLLATE 只需对 unicode 排序即可。&lt;/p>
+&lt;p>在 Arch 中我们通过配置 &lt;code>/etc/locale.gen&lt;/code>，然后使用 &lt;code>locale-gen&lt;/code> 来启用对应的语言和本地化支持。&lt;/p>
+&lt;ul>
+&lt;li>Man-Pages:
+&lt;ul>
+&lt;li>&lt;code>man 3 nl_langinfo&lt;/code>：查询当前设置的 locale&lt;/li>
+&lt;/ul>&lt;/li>
+&lt;/ul>
+&lt;p>注意：下面的例子中，使用了其他地区的 locale，先启用才能生效。&lt;/p>
+&lt;h3 id="lc_time-和其他格式相关的-lc">&lt;code>LC_TIME&lt;/code> 和其他格式相关的 &lt;code>LC&lt;/code>&lt;/h3>
+&lt;p>以 &lt;code>LC_TIME&lt;/code> 为例：&lt;/p>
+&lt;pre class="console">&lt;code> ➜ env LC_TIME=en_US.UTF-8 date
+Tue Mar 10 11:55:55 AM CST 2026
+➜ env LC_TIME=zh_CN.UTF-8 date
+2026年 03月 10日 星期二 11:55:55 CST&lt;/code>&lt;/pre>
+&lt;div class="sourceCode" id="cb21">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb21-1">&lt;a href="#cb21-1" aria-hidden="true">&lt;/a>&lt;span class="co">// https://en.cppreference.com/w/c/locale/setlocale.html&lt;/span>&lt;/span>
+&lt;span id="cb21-2">&lt;a href="#cb21-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;locale.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb21-3">&lt;a href="#cb21-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb21-4">&lt;a href="#cb21-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;time.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb21-5">&lt;a href="#cb21-5" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;wchar.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb21-6">&lt;a href="#cb21-6" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb21-7">&lt;a href="#cb21-7" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;libintl.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb21-8">&lt;a href="#cb21-8" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">void&lt;/span>)&lt;/span>
+&lt;span id="cb21-9">&lt;a href="#cb21-9" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb21-10">&lt;a href="#cb21-10" aria-hidden="true">&lt;/a> &lt;span class="co">// the C locale will be UTF-8 enabled English;&lt;/span>&lt;/span>
+&lt;span id="cb21-11">&lt;a href="#cb21-11" aria-hidden="true">&lt;/a> &lt;span class="co">// decimal dot will be German&lt;/span>&lt;/span>
+&lt;span id="cb21-12">&lt;a href="#cb21-12" aria-hidden="true">&lt;/a> &lt;span class="co">// date and time formatting will be Japanese&lt;/span>&lt;/span>
+&lt;span id="cb21-13">&lt;a href="#cb21-13" aria-hidden="true">&lt;/a> setlocale(LC_ALL, &lt;span class="st">&amp;quot;en_US.UTF-8&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb21-14">&lt;a href="#cb21-14" aria-hidden="true">&lt;/a> setlocale(LC_NUMERIC, &lt;span class="st">&amp;quot;de_DE.utf8&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb21-15">&lt;a href="#cb21-15" aria-hidden="true">&lt;/a> setlocale(LC_TIME, &lt;span class="st">&amp;quot;ja_JP.utf8&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb21-16">&lt;a href="#cb21-16" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb21-17">&lt;a href="#cb21-17" aria-hidden="true">&lt;/a> &lt;span class="dt">wchar_t&lt;/span> str[&lt;span class="dv">100&lt;/span>];&lt;/span>
+&lt;span id="cb21-18">&lt;a href="#cb21-18" aria-hidden="true">&lt;/a> &lt;span class="dt">time_t&lt;/span> t = time(NULL);&lt;/span>
+&lt;span id="cb21-19">&lt;a href="#cb21-19" aria-hidden="true">&lt;/a> wcsftime(str, &lt;span class="dv">100&lt;/span>, L&lt;span class="st">&amp;quot;%A %c&amp;quot;&lt;/span>, localtime(&amp;amp;t));&lt;/span>
+&lt;span id="cb21-20">&lt;a href="#cb21-20" aria-hidden="true">&lt;/a> wprintf(L&lt;span class="st">&amp;quot;Number: %.2f&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">Date: %ls&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, &lt;span class="fl">3.14&lt;/span>, str);&lt;/span>
+&lt;span id="cb21-21">&lt;a href="#cb21-21" aria-hidden="true">&lt;/a>}&lt;/span>
+&lt;span id="cb21-22">&lt;a href="#cb21-22" aria-hidden="true">&lt;/a>&lt;span class="co">//Number: 3,14&lt;/span>&lt;/span>
+&lt;span id="cb21-23">&lt;a href="#cb21-23" aria-hidden="true">&lt;/a>&lt;span class="co">//Date: 火曜日 2026年03月10日 11時58分01秒&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="lc_ctype">&lt;code>LC_CTYPE&lt;/code>&lt;/h3>
+&lt;p>我们说 &lt;code>LC_CTYPE&lt;/code> 会同时影响输入和输出的解析，所以对 &lt;code>printf&lt;/code> 来说就是输入什么字节流就打印什么字节流，无法看出区别。但是，我们可以用 &lt;code>\u&lt;/code> 和 &lt;code>\U&lt;/code> 来指定 unicode，这样输入就不再是 bytes，只有输出会是符合 &lt;code>LC_CTYPE&lt;/code>。另外，&lt;code>iconv&lt;/code> 的 &lt;code>-f&lt;/code> 和 &lt;code>-t&lt;/code> 也可以覆盖 &lt;code>LC_CTYPE&lt;/code> 的配置。&lt;/p>
+&lt;h4 id="输入-unicode通过-lc_ctype-控制输出的字节流printf">输入 Unicode，通过 &lt;code>LC_CTYPE&lt;/code> 控制输出的字节流（&lt;code>printf&lt;/code>）&lt;/h4>
+&lt;h5 id="encoding-是-utf-8-的终端模拟器">encoding 是 UTF-8 的终端模拟器&lt;/h5>
+&lt;ul>
+&lt;li>输出 UTF-8&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb22">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb22-1">&lt;a href="#cb22-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb22-2">&lt;a href="#cb22-2" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="ex">xxd&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code>你好
+00000000: e4bd a0e5 a5bd ......&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>输出 GB 2312&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb24">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb24-1">&lt;a href="#cb24-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb24-2">&lt;a href="#cb24-2" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="ex">xxd&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code>��
+00000000: c4e3 ba ...&lt;/code>&lt;/pre>
+&lt;p>我们可以看到，当 shell 输出 GB 2312 的字节流给终端模拟器后，终端模拟器用 UTF-8 解码，发现并非合法 UTF-8，显示的是替换符号（&lt;code>\uFFFD&lt;/code>，该符号含义是该字节转成 Unicode 的符号）。&lt;/p>
+&lt;h5 id="encoding-是-gb-2312-的终端模拟器">encoding 是 GB 2312 的终端模拟器&lt;/h5>
+&lt;ul>
+&lt;li>输出 UTF-8&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb26">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb26-1">&lt;a href="#cb26-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb26-2">&lt;a href="#cb26-2" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="ex">xxd&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code>浣␦濂␦
+00000000: e4bd a0e5 a5bd ......&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>输出 GB 2312&lt;/li>
+&lt;/ul>
+&lt;div class="sourceCode" id="cb28">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb28-1">&lt;a href="#cb28-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>
+&lt;span id="cb28-2">&lt;a href="#cb28-2" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="ex">xxd&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code>你好
+00000000: c4e3 bac3 ....&lt;/code>&lt;/pre>
+&lt;p>我们可以看到，当 shell 输出 UTF-8 的字节流给终端模拟器后，终端模拟器用 GB 2312 解码，三字节的 UTF-8 的字符的前两个 bytes 被解析出来，并将剩下的一个字节用 &lt;a href="https://en.wikipedia.org/wiki/Substitute_character">替代字符 ␦&lt;/a> 填充。&lt;/p>
+&lt;p>也就是说，&lt;code>浣&lt;/code>、&lt;code>濂&lt;/code> 这两个字其实应该是合法的 GB 2312 的字符，对应的编码应该是&lt;/p>
+&lt;pre>&lt;code>e4bd e5a5&lt;/code>&lt;/pre>
+&lt;p>在 GB 2312 的终端中，验证之后确实是：&lt;/p>
+&lt;div class="sourceCode" id="cb31">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb31-1">&lt;a href="#cb31-1" aria-hidden="true">&lt;/a>&lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\xe4\xbd\xe5\xa5&amp;#39;&lt;/span>&lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;pre>&lt;code>浣濂&lt;/code>&lt;/pre>
+&lt;h4 id="输入-unicode通过-lc_ctype-控制输入的字节流iconv">输入 Unicode，通过 &lt;code>LC_CTYPE&lt;/code> 控制输入的字节流（&lt;code>iconv&lt;/code>）&lt;/h4>
+&lt;p>&lt;code>LC_CTYPE&lt;/code> 对 &lt;code>iconv&lt;/code> 也是一样有影响的，但是，&lt;code>iconv&lt;/code> 可以通过 &lt;code>--from-code&lt;/code>/&lt;code>--to-code&lt;/code> 强制指定输入的编码方式。如果不指定，就用 &lt;code>LC_CTYPE&lt;/code> 来编解码。&lt;/p>
+&lt;p>前面，我们说下面的命令在 UTF-8 的终端中会输出不可转义字符 �&lt;/p>
+&lt;div class="sourceCode" id="cb33">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb33-1">&lt;a href="#cb33-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span>&lt;span class="kw">;&lt;/span> &lt;span class="bu">printf&lt;/span> &lt;span class="st">&amp;#39;\n&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>我们可以通过 &lt;code>iconv&lt;/code> 将 &lt;code>GB 2312&lt;/code> 的结果转换，使得输出给终端模拟器的编码是 UTF-8 的，以下几条都是可以的&lt;/p>
+&lt;div class="sourceCode" id="cb34">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb34-1">&lt;a href="#cb34-1" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 iconv -f GB2312 -t UTF-8&lt;/span>
+&lt;span id="cb34-2">&lt;a href="#cb34-2" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 iconv -t UTF-8&lt;/span>
+&lt;span id="cb34-3">&lt;a href="#cb34-3" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 iconv -f GB2312 -t UTF-8&lt;/span>
+&lt;span id="cb34-4">&lt;a href="#cb34-4" aria-hidden="true">&lt;/a>&lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.GB2312 printf &lt;span class="st">&amp;#39;\u4f60\u597d&amp;#39;&lt;/span> &lt;span class="kw">|&lt;/span> &lt;span class="fu">env&lt;/span> LC_CTYPE=zh_CN.UTF-8 iconv -f GB2312&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>后两条命令中，环境很多时候会配置 LANG，LANGUAGE，LC_ALL 检查一下，如果 unset 掉，不加这两条 &lt;code>env&lt;/code> 会用默认的 C.ASCII 来解析&lt;/p>
+&lt;h4 id="lc_ctype-和源码中的-char-字符串">&lt;code>LC_CTYPE&lt;/code> 和源码中的 &lt;code>char *&lt;/code> 字符串&lt;/h4>
+&lt;p>当源码文件和运行环境的编码不统一时，输出的结果是不一样的。&lt;/p>
+&lt;div class="sourceCode" id="cb35">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb35-1">&lt;a href="#cb35-1" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb35-2">&lt;a href="#cb35-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;locale.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb35-3">&lt;a href="#cb35-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;string.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb35-4">&lt;a href="#cb35-4" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb35-5">&lt;a href="#cb35-5" aria-hidden="true">&lt;/a> setlocale(LC_CTYPE, &lt;span class="st">&amp;quot;&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb35-6">&lt;a href="#cb35-6" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> ( argc != &lt;span class="dv">2&lt;/span> ){&lt;/span>
+&lt;span id="cb35-7">&lt;a href="#cb35-7" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%s &amp;lt;strings&amp;gt;&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, argv[&lt;span class="dv">0&lt;/span>]);&lt;/span>
+&lt;span id="cb35-8">&lt;a href="#cb35-8" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb35-9">&lt;a href="#cb35-9" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb35-10">&lt;a href="#cb35-10" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> s[&lt;span class="dv">128&lt;/span>]=&lt;span class="st">&amp;quot;你好&amp;quot;&lt;/span>;&lt;/span>
+&lt;span id="cb35-11">&lt;a href="#cb35-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb35-12">&lt;a href="#cb35-12" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (strcmp(s, argv[&lt;span class="dv">1&lt;/span>]) == &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb35-13">&lt;a href="#cb35-13" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;argv[1] is %s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s);&lt;/span>
+&lt;span id="cb35-14">&lt;a href="#cb35-14" aria-hidden="true">&lt;/a> &lt;span class="cf">else&lt;/span>&lt;/span>
+&lt;span id="cb35-15">&lt;a href="#cb35-15" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;argv[1] is not %s, it is %s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s, argv[&lt;span class="dv">1&lt;/span>]);&lt;/span>
+&lt;span id="cb35-16">&lt;a href="#cb35-16" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb35-17">&lt;a href="#cb35-17" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb35-18">&lt;a href="#cb35-18" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;div class="sourceCode" id="cb36">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb36-1">&lt;a href="#cb36-1" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb36-2">&lt;a href="#cb36-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;locale.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb36-3">&lt;a href="#cb36-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;string.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb36-4">&lt;a href="#cb36-4" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdlib.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb36-5">&lt;a href="#cb36-5" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">int&lt;/span> argc, &lt;span class="dt">char&lt;/span> *argv[]){&lt;/span>
+&lt;span id="cb36-6">&lt;a href="#cb36-6" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> ( argc != &lt;span class="dv">2&lt;/span> ){&lt;/span>
+&lt;span id="cb36-7">&lt;a href="#cb36-7" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;%s &amp;lt;strings&amp;gt;&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, argv[&lt;span class="dv">0&lt;/span>]);&lt;/span>
+&lt;span id="cb36-8">&lt;a href="#cb36-8" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">1&lt;/span>;&lt;/span>
+&lt;span id="cb36-9">&lt;a href="#cb36-9" aria-hidden="true">&lt;/a> }&lt;/span>
+&lt;span id="cb36-10">&lt;a href="#cb36-10" aria-hidden="true">&lt;/a> &lt;span class="co">// 用源码的编码 zh_CN.UTF-8 转成 wchar_t&lt;/span>&lt;/span>
+&lt;span id="cb36-11">&lt;a href="#cb36-11" aria-hidden="true">&lt;/a> setlocale(LC_CTYPE, &lt;span class="st">&amp;quot;zh_CN.UTF-8&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb36-12">&lt;a href="#cb36-12" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> s[&lt;span class="dv">128&lt;/span>]=&lt;span class="st">&amp;quot;你&amp;quot;&lt;/span>;&lt;/span>
+&lt;span id="cb36-13">&lt;a href="#cb36-13" aria-hidden="true">&lt;/a> &lt;span class="dt">wchar_t&lt;/span> wc[&lt;span class="dv">128&lt;/span>]={&lt;span class="dv">0&lt;/span>};&lt;/span>
+&lt;span id="cb36-14">&lt;a href="#cb36-14" aria-hidden="true">&lt;/a> mbtowc(wc, s, MB_CUR_MAX);&lt;/span>
+&lt;span id="cb36-15">&lt;a href="#cb36-15" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb36-16">&lt;a href="#cb36-16" aria-hidden="true">&lt;/a> &lt;span class="co">// 用当前的 locale 转成 char&lt;/span>&lt;/span>
+&lt;span id="cb36-17">&lt;a href="#cb36-17" aria-hidden="true">&lt;/a> setlocale(LC_CTYPE, &lt;span class="st">&amp;quot;&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb36-18">&lt;a href="#cb36-18" aria-hidden="true">&lt;/a> memset(s, &lt;span class="dv">0&lt;/span>, &lt;span class="kw">sizeof&lt;/span>(s)/&lt;span class="kw">sizeof&lt;/span>(&lt;span class="dt">char&lt;/span>));&lt;/span>
+&lt;span id="cb36-19">&lt;a href="#cb36-19" aria-hidden="true">&lt;/a> wctomb(s, wc[&lt;span class="dv">0&lt;/span>]);&lt;/span>
+&lt;span id="cb36-20">&lt;a href="#cb36-20" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb36-21">&lt;a href="#cb36-21" aria-hidden="true">&lt;/a> &lt;span class="cf">if&lt;/span> (strcmp(s, argv[&lt;span class="dv">1&lt;/span>]) == &lt;span class="dv">0&lt;/span>)&lt;/span>
+&lt;span id="cb36-22">&lt;a href="#cb36-22" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;argv[1] is %s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s);&lt;/span>
+&lt;span id="cb36-23">&lt;a href="#cb36-23" aria-hidden="true">&lt;/a> &lt;span class="cf">else&lt;/span>&lt;/span>
+&lt;span id="cb36-24">&lt;a href="#cb36-24" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;argv[1] is not %s, it is %s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, s, argv[&lt;span class="dv">1&lt;/span>]);&lt;/span>
+&lt;span id="cb36-25">&lt;a href="#cb36-25" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb36-26">&lt;a href="#cb36-26" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb36-27">&lt;a href="#cb36-27" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>当然合适的例子应该是用 &lt;code>iconv&lt;/code> 或者 &lt;code>gettext&lt;/code> 来转。这个例子只是想说明输入的 encoding 和源代码的 encoding 不同的情况。&lt;/p>
+&lt;h4 id="ls-文件名">ls 文件名&lt;/h4>
+&lt;p>文件名其实是文件夹 inode 的 data 部分，和普通文件内的文件是一回事。它也是字符串，我们可以用下面的命令或者在 GB 2312 的终端模拟器中创建一个其他编码文件名的文件：&lt;/p>
+&lt;div class="sourceCode" id="cb37">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb37-1">&lt;a href="#cb37-1" aria-hidden="true">&lt;/a>&lt;span class="fu">touch&lt;/span> &lt;span class="va">$(&lt;/span>&lt;span class="bu">echo&lt;/span> 你好&lt;span class="kw">|&lt;/span>&lt;span class="ex">iconv&lt;/span> -t GB2312&lt;span class="va">)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;p>用 ls 查看会发现文件名是一串奇怪的数字&lt;/p>
+&lt;pre>&lt;code> ➜ ls
+&amp;#39;&amp;#39;$&amp;#39;\304\343\272\303&amp;#39;&lt;/code>&lt;/pre>
+&lt;p>这串码其实是八进制数&lt;/p>
+&lt;pre>&lt;code>C4 E3 BA C3&lt;/code>&lt;/pre>
+&lt;p>正是“你好”用 GB 2312 编码的字节，那要如何显示正常呢？对，用 &lt;code>LC_CTYPE&lt;/code>，让 ls 将从文件夹中读到的 &lt;code>char *&lt;/code> 的文件名 bytes 解码时用 GB 2312 去解码即可&lt;/p>
+&lt;pre>&lt;code> ➜ env LC_CTYPE=zh_CN.GB2312 ls
+���&lt;/code>&lt;/pre>
+&lt;p>出现了未知字符，当然因为我们用的是 UTF-8 的终端，解析不了 GB 2312 的字节流，如果用的是 GB 2312 编码的终端，这时显示应该是正常了。在 UTF-8 中，我们可以用 iconv 转一下就可以了。&lt;/p>
+&lt;pre>&lt;code> ➜ env LC_CTYPE=zh_CN.GB2312 ls | iconv -f GB2312
+你好&lt;/code>&lt;/pre>
+&lt;h4 id="终端模拟器和输入法">终端模拟器和输入法&lt;/h4>
+&lt;p>输入字符到终端的过程大概是：&lt;/p>
+&lt;ol type="1">
+&lt;li>Xorg 将键盘键入的字符给到终端管理器&lt;/li>
+&lt;li>终端窗口将字符字节流传输到 fcitx5 的 dbus port&lt;/li>
+&lt;li>然后 fcitx5 把中文字符字节流发回给终端模拟器。&lt;/li>
+&lt;/ol>
+&lt;p>中间用的也是字节流，如果终端管理器配置了 encoding 是 GB 2312 但是没有设置 &lt;code>LC_CTYPE&lt;/code> 会导致无法解析 fcitx5 发回过来的字节流，导致无法输入。（TODO：具体输入法的流程是怎么样的？）&lt;/p>
+&lt;h3 id="lc_collate">&lt;code>LC_COLLATE&lt;/code>&lt;/h3>
+&lt;pre class="console">&lt;code> ➜ echo -e &amp;#39;你\n好&amp;#39; | env LC_COLLATE=en_US.UTF-8 sort
+你
+好
+➤ ~/work/codeset_and_translation
+➜ echo -e &amp;#39;你\n好&amp;#39; | env LC_COLLATE=zh_CN.UTF-8 sort
+好
+你&lt;/code>&lt;/pre>
+&lt;p>我们会看到同样是 UTF-8 的编码，在 &lt;code>zh_CN.UTF-8&lt;/code> 中的排序是以拼音来的。而在 &lt;code>en_US.UTF-8&lt;/code> 中因为 en_US 的表没有关于中文的，所以大概是按 Unicode 序号编码的。&lt;/p>
+&lt;pre class="console">&lt;code> ➜ echo -e &amp;#39;é\ne\nf\nz&amp;#39; | env LC_COLLATE=zh_CN.UTF-8 sort
+e
+é
+f
+z
+➜ echo -e &amp;#39;é\ne\nf\nz&amp;#39; | env LC_COLLATE=C.UTF-8 sort
+e
+f
+z
+é&lt;/code>&lt;/pre>
+&lt;p>在如果是 C，就是拿 codepoint 直接来比较，而&lt;/p>
+&lt;h3 id="lc_messages-和-lc_ctype-交叉使用">&lt;code>LC_MESSAGES&lt;/code> 和 &lt;code>LC_CTYPE&lt;/code> 交叉使用&lt;/h3>
+&lt;p>那么既然分了 LC_MESSAGES 和 LC_CTYPE 了，这两者是否还可以交叉使用？用 &lt;code>ja_JP.UTF-8&lt;/code> 的翻译文件，但是用 &lt;code>zh_TW.BIG5&lt;/code> 的 bytes 来输出。&lt;/p>
+&lt;pre>&lt;code># encoding 是 zh_TW.BIG5 的终端模拟器中执行
+env LC_MESSAGES=ja_JP.UTF_8 LC_CTYPE=zh_TW.BIG5 date aaaaa
+# encoding 是 zh_CN.UTF-8 的终端模拟器中执行
+env LC_MESSAGES=ja_JP.UTF_8 date aaaaa&lt;/code>&lt;/pre>
+&lt;figure>
+&lt;img src="./figures/jp_msg_big5_ctype.png" alt="" />&lt;figcaption>jp msg big5 ctype&lt;/figcaption>
+&lt;/figure>
+&lt;p>我们可以看到，确实，日文翻译中的繁体部分被正确地读取，并用 BIG5 编码出来，终端模拟器正确地解码并渲染出来了。&lt;/p>
+&lt;h3 id="lc_messages-和-gettext">&lt;code>LC_MESSAGES&lt;/code> 和 &lt;code>gettext&lt;/code>&lt;/h3>
+&lt;p>可以用 &lt;code>xgettext&lt;/code> 获取源码中的 &lt;code>gettext&lt;/code> 并生成 &lt;code>po&lt;/code> 文件，修改 &lt;code>po&lt;/code> 文件 meta data 的 charset，用于 msgfmt 或者 gettext 时理解文件内的 bytes 的格式，类似 python 的 encoding&lt;/p>
+&lt;div class="sourceCode" id="cb45">&lt;pre class="sourceCode c">&lt;code class="sourceCode c">&lt;span id="cb45-1">&lt;a href="#cb45-1" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;locale.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb45-2">&lt;a href="#cb45-2" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;stdio.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb45-3">&lt;a href="#cb45-3" aria-hidden="true">&lt;/a>&lt;span class="pp">#include &lt;/span>&lt;span class="im">&amp;lt;libintl.h&amp;gt;&lt;/span>&lt;/span>
+&lt;span id="cb45-4">&lt;a href="#cb45-4" aria-hidden="true">&lt;/a>&lt;span class="dt">int&lt;/span> main(&lt;span class="dt">void&lt;/span>)&lt;/span>
+&lt;span id="cb45-5">&lt;a href="#cb45-5" aria-hidden="true">&lt;/a>{&lt;/span>
+&lt;span id="cb45-6">&lt;a href="#cb45-6" aria-hidden="true">&lt;/a> &lt;span class="co">/* 由于我们没有对 gettext 的参数做本地化转化，所以该参数目前只会影响输出*/&lt;/span>&lt;/span>
+&lt;span id="cb45-7">&lt;a href="#cb45-7" aria-hidden="true">&lt;/a> setlocale(LC_CTYPE, &lt;span class="st">&amp;quot;zh_CN.UTF-8&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb45-8">&lt;a href="#cb45-8" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-9">&lt;a href="#cb45-9" aria-hidden="true">&lt;/a> &lt;span class="co">/* 选 mo LC_MESSAGES 的父目录，即用哪个翻译文件 */&lt;/span>&lt;/span>
+&lt;span id="cb45-10">&lt;a href="#cb45-10" aria-hidden="true">&lt;/a> setlocale(LC_MESSAGES, &lt;span class="st">&amp;quot;zh_CN.GB2312&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb45-11">&lt;a href="#cb45-11" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-12">&lt;a href="#cb45-12" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-13">&lt;a href="#cb45-13" aria-hidden="true">&lt;/a> &lt;span class="co">/* 设置在哪找这个 text domain */&lt;/span>&lt;/span>
+&lt;span id="cb45-14">&lt;a href="#cb45-14" aria-hidden="true">&lt;/a> bindtextdomain(&lt;span class="st">&amp;quot;ben_test&amp;quot;&lt;/span>, &lt;span class="st">&amp;quot;./locale&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb45-15">&lt;a href="#cb45-15" aria-hidden="true">&lt;/a> &lt;span class="co">/* set default text domain */&lt;/span>&lt;/span>
+&lt;span id="cb45-16">&lt;a href="#cb45-16" aria-hidden="true">&lt;/a> textdomain(&lt;span class="st">&amp;quot;ben_test&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb45-17">&lt;a href="#cb45-17" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-18">&lt;a href="#cb45-18" aria-hidden="true">&lt;/a> &lt;span class="co">/* 设置 gettext 输出的 bytes 的 codeset。如果不设置，就会用 LC_CTYPE 的 bytes 来编码。 */&lt;/span>&lt;/span>
+&lt;span id="cb45-19">&lt;a href="#cb45-19" aria-hidden="true">&lt;/a> &lt;span class="co">//bind_textdomain_codeset(&amp;quot;ben_test&amp;quot;, &amp;quot;GB2312&amp;quot;);&lt;/span>&lt;/span>
+&lt;span id="cb45-20">&lt;a href="#cb45-20" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-21">&lt;a href="#cb45-21" aria-hidden="true">&lt;/a> &lt;span class="co">/* gettext：&lt;/span>&lt;/span>
+&lt;span id="cb45-22">&lt;a href="#cb45-22" aria-hidden="true">&lt;/a>&lt;span class="co"> * 1. 根据 LC_MESSAGES(zh_CN.UTF-8)，找到 &amp;lt;text_domain&amp;gt;.mo&lt;/span>&lt;/span>
+&lt;span id="cb45-23">&lt;a href="#cb45-23" aria-hidden="true">&lt;/a>&lt;span class="co"> * 2. 根据 gettext 的参数 byte by byte 比较 msg_id，找到 msg_str 的 bytes&lt;/span>&lt;/span>
+&lt;span id="cb45-24">&lt;a href="#cb45-24" aria-hidden="true">&lt;/a>&lt;span class="co"> * * msgfmt --no-convert 会保留原始 mo 文件的编码格式，而不是统一转换成 UTF-8，原文件不是 UTF-8，并对 gettext 的参数没有转换时有用&lt;/span>&lt;/span>
+&lt;span id="cb45-25">&lt;a href="#cb45-25" aria-hidden="true">&lt;/a>&lt;span class="co"> * 3. 找到 mo 中的 charset（UTF-8/GB2312）作为 iconv 的 from-enconding&lt;/span>&lt;/span>
+&lt;span id="cb45-26">&lt;a href="#cb45-26" aria-hidden="true">&lt;/a>&lt;span class="co"> * 4. 根据 LC_CTYPE/$OUTPUT_CHARSET/bind_textdomain_codeset 作为 iconv 的 to-encoding&lt;/span>&lt;/span>
+&lt;span id="cb45-27">&lt;a href="#cb45-27" aria-hidden="true">&lt;/a>&lt;span class="co"> * 5. iconv 将 mo 中的 bytes 转成输出的 bytes，return&lt;/span>&lt;/span>
+&lt;span id="cb45-28">&lt;a href="#cb45-28" aria-hidden="true">&lt;/a>&lt;span class="co"> */&lt;/span>&lt;/span>
+&lt;span id="cb45-29">&lt;a href="#cb45-29" aria-hidden="true">&lt;/a> &lt;span class="dt">char&lt;/span> *char_translated = gettext(&lt;span class="st">&amp;quot;世&amp;quot;&lt;/span>);&lt;/span>
+&lt;span id="cb45-30">&lt;a href="#cb45-30" aria-hidden="true">&lt;/a> &lt;span class="co">//char *char_translated = gettext(&amp;quot;Hello world!&amp;quot;);&lt;/span>&lt;/span>
+&lt;span id="cb45-31">&lt;a href="#cb45-31" aria-hidden="true">&lt;/a>&lt;/span>
+&lt;span id="cb45-32">&lt;a href="#cb45-32" aria-hidden="true">&lt;/a> printf(&lt;span class="st">&amp;quot;char_translated=%s&lt;/span>&lt;span class="sc">\n&lt;/span>&lt;span class="st">&amp;quot;&lt;/span>, char_translated);&lt;/span>
+&lt;span id="cb45-33">&lt;a href="#cb45-33" aria-hidden="true">&lt;/a> &lt;span class="cf">return&lt;/span> &lt;span class="dv">0&lt;/span>;&lt;/span>
+&lt;span id="cb45-34">&lt;a href="#cb45-34" aria-hidden="true">&lt;/a>}&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
+&lt;h3 id="c.ascii-vs-c.utf-8-vs-en_us.utf-8">&lt;code>C.ASCII&lt;/code> vs &lt;code>C.UTF-8&lt;/code> vs &lt;code>en_US.UTF-8&lt;/code>&lt;/h3>
+&lt;p>&lt;code>C.ASCII&lt;/code> 和后两者的区别就是字符集，C.ASCII 只包含 ASCII 字符，不包含 UTF-8。所以 C.ASCII 无法正确解析非 ASCII 字符，即 UTF-8 中的多字节字符。&lt;/p>
+&lt;p>&lt;code>C.UTF-8&lt;/code> 和 &lt;code>en_US.UTF-8&lt;/code> 用的都是 UTF-8 编码，所以可以正确解析 UTF-8 的 bytes，他们的差别在 locale，也就是区域规则上，例如 C.UTF-8 的 &lt;code>LC_MONETARY&lt;/code> 的货币符号标志 &lt;code>currency_symbol&lt;/code> 是空，而 en_US 的货币符号是 &lt;code>$&lt;/code>，排序也是，&lt;code>C&lt;/code> 是 bytes by bytes 比较，en_US 是用 &lt;code>iso14651_t1&lt;/code>&lt;/p>
+&lt;pre>&lt;code>/usr/share/i18n/locales/C
+/usr/share/i18n/locales/en_US&lt;/code>&lt;/pre>
+&lt;p>既然有 &lt;code>en_XX.UTF-8&lt;/code> 那多一个 &lt;code>C&lt;/code> 虽然用的也是英文也没什么区别吧。&lt;/p>
+&lt;h3 id="locale-gen-的原理">locale-gen 的原理&lt;/h3>
+&lt;p>我们前面已经使用过 &lt;code>iconv&lt;/code> 来尝试编码转换。而 Linux 中提供本地化支持的是 glibc ，也就是说 &lt;code>gettext&lt;/code>，&lt;code>iconv&lt;/code>, &lt;code>mbtowc&lt;/code> 这些库函数都是由 glibc 提供的。常见的 LANG、LC_TIME、LC_ADDRESS 这些环境变量的使用者也都是 glibc，这些环境变量的定义都在 POSIX specification 中。&lt;/p>
+&lt;p>当 glibc 提供编码转换时，那么它必须得知道编码表，只有拿着编码表，它才能将某一字节流转成 unicode，毕竟正如开头所说，同一个编码数字在不同的编码表下对应的字符（或者说 Unicode，因为 Unicode 和字符是一一对应的）是不同的。&lt;/p>
+&lt;p>&lt;code>locale-gen&lt;/code> 是 shell scripts，实际用的是 &lt;code>localedef&lt;/code>，用 &lt;code>strace&lt;/code> 查到，读取的文件结构如下，设计类似设备树中的 &lt;code>dtsi&lt;/code>，有默认的和特异化的配置，&lt;code>dts&lt;/code> 会覆写 &lt;code>dtsi&lt;/code> 中的配置&lt;/p>
+&lt;pre>&lt;code>|- /usr/share/i18n/charmaps/UTF-8.gz // charset 编码表，定义当前编码表下的字符对应的 bytes
+`- /usr/share/i18n/locales/zh_CN // 当前 locale 的各种 LC_*
+|- /usr/share/i18n/locales/i18n // 默认的各种 LC_*
+| `- /usr/share/i18n/locales/i18n_ctype // 默认的 LC_CTYPE
+`- /usr/share/i18n/locales/iso14651_t1_pinyin // pinyin 的 LC_COLLATE
+`- /usr/share/i18n/locales/iso14651_t1_common // 默认的 LC_COLLATE
+...&lt;/code>&lt;/pre>
+&lt;p>这里我们有 &lt;code>iso14651_t1_pinyin&lt;/code> 的 LC_COLLATE，而 &lt;code>zh_TW&lt;/code> 则没有，所以 &lt;code>zh_TW&lt;/code> 是不按照拼音来排序的。&lt;/p>
+&lt;p>最后写入到：/usr/lib/locale/locale-archive&lt;/p>
+&lt;blockquote>
+&lt;p>The full locale-archive is functionally equivalent to the collection of files in the /usr/lib/locale/ directory provided by all language subpackages. &lt;a href="https://www.openeuler.org/en/blog/wangshuo/Using%20glibc%20Locales/Using_glibc_Locales" class="uri">https://www.openeuler.org/en/blog/wangshuo/Using%20glibc%20Locales/Using_glibc_Locales&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>&lt;code>/usr/share/i18n/locales/zh_CN&lt;/code> 制定规则的方式非常直白，可以参考 &lt;code>man 5 locale&lt;/code> 看一看，你会发现，诶？这个居然是在这里定义的，特别是 LC_TIME 的“星期”，“月”&lt;/li>
+&lt;li>&lt;code>/usr/share/i18n/charmaps/UTF-8.gz&lt;/code> ，可以参考 &lt;code>man 5 charmap&lt;/code> 看一看。&lt;/li>
+&lt;/ul>
+&lt;h2 id="see-also">See also&lt;/h2>
+&lt;p>&lt;a href="https://www.theswissbay.ch/pdf/Gentoomen%20Library/Misc/O%27Reilly%20Fonts%20%26%20Encodings.pdf">O’Reilly Fonts &amp;amp; Encodings.pdf&lt;/a>&lt;/p></description></item></channel></rss>
