@@ -13,4 +13,4 @@ article_list: true
 ## Others
 ### [About](about)
 ### [Tags](tags)
-### [RSS](index.xml)
+### [RSS](rss.xml)

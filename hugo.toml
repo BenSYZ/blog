@@ -29,6 +29,9 @@ priority = 0.5
     endLevel = 6
     ordered = true  # 必须设为 true，以便 CSS 针对 <ol> 进行计数
 
+[outputFormats.RSS]
+  baseName = "rss"
+
 [params]
   [params.author]
     name = "Ben"
