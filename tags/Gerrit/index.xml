@@ -1,6 +1,35 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Gerrit on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Gerrit/</link><description>Recent content in Gerrit on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 27 May 2025 16:02:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Gerrit/index.xml" rel="self" type="application/rss+xml"/><item><title>Gerrit Replication</title><link>https://bensyz.github.io/blog/blogs/gerrit_replication/</link><pubDate>Tue, 27 May 2025 16:02:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gerrit_replication/</guid><description>[toc]
-Introduction # Gerrit 官方文档 replication 是 Gerrit 提供的插件：当“主服务器”中的相关仓库更新时，会自动同步到“从服务器”，因而可以实现备份，只允许单向流动。它的实现是：用本地的 Unix 帐号，通过 git 向其他服务器 push “本地 Gerrit 工作目录下 git 子目录下的目录仓库”。
-注意：
-replication 的执行和 Gerrit 软件提供的 git 账户没有关系：
-master 端：它不是用 Gerrit 内部的用户来推送到远端的，而是用“启动 Gerrit 软件的 本地帐号 ” slave 端：接收不是走 Gerrit 开放的 ssh 端口。而是走“本地账户”的 ssh 端口（不全对，可以参考 replication 后记） 由于我希望 slave 端接收到从 master 传过来的 git 后，亦能提供 clone fetch 等只读的服务。而这些服务是受限的，权限信息都在 All-Projects.git, All-Users.git 这两个仓库下，最简单的办法就是 slave 端也用 Gerrit 来发布，以避免权限转化和不统一。同时我还要配置 slave 端设成只读。
-配置 # 启动两个 docker # 启动两个 docker</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Gerrit on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Gerrit/</link><description>Recent content in Gerrit on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 27 May 2025 16:02:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Gerrit/index.xml" rel="self" type="application/rss+xml"/><item><title>Gerrit Replication</title><link>https://bensyz.github.io/blog/blogs/gerrit_replication/</link><pubDate>Tue, 27 May 2025 16:02:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gerrit_replication/</guid><description>&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://gerrit.googlesource.com/plugins/replication/&amp;#43;doc/master/src/main/resources/Documentation/config.md" target="_blank"&gt;Gerrit 官方文档&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;replication&lt;/code&gt; 是 Gerrit 提供的插件：当“主服务器”中的相关仓库更新时，会自动同步到“从服务器”，因而可以实现备份，只允许单向流动。它的实现是：用本地的 Unix 帐号，通过 git 向其他服务器 push “本地 Gerrit 工作目录下 git 子目录下的目录仓库”。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;replication&lt;/code&gt; 的执行和 Gerrit 软件提供的 git 账户没有关系：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;master 端：它不是用 Gerrit 内部的用户来推送到远端的，而是用“启动 Gerrit 软件的 &lt;strong&gt;本地帐号&lt;/strong&gt; ”&lt;/li&gt;
+&lt;li&gt;slave 端：接收不是走 Gerrit 开放的 ssh 端口。而是走“本地账户”的 ssh 端口（不全对，可以参考 replication 后记）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;由于我希望 slave 端接收到从 master 传过来的 git 后，亦能提供 clone fetch 等只读的服务。而这些服务是受限的，权限信息都在 All-Projects.git, All-Users.git 这两个仓库下，最简单的办法就是 slave 端也用 Gerrit 来发布，以避免权限转化和不统一。同时我还要配置 slave 端设成只读。&lt;/p&gt;
+
+
+&lt;h2 id="配置"&gt;
+ 配置
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="启动两个-docker"&gt;
+ 启动两个 docker
+ &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8%e4%b8%a4%e4%b8%aa-docker" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;启动两个 docker&lt;/p&gt;</description></item></channel></rss>

@@ -1,3 +1,124 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>keyboard on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/keyboard/</link><description>Recent content in keyboard on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 30 Jul 2020 14:55:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/keyboard/index.xml" rel="self" type="application/rss+xml"/><item><title>通过修改注册表修改Windows键位为colemak</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</link><pubDate>Thu, 30 Jul 2020 14:55:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</guid><description>我原先发于 CSDN TL; DR # 1. 转 colemak # Windows Registry Editor Version 5.00 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout] &amp;#34;Scancode Map&amp;#34;=hex:00,00,00,00,00,00,00,00,14,00,00,00,3a,00,01,00,01,00,3a,00,\ 21,00,12,00,19,00,13,00,22,00,14,00,24,00,15,00,26,00,16,00,16,00,17,00,15,\ 00,18,00,27,00,19,00,13,00,1f,00,1f,00,20,00,14,00,21,00,20,00,22,00,31,00,\ 24,00,12,00,25,00,17,00,26,00,18,00,27,00,25,00,31,00,00,00,00,00 2. &amp;lt;Esc&amp;gt; &amp;lt;Caps Lock&amp;gt; 互换 # Windows Registry Editor Version 5.00 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout] &amp;#34;Scancode Map&amp;#34;=hex:00,00,00,00,00,00,00,00,03,00,00,00,3a,00,01,00,01,00,3a,00,00,00,00,00,00 问题 # 在Linux中修改键盘为colemak键盘很容易 ：
-# 暂时 setxkbmap us -variant colemak setxkbmap us -variant workman setxkbmap us -variant norman # Ubuntu sudo dpkg-reconfigure keyboard-configuration # Arch loadkeys colemak 但是在Windows中就很麻烦了，有推荐在 这里 下载安装，然后修改这一项注册表\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000804 但是我的使用体验并不好，所以直接修改注册表来映射。
-解决 # 新建一个txt文档，填入下面内容后，修改扩展名为reg，然后双击，也可以手动添加项。</description></item><item><title>为 Linux colemak 修改键</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</link><pubDate>Wed, 26 Feb 2020 09:17:44 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</guid><description>我原先发于 CSDN Change keyboard layout as colemak, and &amp;lt;Esc&amp;gt; with &amp;lt;CapsLock&amp;gt; # For Windows check here TLDR # # tty # /etc/vconsole.conf KEYMAP = colemak # or loadkeys colemak # graphic setxkbmap us -variant colemak change to colemak # Temporary # # tty loadkeys colemak # graphic setxkbmap us -variant colemak 参考 Permanet # # tty (include graphic) # /etc/vconsole.conf KEYMAP = colemak The above way may not work for Ubuntu, so adding setxkbmap us -variant colemak in ~/.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Keyboard on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/keyboard/</link><description>Recent content in Keyboard on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 01 Nov 2021 11:43:31 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/keyboard/index.xml" rel="self" type="application/rss+xml"/><item><title>通过修改注册表修改Windows键位为colemak</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</link><pubDate>Thu, 30 Jul 2020 14:55:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_windows/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="tl-dr"&gt;
+ TL; DR
+ &lt;a class="anchor" href="#tl-dr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="1-转-colemak"&gt;
+ 1. 转 colemak
+ &lt;a class="anchor" href="#1-%e8%bd%ac-colemak" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-reg" data-lang="reg"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Windows Registry Editor Version 5.00
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;[&lt;/span&gt;HKEY_LOCAL_MACHINE&lt;span style="color:#66d9ef"&gt;\SYSTEM\CurrentControlSet\Control\Keyboard Layout]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#34;Scancode Map&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;=&lt;/span&gt;hex:&lt;span style="color:#ae81ff"&gt;00,00,00,00,00,00,00,00,14,00,00,00,3a,00,01,00,01,00,3a,00,&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;\&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;21,00,12,00,19,00,13,00,22,00,14,00,24,00,15,00,26,00,16,00,16,00,17,00,15,\&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;00,18,00,27,00,19,00,13,00,1f,00,1f,00,20,00,14,00,21,00,20,00,22,00,31,00,\&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;24,00,12,00,25,00,17,00,26,00,18,00,27,00,25,00,31,00,00,00,00,00&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="2-esc-caps-lock-互换"&gt;
+ 2. &lt;code&gt;&amp;lt;Esc&amp;gt;&lt;/code&gt; &lt;code&gt;&amp;lt;Caps Lock&amp;gt;&lt;/code&gt; 互换
+ &lt;a class="anchor" href="#2-esc-caps-lock-%e4%ba%92%e6%8d%a2" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-reg" data-lang="reg"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Windows Registry Editor Version 5.00
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;[&lt;/span&gt;HKEY_LOCAL_MACHINE&lt;span style="color:#66d9ef"&gt;\SYSTEM\CurrentControlSet\Control\Keyboard Layout]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;&amp;#34;Scancode Map&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;=&lt;/span&gt;hex:&lt;span style="color:#ae81ff"&gt;00,00,00,00,00,00,00,00,03,00,00,00,3a,00,01,00,01,00,3a,00,00,00,00,00,00&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="问题"&gt;
+ 问题
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="../keyboard_map_linux"&gt;在Linux中修改键盘为colemak键盘很容易&lt;/a&gt;
+：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 暂时&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;setxkbmap us -variant colemak
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;setxkbmap us -variant workman
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;setxkbmap us -variant norman
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Ubuntu&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo dpkg-reconfigure keyboard-configuration
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Arch&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;loadkeys colemak
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是在Windows中就很麻烦了，有推荐在
+
+&lt;a href="https://colemak.com/Windows" target="_blank"&gt;这里&lt;/a&gt;
+下载安装，然后修改这一项注册表&lt;code&gt;\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000804&lt;/code&gt; 但是我的使用体验并不好，所以直接修改注册表来映射。&lt;/p&gt;</description></item><item><title>为 Linux colemak 修改键</title><link>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</link><pubDate>Wed, 26 Feb 2020 09:17:44 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/keyboard_map_linux/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="change-keyboard-layout-as-colemak-and--esc-with-capslock"&gt;
+ Change keyboard layout as colemak, and &lt;code&gt; &amp;lt;Esc&amp;gt;&lt;/code&gt; with &lt;code&gt;&amp;lt;CapsLock&amp;gt;&lt;/code&gt;
+ &lt;a class="anchor" href="#change-keyboard-layout-as-colemak-and--esc-with-capslock" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;For Windows check 
+
+&lt;a href="../keyboard_map_windows"&gt;here&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="tldr"&gt;
+ TLDR
+ &lt;a class="anchor" href="#tldr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# tty&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# /etc/vconsole.conf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;KEYMAP &lt;span style="color:#f92672"&gt;=&lt;/span&gt; colemak
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# or&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;loadkeys colemak
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# graphic&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;setxkbmap us -variant colemak
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="change-to-colemak"&gt;
+ change to colemak
+ &lt;a class="anchor" href="#change-to-colemak" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h4 id="temporary"&gt;
+ Temporary
+ &lt;a class="anchor" href="#temporary" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# tty&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;loadkeys colemak
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# graphic&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;setxkbmap us -variant colemak
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;
+
+&lt;a href="https://www.cnblogs.com/BlackStorm/p/Ubuntu-Switch-Keyboard-Layouts-Such-As-Colemak-Workman-Norman.html" target="_blank"&gt;参考&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h4 id="permanet"&gt;
+ Permanet
+ &lt;a class="anchor" href="#permanet" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# tty (include graphic)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# /etc/vconsole.conf &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;KEYMAP &lt;span style="color:#f92672"&gt;=&lt;/span&gt; colemak
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The above way may not work for Ubuntu, so adding &lt;code&gt;setxkbmap us -variant colemak&lt;/code&gt; in &lt;code&gt;~/.xinitrc&lt;/code&gt; may worked. If not see the next section.&lt;/p&gt;</description></item></channel></rss>

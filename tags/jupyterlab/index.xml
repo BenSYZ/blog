@@ -1,6 +1,132 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>jupyterlab on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/jupyterlab/</link><description>Recent content in jupyterlab on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 03 Aug 2020 23:09:45 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/jupyterlab/index.xml" rel="self" type="application/rss+xml"/><item><title>jupyter-lab里的vim，colemak 配置</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</guid><description>我原先发于 CSDN 上一篇文章 介绍了 jupyter-notebook 怎样 map。jupyterlab 是新一代的 jupyter-notebook， 有点像R-Studio, 有更多的功能了。
-TL; DR # install # For jupyterlab 2.0 jupyter-labextension install @axlair/jupyterlab_vim # vimrc jupyter-labextension install jupyterlab-vimrc config &amp;#34;nmap&amp;#34;: [ [&amp;#34;n&amp;#34;,&amp;#34;j&amp;#34;], [&amp;#34;e&amp;#34;,&amp;#34;k&amp;#34;] ], 安装jupyterlab # pip install --user jupyterlab # or conda activate &amp;lt;env&amp;gt; conda install jupyterlab 安装 extension # 1. vim binding # # jupyterlab 1.0 jupyter labextension install jupyterlab_vim # jupyterlab 2.0 jupyter-labextension install @axlair/jupyterlab_vim 2. vim keymap # jupyter-labextension install jupyterlab-vimrc 配置 # !</description></item><item><title>vim+colemak(keymap)+jupyterlab</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</guid><description>我原先发于 CSDN 推荐使用 jupyter-lab, 见此 TL, DR # install this extension, and change the vim .jupyter/custom/custom.js, map n and e. Reason is that this extension can help you jump from cells to cells.
-change the codemirror in notebook package.
-~/.local/lib/python3.8/site-packages/notebook/static/components/codemirror/keymap/vim.js My example is here Essay # Vimer 很多，所以有作者开发了 jupyter-vim-binding 。 colemaker 很少，而上面的 jupyter-vim-binding 的作者只提供了移动的API，不能做到映射全部的键位。
-我本想修改这个插件来扩展它的功能。从 codemirror 官网下下了 codemirror 的代码，对照了jupyter-vim-binding 对hi(qwert: hl)方向的修改成功了，但是 colemak 向下是n键，所以还需把搜索键引入进来，同样的方法试了一下不行，发现源码中涉及的函数太多，只会照猫画虎。
-弄了一天，终于搜对了关键字 “jupyter notebook 自定义 codemirror”， 谷歌对中文的支持不好，英文搜出来的修改的手段也太官方了，所以一直解决不了，百度搜到了 Jupyter Notebook 更改字体、字体大小、行高 。</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Jupyterlab on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/jupyterlab/</link><description>Recent content in Jupyterlab on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 03 Aug 2020 23:09:45 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/jupyterlab/index.xml" rel="self" type="application/rss+xml"/><item><title>jupyter-lab里的vim，colemak 配置</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_vim_colemak_config/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;
+
+&lt;a href="../jupyterlab_colemak"&gt;上一篇文章&lt;/a&gt;
+ 介绍了 &lt;code&gt;jupyter-notebook&lt;/code&gt; 怎样 &lt;code&gt;map&lt;/code&gt;。&lt;code&gt;jupyterlab&lt;/code&gt; 是新一代的 &lt;code&gt;jupyter-notebook，&lt;/code&gt; 有点像&lt;code&gt;R-Studio&lt;/code&gt;, 有更多的功能了。&lt;/p&gt;
+
+
+&lt;h2 id="tl-dr"&gt;
+ TL; DR
+ &lt;a class="anchor" href="#tl-dr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;install&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# For jupyterlab 2.0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;jupyter-labextension install @axlair/jupyterlab_vim
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# vimrc&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;jupyter-labextension install jupyterlab-vimrc
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;config&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-JSON5" data-lang="JSON5"&gt; &amp;#34;nmap&amp;#34;: [
+ [&amp;#34;n&amp;#34;,&amp;#34;j&amp;#34;],
+ [&amp;#34;e&amp;#34;,&amp;#34;k&amp;#34;]
+ ],
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+
+
+&lt;h2 id="安装jupyterlab"&gt;
+ 安装&lt;code&gt;jupyterlab&lt;/code&gt;
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85jupyterlab" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pip install --user jupyterlab
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# or&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;conda activate &amp;lt;env&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;conda install jupyterlab
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="安装-extension"&gt;
+ 安装 extension
+ &lt;a class="anchor" href="#%e5%ae%89%e8%a3%85-extension" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="1-vim-binding"&gt;
+ 1. vim binding
+ &lt;a class="anchor" href="#1-vim-binding" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# jupyterlab 1.0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;jupyter labextension install jupyterlab_vim
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# jupyterlab 2.0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;jupyter-labextension install @axlair/jupyterlab_vim
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="2-vim-keymap"&gt;
+ 2. vim keymap
+ &lt;a class="anchor" href="#2-vim-keymap" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;jupyter-labextension install jupyterlab-vimrc
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4 id="配置"&gt;
+ 配置
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;![在这里插入图片描述](
+
+&lt;a href="https://img-blog.csdnimg.cn/20200803225854570.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JlblNZWg==,size_16,color_FFFFFF,t_70#pic_center" target="_blank"&gt;https://img-blog.csdnimg.cn/20200803225854570.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JlblNZWg==,size_16,color_FFFFFF,t_70#pic_center&lt;/a&gt;
+ =200x)
+2.
+&lt;img src="https://img-blog.csdnimg.cn/20200803225927188.png#pic_center" alt="在这里插入图片描述"&gt;
+3. 仅供参考&lt;/p&gt;</description></item><item><title>vim+colemak(keymap)+jupyterlab</title><link>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</link><pubDate>Mon, 03 Aug 2020 23:09:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/jupyterlab_colemak/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;推荐使用 jupyter-lab, 
+
+&lt;a href="https://blog.csdn.net/BenSYZ/article/details/107775517" target="_blank"&gt;见此&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="tl-dr"&gt;
+ TL, DR
+ &lt;a class="anchor" href="#tl-dr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;install this extension, and change the &lt;code&gt;vim .jupyter/custom/custom.js&lt;/code&gt;, map &lt;code&gt;n&lt;/code&gt; and &lt;code&gt;e&lt;/code&gt;. Reason is that this extension can help you jump from cells to cells.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;change the codemirror in notebook package.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;~/.local/lib/python3.8/site-packages/notebook/static/components/codemirror/keymap/vim.js
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;My example is 
+
+&lt;a href="https://github.com/BenSYZ/jupyter-vim-binding-colemak/tree/master/colemak" target="_blank"&gt;here&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="essay"&gt;
+ Essay
+ &lt;a class="anchor" href="#essay" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;Vimer 很多，所以有作者开发了
+
+&lt;a href="jupyter-vim-binding"&gt;jupyter-vim-binding&lt;/a&gt;
+。
+colemaker 很少，而上面的 jupyter-vim-binding 的作者只提供了移动的API，不能做到映射全部的键位。&lt;/p&gt;
+&lt;p&gt;我本想修改这个插件来扩展它的功能。从 
+
+&lt;a href="https://codemirror.net/" target="_blank"&gt;codemirror&lt;/a&gt;
+ 官网下下了 codemirror 的代码，对照了jupyter-vim-binding 对&lt;code&gt;hi&lt;/code&gt;(qwert: &lt;code&gt;hl&lt;/code&gt;)方向的修改成功了，但是 colemak 向下是&lt;code&gt;n&lt;/code&gt;键，所以还需把搜索键引入进来，同样的方法试了一下不行，发现源码中涉及的函数太多，只会照猫画虎。&lt;/p&gt;
+&lt;p&gt;弄了一天，终于搜对了关键字 “jupyter notebook 自定义 codemirror”， 谷歌对中文的支持不好，英文搜出来的修改的手段也太官方了，所以一直解决不了，百度搜到了
+
+&lt;a href="https://www.cnblogs.com/ZhangHT97/p/13336975.html" target="_blank"&gt;Jupyter Notebook 更改字体、字体大小、行高&lt;/a&gt;
+。&lt;/p&gt;
+&lt;p&gt;nb! 直接修改 codemirror 在 jupyter 中的源码&lt;/p&gt;</description></item></channel></rss>

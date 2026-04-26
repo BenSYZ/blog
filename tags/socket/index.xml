@@ -1,9 +1,54 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>socket on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/socket/</link><description>Recent content in socket on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 14 Apr 2022 08:36:19 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/socket/index.xml" rel="self" type="application/rss+xml"/><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>C 和 Qt 中 socket 的创建和删除 # [toc]
-C # example code 客户端 # 客户端相对来说比较简单：创建，然后 connect
-connect(sockfd, (SA*)&amp;amp;servaddr, sizeof(servaddr)); 服务端 # 服务端相对来说会复杂一些
-bind(sockfd, (SA*)&amp;amp;servaddr, sizeof(servaddr)); listen(sockfd, 5); connfd = accept(sockfd, (SA*)&amp;amp;cli, &amp;amp;len); 先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket
-从 man 2 accept 可以知道 accept 做了这些事：
-从这个监听的 socket 中取出第一个连接请求 创建一个新的连接着的socket， 返回一个指向这个 socket 的文件描述符 这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。
-文件描述符： # 文件描述符号是 int。
-在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。
-文件描述符在系统中在这里 /proc/&amp;lt;PID&amp;gt;/fd/&amp;lt;fdNum&amp;gt; 虽然新的socket 的描述符还是 21，但它的软连接对象已经变了。</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Socket on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/socket/</link><description>Recent content in Socket on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 14 Apr 2022 08:36:19 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/socket/index.xml" rel="self" type="application/rss+xml"/><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除"&gt;
+ C 和 Qt 中 socket 的创建和删除
+ &lt;a class="anchor" href="#c-%e5%92%8c-qt-%e4%b8%ad-socket-%e7%9a%84%e5%88%9b%e5%bb%ba%e5%92%8c%e5%88%a0%e9%99%a4" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="c"&gt;
+ C
+ &lt;a class="anchor" href="#c" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/" target="_blank"&gt;example code&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="客户端"&gt;
+ 客户端
+ &lt;a class="anchor" href="#%e5%ae%a2%e6%88%b7%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;客户端相对来说比较简单：创建，然后 connect&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;connect&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="服务端"&gt;
+ 服务端
+ &lt;a class="anchor" href="#%e6%9c%8d%e5%8a%a1%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;服务端相对来说会复杂一些&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;bind&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;listen&lt;/span&gt;(sockfd, &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;connfd &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;accept&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;cli, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;len);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p&gt;
+&lt;p&gt;从 &lt;code&gt;man 2 accept&lt;/code&gt; 可以知道 accept 做了这些事：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从这个监听的 socket 中取出第一个连接请求&lt;/li&gt;
+&lt;li&gt;创建一个新的连接着的socket，&lt;/li&gt;
+&lt;li&gt;返回一个指向这个 socket 的文件描述符&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p&gt;
+
+
+&lt;h4 id="文件描述符"&gt;
+ 文件描述符：
+ &lt;a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;p&gt;文件描述符号是 int。&lt;/p&gt;
+&lt;p&gt;在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p&gt;</description></item></channel></rss>

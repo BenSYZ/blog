@@ -1,5 +1,59 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>github on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/github/</link><description>Recent content in github on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 22 Dec 2021 13:36:53 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/github/index.xml" rel="self" type="application/rss+xml"/><item><title>github 使用key 来pull fetch</title><link>https://bensyz.github.io/blog/blogs/github_key/</link><pubDate>Wed, 22 Dec 2021 13:36:53 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/github_key/</guid><description>问题的出现 # github 似乎不能使用帐号密码来push了，我们这里介绍一下如何使用 rsa 密钥对来进行身份认证。
-github 上有 文档 如何操作 # 生成密钥对 # 在~/.ssh下生成 rsa 非对称密钥对，可以把密钥名取为github，可以不用设置密码
-$ cd ~/.ssh/ $ ssh-keygen -t rsa Generating public/private rsa key pair. Enter file in which to save the key (/home/ben/.ssh/id_rsa): github 非对称密钥对在我 ssh 免密登录 里有讲到一点。
-于是我们得到了 github 这一密钥 和 github.pub 这一公钥。将 github.pub 中的内容拷贝出来，一会儿放在 github 上
-将公钥内容拷贝到 github 上 # 点击路径：头像-&amp;gt; Settings -&amp;gt; 左侧SSH and GPG keys 或者直接访问这个链接 https://github.com/settings/keys 然后就是 New SSH key</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Github on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/github/</link><description>Recent content in Github on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 22 Dec 2021 13:36:53 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/github/index.xml" rel="self" type="application/rss+xml"/><item><title>github 使用key 来pull fetch</title><link>https://bensyz.github.io/blog/blogs/github_key/</link><pubDate>Wed, 22 Dec 2021 13:36:53 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/github_key/</guid><description>&lt;h2 id="问题的出现"&gt;
+ 问题的出现
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e7%9a%84%e5%87%ba%e7%8e%b0" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;github 似乎不能使用帐号密码来push了，我们这里介绍一下如何使用 rsa 密钥对来进行身份认证。&lt;/p&gt;
+&lt;p&gt;github 上有
+
+&lt;a href="https://docs.github.com/cn/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account" target="_blank"&gt;文档&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="如何操作"&gt;
+ 如何操作
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e6%93%8d%e4%bd%9c" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="生成密钥对"&gt;
+ 生成密钥对
+ &lt;a class="anchor" href="#%e7%94%9f%e6%88%90%e5%af%86%e9%92%a5%e5%af%b9" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;在&lt;code&gt;~/.ssh&lt;/code&gt;下生成 rsa 非对称密钥对，可以把密钥名取为&lt;code&gt;github&lt;/code&gt;，可以不用设置密码&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-shell" data-lang="shell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ cd ~/.ssh/
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ssh-keygen -t rsa
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Generating public/private rsa key pair.
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Enter file in which to save the key &lt;span style="color:#f92672"&gt;(&lt;/span&gt;/home/ben/.ssh/id_rsa&lt;span style="color:#f92672"&gt;)&lt;/span&gt;: github
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;非对称密钥对在我 
+
+&lt;a href="../rsa_ssh/"&gt;ssh 免密登录&lt;/a&gt;
+里有讲到一点。&lt;/p&gt;
+&lt;p&gt;于是我们得到了 &lt;code&gt;github&lt;/code&gt; 这一密钥 和 &lt;code&gt;github.pub&lt;/code&gt; 这一公钥。将 &lt;code&gt;github.pub&lt;/code&gt; 中的内容拷贝出来，一会儿放在 github 上&lt;/p&gt;
+
+
+&lt;h3 id="将公钥内容拷贝到-github-上"&gt;
+ 将公钥内容拷贝到 github 上
+ &lt;a class="anchor" href="#%e5%b0%86%e5%85%ac%e9%92%a5%e5%86%85%e5%ae%b9%e6%8b%b7%e8%b4%9d%e5%88%b0-github-%e4%b8%8a" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;点击路径：头像-&amp;gt; Settings -&amp;gt; 左侧SSH and GPG keys&lt;/li&gt;
+&lt;li&gt;或者直接访问这个链接 
+
+&lt;a href="https://github.com/settings/keys" target="_blank"&gt;https://github.com/settings/keys&lt;/a&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;&lt;img src="./figures/steps_to_keys.png" alt="steps to keys"&gt;&lt;/th&gt;
+ &lt;th&gt;&lt;img src="./figures/steps_to_keys2.png" alt="steps to keys2"&gt;&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;然后就是 New SSH key&lt;/p&gt;</description></item></channel></rss>

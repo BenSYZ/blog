@@ -1,24 +1,335 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>what happens before do_IRQ on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</link><description>Recent content in what happens before do_IRQ on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 18 Apr 2026 06:51:54 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/index.xml" rel="self" type="application/rss+xml"/><item><title>asm x86 arg</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/</link><pubDate>Sun, 26 Apr 2026 20:43:06 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/</guid><description>内核栈还是用户栈都是从高位往地位变化的，只是用户是从中间往下，内核是从顶上往下
-传参 # // #include &amp;lt;stdio.h&amp;gt; int fn( int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8){ int minus_result=a8-a1; return minus_result; // printf(&amp;#34;%d\n&amp;#34;, minus_result); } int main(){ int var=0xF; var = fn(0, 1, 2, 3, 4, 5, 6, 7, 8); return 0; } fn: pushq %rbp movq %rsp, %rbp movl %edi, -20(%rbp) movl %esi, -24(%rbp) movl %edx, -28(%rbp) movl %ecx, -32(%rbp) movl %r8d, -36(%rbp) movl %r9d, -40(%rbp) movl 32(%rbp), %eax subl -24(%rbp), %eax movl %eax, -4(%rbp) movl -4(%rbp), %eax popq %rbp ret main: pushq %rbp movq %rsp, %rbp subq $16, %rsp movl $15, -4(%rbp) # 0xF # 把 8 7 6 压入栈，前 6 个用寄存器存 pushq $8 pushq $7 pushq $6 movl $5, %r9d movl $4, %r8d movl $3, %ecx movl $2, %edx movl $1, %esi movl $0, %edi # call fn call fn addq $24, %rsp movl %eax, -4(%rbp) movl $0, %eax leave ret 因为这里是 32 位的 int，所以用的是 edi，如果改成 UL，就会是 rdi 了</description></item><item><title>asm x86 reg gs</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_gs/</link><pubDate>Sun, 26 Apr 2026 20:26:46 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_gs/</guid><description>talk with gemini 在 QEMU 的寄存器导出（如使用 info registers 或 -d cpu 时）中，GS 这一行显示的是 x86 段寄存器的完整内部状态，包括它的可见选择子和隐藏的描述符缓存（Shadow Register）。 [1, 2] 你看到的这串数字的含义如下： GS =0000 ffffffff8052a000 ffffffff 00c00100
-0000 (选择子/Selector): 这是 GS 寄存器的“可见”部分。由于值为 0，表示目前没有加载任何有效的段选择子（通常在 64 位模式下很常见，因为 GS 常通过 MSR 寄存器直接设置基地址，而不使用段选择子）。 ffffffff8052a000 (基地址/Base Address): 这是该段对应的线性基地址。在 64 位内核（如 Linux 或 Windows）中，GS 经常被用来指向 线程本地存储 (TLS) 或 内核的数据结构（如 cpu_entry_area）。这里的 ffffffff8052a000 表明它正指向内核空间的一个特定位置。 ffffffff (段界限/Limit): 这是该段的最大偏移量。ffffffff 表示该段的界限是 4GB（在 64 位平坦内存模型中通常被忽略或设为最大值）。 00c00100 (访问属性/Access Rights): 这是该段的属性标志位（通常对应段描述符中的各种权限位，如 DPL、Presence、Type 等）。 [1, 2, 3, 4, 5] 为什么会出现这个特定的值？ # 如果你正在调试 Linux 内核 或 OSDev 项目，这种 GS 状态通常表示：</description></item><item><title>asm x86 mov and lea</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/</link><pubDate>Sat, 18 Apr 2026 14:29:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/</guid><description>mov # # prepare rax rbx movq $1, %rax movq $2, %rbx # mov movq %rax, %rbx # copy content in rax to rbx movq (%rax), %rbx # copy content in memory whose address is recorded in rax to rbx movq %rax, (%rbx) # copy content in rbx to memory whose address is recorded in rbx # movq (%rax), (%rbx) # not allowed: number of operand in memory location at most to one # leaq leaq (%rax), %rbx # copy memory address of a memory whose address is recorded in rax To rbx leaq 8(%rsp), %rbp # copy memory address of a memory whose address is value recorded in rax plus 8 To rbx 直接拷贝和解引用 # mov %rsp, %rbp #改寄存器的内容 mov %rsp, (%rbp) # de-reference 改寄存器指向的内存 括号等同于 C 中 *</description></item><item><title>asm x86 call and stack</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/</link><pubDate>Sat, 18 Apr 2026 11:29:06 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/</guid><description>本文只讨论 C 语言中的函数函数调用，不涉及换栈的操作。
-The CALL instruction in x86-64 assembly automatically decreases the stack pointer (RSP) by 8 bytes to push the return address (RIP) onto the stack. This action ensures the stack points to the top of the new stack frame, effectively allocating space for the return address.
-main # 函数调用前 # +-------------------+ | | ← rbp | main stack var | | main stack var | ← rsp +-------------------+ 在讨论 fn 后我们会知道当前 rbp 指的是谁</description></item><item><title>asm x86 reg name</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/</link><pubDate>Sat, 18 Apr 2026 09:43:56 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/</guid><description>SP: stack pointer, 记录了栈顶在内存中的地址
-BP: base pointer, 记录了栈底在内存中的地址
-IP: instruction pointer, 记录了即将要执行的指令在内存中的地址
-16 位中，他们的名字就是 sp，bp，ip
-32 位中，我们会给这些寄存器的名字加一个前缀 E（Extended）
-64 位中，我们会给这些寄存器的名字加一个前缀 R（Register）
-前缀为什么是 R 查看 # gdb/qemu 中 info register
-和 $sp 类似，$fp（或 $ebp / $rbp）在 GDB 中代表的是基址指针（Base Pointer），通常也被称为帧指针（Frame Pointer）。
-64位全称 (Long) 32位名称 (Double Word) 16位名称 (Word) 8位低位 (Byte) auto bit pseudo-reg in gdb $rsp (Stack Pointer) $esp $sp $spl $sp $rbp (Base Pointer) $ebp $bp $bpl $fp To print 16 bit of sp: force the type</description></item><item><title>linux gs and pda</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</link><pubDate>Fri, 17 Apr 2026 10:33:24 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</guid><description>换栈的时候
-cmoveq %gs:pda_irqstackptr,%rsp cmoveq: Condition MOVe Equal Quadratic (when ZF=1)
-pda: Processor Data Area
-GS: ?? 段选择寄存器之一，常用于 process data area(pda)
-GS qemu 中我们可以看到 GS 是
-GS =0000 ffffffff8052a000 ffffffff 00c00100 GS:offset 等同于 offset(%gs) 但
-%gs:variable_name：常用于访问全局定义的 per-CPU 变量。 offset(%gs)：在手写汇编或计算特定偏移时更为常见。 也就是说上面这段 cmoveq 在条件成立时等同于
-movq pda_irqstackptr(%gs), %rsp linux 中定义了 pda_irqstackptr 宏为 40
-执行完 cmoveq 之后 rsp 确实拿到了地址是 GS+0x28 的内存
-(gdb) x (0xffffffff8052a000 + 0x28) 0xffffffff8052a028 &amp;lt;boot_cpu_pda+40&amp;gt;: 0xffffffff805c0fc0 (gdb) p $rsp $54 = (void *) 0xffffffff805c0fc0 &amp;lt;boot_cpu_stack+16320&amp;gt; GDB 中查看 GS（0xffffffff8052a000） 地址的内存内容是：</description></item><item><title>gdt, tss and switch_to</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</link><pubDate>Wed, 15 Apr 2026 10:56:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</guid><description>Gemini talk TSS 的功能 # 特权级切换与堆栈保存：当处理器从用户态 (Ring 3) 进入内核态 (Ring 0) 时（例如发生中断或系统调用），TSS 提供了内核态所需的堆栈指针 (ESP0/RSP0)。没有它，CPU 将不知道把寄存器压入哪个堆栈，从而导致系统崩溃。 I/O 权限管理：TSS 包含一个 I/O 许可位图 (I/O Permission Bitmap)，操作系统可以用它来精确控制用户进程可以访问哪些硬件端口。 中断堆栈表 (IST)：在 64 位模式下，TSS 引入了 IST，允许某些关键中断（如双重错误 Double Fault）使用独立、预定义的已知良好堆栈，确保即使内核堆栈溢出，系统也能处理异常。 TSS 与 GDT 的关系 # TSS 本身并不是 GDT 的一部分，但它必须在 GDT 中拥有一个描述符 (TSS Descriptor) 才能被使用。
-操作系统在内存中开辟一块空间定义 TSS。 在 GDT 中创建一个描述符，指向该空间的基地址和长度。 通过 LTR (Load Task Register) 指令将 GDT 中的选择子加载到处理器的 TR 寄存器 中，从而激活该 TSS。 现代操作系统（如 Linux 或 Windows） 通常不再为每个进程创建单独的 TSS，而是为每个 CPU 核心维护一个全局 TSS。在进程切换时，内核只需动态更新这个全局 TSS 中的堆栈指针即可。</description></item><item><title>asm AT&amp;T vs intel</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/</link><pubDate>Tue, 14 Apr 2026 22:47:49 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/</guid><description>The primary difference between AT&amp;amp;T and Intel assembly syntax is the operand order. Intel syntax (destination first) is the native format for x86 processors used in Windows and official Intel manuals , while AT&amp;amp;T syntax (source first) is the default for GNU tools like GCC and GDB on Linux/Unix systems. [1, 2, 3]
-Key Syntax Differences # Feature [2, 4, 5, 6, 7] Intel Syntax AT&amp;amp;T Syntax Operand Order Opcode Dest, Src Opcode Src, Dest Register Prefix None (e.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>what happens before do_IRQ on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</link><description>Recent content in what happens before do_IRQ on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 26 Apr 2026 20:43:06 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/index.xml" rel="self" type="application/rss+xml"/><item><title>asm x86 arg</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/</link><pubDate>Sun, 26 Apr 2026 20:43:06 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/</guid><description>&lt;p&gt;内核栈还是用户栈都是从高位往地位变化的，只是用户是从中间往下，内核是从顶上往下&lt;/p&gt;
+
+
+&lt;h2 id="传参"&gt;
+ 传参
+ &lt;a class="anchor" href="#%e4%bc%a0%e5%8f%82" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// #include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;fn&lt;/span&gt;( &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a0, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a1, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a2, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a3, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a4, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a5, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a6, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a7, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a8){
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; minus_result&lt;span style="color:#f92672"&gt;=&lt;/span&gt;a8&lt;span style="color:#f92672"&gt;-&lt;/span&gt;a1;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; minus_result;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#75715e"&gt;// printf(&amp;#34;%d\n&amp;#34;, minus_result);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;(){
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; var&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;0xF&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	var &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;fn&lt;/span&gt;(&lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;6&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;7&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;8&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-asm" data-lang="asm"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;fn:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;pushq&lt;/span&gt;	%rbp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	%rsp, %rbp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%edi, -&lt;span style="color:#ae81ff"&gt;20&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%esi, -&lt;span style="color:#ae81ff"&gt;24&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%edx, -&lt;span style="color:#ae81ff"&gt;28&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%ecx, -&lt;span style="color:#ae81ff"&gt;32&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%r8d, -&lt;span style="color:#ae81ff"&gt;36&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%r9d, -&lt;span style="color:#ae81ff"&gt;40&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#ae81ff"&gt;32&lt;/span&gt;(%rbp), %eax
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;subl&lt;/span&gt;	-&lt;span style="color:#ae81ff"&gt;24&lt;/span&gt;(%rbp), %eax
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%eax, -&lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	-&lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;(%rbp), %eax
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;popq&lt;/span&gt;	%rbp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;ret&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;main:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;pushq&lt;/span&gt;	%rbp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	%rsp, %rbp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;subq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$16&lt;/span&gt;, %rsp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$15&lt;/span&gt;, -&lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;(%rbp) &lt;span style="color:#75715e"&gt;# 0xF
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 把 8 7 6 压入栈，前 6 个用寄存器存
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;pushq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$8&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;pushq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$7&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;pushq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$6&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$5&lt;/span&gt;, %r9d
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$4&lt;/span&gt;, %r8d
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$3&lt;/span&gt;, %ecx
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$2&lt;/span&gt;, %edx
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$1&lt;/span&gt;, %esi
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$0&lt;/span&gt;, %edi
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# call fn
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;call&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;fn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;addq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$24&lt;/span&gt;, %rsp
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	%eax, -&lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;(%rbp)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movl&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$0&lt;/span&gt;, %eax
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;leave&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;ret&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;因为这里是 32 位的 int，所以用的是 edi，如果改成 UL，就会是 rdi 了&lt;/p&gt;</description></item><item><title>asm x86 reg gs</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_gs/</link><pubDate>Sun, 26 Apr 2026 20:26:46 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_gs/</guid><description>&lt;p&gt;
+
+&lt;a href="https://www.google.com/search?q=length&amp;#43;of&amp;#43;GS&amp;#43;reg&amp;amp;client=firefox-b-d&amp;amp;hs=XU3U&amp;amp;sca_esv=8950cf81e29a85fb&amp;amp;sxsrf=ANbL-n6C8PcgEiBLqXnMc0cvhT_yp_Uh4w%3A1776387402487&amp;amp;ei=SoXhaa-tHaKy0PEP3K2cmAo&amp;amp;biw=1280&amp;amp;bih=800&amp;amp;ved=2ahUKEwjK1fqp6POTAxWqAjQIHVnYD4cQ0NsOegQIAxAB&amp;amp;uact=5&amp;amp;sclient=gws-wiz-serp&amp;amp;fbs=ADc_l-Z6XGGbkKmpylZqg2J7ZOuVNvV7jKtLqzLZ63dd2zPtrsojpaijeJRLrp4clUvcwVLqz22G_DDF8uXB52NlEFf5wf7GIq1kUkf2LzqDT3jWEtP6wIPqyN5KEXkAZxwbMJ5yiczr5iL7VhU7UDtQD2riWsGO8Q1G3JjRukKzy5XsVkXEdr-QxhcFl8U7vbRZWG1-mksaTo1a-K3477KjmScZXDYzJw&amp;amp;aep=10&amp;amp;ntc=1&amp;amp;mstk=AUtExfDQ52TjdglgqeP9Awxe5H8wWcFwiH2gDxec7XpfUIeefK3zrHkUUsSc_yT7MBdXllJ2r-rjgMD2XrWvkN5HcmidVmCnONPXuYkuPaeS3RwuEwwfakrmDQthLhnwf2X1TjdNRLthzsgTbZRDRatkLmH5-LdrZben-_XykDQ0vhGAm-qgNJa6wwzQ9AlR7Q3KtVqAVQPLRhYeow8T6sQMlxU_XS6W3LSTYmf_yD4NhQcReD7LpuY_59H46fB0905_OlIIOBkOtMv_sRIefoZ2aZV-8Yalgzo6eigzre2_PoMV67xmCsKjgbQLnU64TuymZqfq0wDIFkII6orixTWjHSUfhgVts8V7fcfqrEVSxZe_-hfwNz5wYFAQEyow7jsGXm4EVUInsfcC_e-b8mSwQyOr1CtZrsCsS8Z3PeTTgPV22fHXrjd560lQtRtumedfK58iUUTb7C8&amp;amp;csuir=1&amp;amp;mtid=v5fhaZqOJJf00PEPr76FoQM&amp;amp;udm=50" target="_blank"&gt;talk with gemini&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;在 QEMU 的寄存器导出（如使用 info registers 或 -d cpu 时）中，GS 这一行显示的是 x86 段寄存器的完整内部状态，包括它的可见选择子和隐藏的描述符缓存（Shadow Register）。 [1, 2]
+你看到的这串数字的含义如下：
+GS =0000 ffffffff8052a000 ffffffff 00c00100&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;0000 (选择子/Selector):
+这是 GS 寄存器的“可见”部分。由于值为 0，表示目前没有加载任何有效的段选择子（通常在 64 位模式下很常见，因为 GS 常通过 MSR 寄存器直接设置基地址，而不使用段选择子）。&lt;/li&gt;
+&lt;li&gt;ffffffff8052a000 (基地址/Base Address):
+这是该段对应的线性基地址。在 64 位内核（如 Linux 或 Windows）中，GS 经常被用来指向 线程本地存储 (TLS) 或 内核的数据结构（如 cpu_entry_area）。这里的 ffffffff8052a000 表明它正指向内核空间的一个特定位置。&lt;/li&gt;
+&lt;li&gt;ffffffff (段界限/Limit):
+这是该段的最大偏移量。ffffffff 表示该段的界限是 4GB（在 64 位平坦内存模型中通常被忽略或设为最大值）。&lt;/li&gt;
+&lt;li&gt;00c00100 (访问属性/Access Rights):
+这是该段的属性标志位（通常对应段描述符中的各种权限位，如 DPL、Presence、Type 等）。 [1, 2, 3, 4, 5]&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="为什么会出现这个特定的值"&gt;
+ 为什么会出现这个特定的值？
+ &lt;a class="anchor" href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bc%9a%e5%87%ba%e7%8e%b0%e8%bf%99%e4%b8%aa%e7%89%b9%e5%ae%9a%e7%9a%84%e5%80%bc" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;如果你正在调试 Linux 内核 或 OSDev 项目，这种 GS 状态通常表示：&lt;/p&gt;</description></item><item><title>asm x86 mov and lea</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/</link><pubDate>Sat, 18 Apr 2026 14:29:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/</guid><description>&lt;h2 id="mov"&gt;
+ mov
+ &lt;a class="anchor" href="#mov" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-asm" data-lang="asm"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# prepare rax rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$1&lt;/span&gt;, %rax
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	&lt;span style="color:#66d9ef"&gt;$2&lt;/span&gt;, %rbx
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# mov
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	%rax, %rbx &lt;span style="color:#75715e"&gt;# copy content in rax to rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	(%rax), %rbx &lt;span style="color:#75715e"&gt;# copy content in memory whose address is recorded in rax to rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;movq&lt;/span&gt;	%rax, (%rbx) &lt;span style="color:#75715e"&gt;# copy content in rbx to memory whose address is recorded in rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#	movq	(%rax), (%rbx) # not allowed: number of operand in memory location at most to one
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# leaq
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;leaq&lt;/span&gt;	(%rax), %rbx &lt;span style="color:#75715e"&gt;# copy memory address of a memory whose address is recorded in rax To rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;leaq&lt;/span&gt;	&lt;span style="color:#ae81ff"&gt;8&lt;/span&gt;(%rsp), %rbp &lt;span style="color:#75715e"&gt;# copy memory address of a memory whose address is value recorded in rax plus 8 To rbx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="直接拷贝和解引用"&gt;
+ 直接拷贝和解引用
+ &lt;a class="anchor" href="#%e7%9b%b4%e6%8e%a5%e6%8b%b7%e8%b4%9d%e5%92%8c%e8%a7%a3%e5%bc%95%e7%94%a8" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-asm" data-lang="asm"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;mov&lt;/span&gt; %rsp, %rbp &lt;span style="color:#75715e"&gt;#改寄存器的内容
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;mov&lt;/span&gt; %rsp, (%rbp) &lt;span style="color:#75715e"&gt;# de-reference 改寄存器指向的内存
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;括号等同于 C 中 &lt;code&gt;*&lt;/code&gt;&lt;/p&gt;</description></item><item><title>asm x86 call and stack</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/</link><pubDate>Sat, 18 Apr 2026 11:29:06 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/</guid><description>&lt;p&gt;本文只讨论 C 语言中的函数函数调用，不涉及换栈的操作。&lt;/p&gt;
+&lt;p&gt;The CALL instruction in x86-64 assembly automatically decreases the stack pointer (RSP) by 8 bytes to push the return address (RIP) onto the stack. This action ensures the stack points to the top of the new stack frame, effectively allocating space for the return address.&lt;/p&gt;
+
+
+&lt;h2 id="main"&gt;
+ main
+ &lt;a class="anchor" href="#main" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="函数调用前"&gt;
+ 函数调用前
+ &lt;a class="anchor" href="#%e5%87%bd%e6%95%b0%e8%b0%83%e7%94%a8%e5%89%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;pre tabindex="0"&gt;&lt;code&gt; +-------------------+
+ | | ← rbp
+ | main stack var |
+ | main stack var | ← rsp
+ +-------------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在讨论 fn 后我们会知道当前 rbp 指的是谁&lt;/p&gt;</description></item><item><title>asm x86 reg name</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/</link><pubDate>Sat, 18 Apr 2026 09:43:56 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/</guid><description>&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;SP: stack pointer, 记录了栈顶在内存中的地址&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;BP: base pointer, 记录了栈底在内存中的地址&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;IP: instruction pointer, 记录了即将要执行的指令在内存中的地址&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;16 位中，他们的名字就是 sp，bp，ip&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;32 位中，我们会给这些寄存器的名字加一个前缀 E（Extended）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;64 位中，我们会给这些寄存器的名字加一个前缀 R（Register）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;
+
+&lt;a href="https://softwareengineering.stackexchange.com/a/127764/469476" target="_blank"&gt;前缀为什么是 R&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="查看"&gt;
+ 查看
+ &lt;a class="anchor" href="#%e6%9f%a5%e7%9c%8b" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;gdb/qemu 中 info register&lt;/p&gt;
+&lt;p&gt;和 $sp 类似，$fp（或 $ebp / $rbp）在 GDB 中代表的是基址指针（Base Pointer），通常也被称为帧指针（Frame Pointer）。&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;64位全称 (Long)&lt;/th&gt;
+ &lt;th&gt;32位名称 (Double Word)&lt;/th&gt;
+ &lt;th&gt;16位名称 (Word)&lt;/th&gt;
+ &lt;th&gt;8位低位 (Byte)&lt;/th&gt;
+ &lt;th&gt;auto bit pseudo-reg in gdb&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;$rsp (Stack Pointer)&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$esp&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$sp&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$spl&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$sp&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;$rbp (Base Pointer)&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$ebp&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$bp&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$bpl&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;$fp&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;To print 16 bit of sp: force the type&lt;/p&gt;</description></item><item><title>linux gs and pda</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</link><pubDate>Fri, 17 Apr 2026 10:33:24 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</guid><description>&lt;p&gt;换栈的时候&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;cmoveq %gs:pda_irqstackptr,%rsp
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;cmoveq: Condition MOVe Equal Quadratic (when ZF=1)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;pda: Processor Data Area&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;GS: ?? 段选择寄存器之一，常用于 process data area(pda)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;GS
+qemu 中我们可以看到 GS 是&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;GS =0000 ffffffff8052a000 ffffffff 00c00100
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;GS:offset 等同于 offset(%gs) 但&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;%gs:variable_name：常用于访问全局定义的 per-CPU 变量。&lt;/li&gt;
+&lt;li&gt;offset(%gs)：在手写汇编或计算特定偏移时更为常见。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;也就是说上面这段 cmoveq 在条件成立时等同于&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;movq pda_irqstackptr(%gs), %rsp
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;linux 中定义了 pda_irqstackptr 宏为 40&lt;/p&gt;
+&lt;p&gt;执行完 cmoveq 之后 rsp 确实拿到了地址是 GS+0x28 的内存&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;(gdb) x (0xffffffff8052a000 + 0x28)
+0xffffffff8052a028 &amp;lt;boot_cpu_pda+40&amp;gt;: 0xffffffff805c0fc0
+(gdb) p $rsp
+$54 = (void *) 0xffffffff805c0fc0 &amp;lt;boot_cpu_stack+16320&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;GDB 中查看 GS（0xffffffff8052a000） 地址的内存内容是：&lt;/p&gt;</description></item><item><title>gdt, tss and switch_to</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</link><pubDate>Wed, 15 Apr 2026 10:56:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</guid><description>&lt;p&gt;
+
+&lt;a href="https://www.google.com/search?client=firefox-b-d&amp;amp;q=what&amp;#43;is&amp;#43;global&amp;#43;descriptor&amp;#43;table&amp;amp;fbs=ADc_l-Z6XGGbkKmpylZqg2J7ZOuVNvV7jKtLqzLZ63dd2zPtrsojpaijeJRLrp4clUvcwVJFwPc3SunfhAadIHhnTsFBVMAAXIZgDnZp5KTskh6spmEAN_m5c9Zl7QQ9S1AEoyH9D4lVpv_wnngMRGAxLVYtAQ0lv6yE5rdDK6YSHRfe9mjQavptxK4vEoFd-TzuKbzrFaNFsrKlv_gEfcxDRavrClfR-Q&amp;amp;ved=2ahUKEwjE3dvK0e6TAxWMDTQIHTwEA6cQ0NsOegQIAxAB&amp;amp;aep=10&amp;amp;ntc=1&amp;amp;mstk=AUtExfAFlhqj7TECPIPnuH2Rfbk4_jTcsVwZGnrXQ9YZFv9GR5c-KZ_wyVy-DWVHuX9hT4IQ2lzAZg3ShTFHZBZuWY2p-WtAwgIxKnnqhXdlG6H1C_v5ER_elvkoz1CHvQBOsIiPIdh7sSBcOnkTdVD17hjcuyTEHNDbOeTsxX-zwaH2Q4SbZovJhpuhTiIL-5jUSCaAIAB1PbvY_MlAXYULYnVaIjMImScqxYKO1JSWaL5_c9lI6BfOMii-WVzAKw-8AVYj-nKH9TuUj-Sz5tf11SkF1ebQCvnW4nzJggLa6fM6JhXMjSBdmqqJRcbBQRGHmsH2CmZDtW5kGQ&amp;amp;csuir=1&amp;amp;mtid=5uDeaeS5OYu90PEPi7KBIQ&amp;amp;udm=50" target="_blank"&gt;Gemini talk&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="tss-的功能"&gt;
+ TSS 的功能
+ &lt;a class="anchor" href="#tss-%e7%9a%84%e5%8a%9f%e8%83%bd" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;特权级切换与堆栈保存：当处理器从用户态 (Ring 3) 进入内核态 (Ring 0) 时（例如发生中断或系统调用），TSS 提供了内核态所需的堆栈指针 (ESP0/RSP0)。没有它，CPU 将不知道把寄存器压入哪个堆栈，从而导致系统崩溃。&lt;/li&gt;
+&lt;li&gt;I/O 权限管理：TSS 包含一个 I/O 许可位图 (I/O Permission Bitmap)，操作系统可以用它来精确控制用户进程可以访问哪些硬件端口。&lt;/li&gt;
+&lt;li&gt;中断堆栈表 (IST)：在 64 位模式下，TSS 引入了 IST，允许某些关键中断（如双重错误 Double Fault）使用独立、预定义的已知良好堆栈，确保即使内核堆栈溢出，系统也能处理异常。&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="tss-与-gdt-的关系"&gt;
+ TSS 与 GDT 的关系
+ &lt;a class="anchor" href="#tss-%e4%b8%8e-gdt-%e7%9a%84%e5%85%b3%e7%b3%bb" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;TSS 本身并不是 GDT 的一部分，但它必须在 GDT 中拥有一个描述符 (TSS Descriptor) 才能被使用。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;操作系统在内存中开辟一块空间定义 TSS。
+在 GDT 中创建一个描述符，指向该空间的基地址和长度。
+通过 LTR (Load Task Register) 指令将 GDT 中的选择子加载到处理器的 TR 寄存器 中，从而激活该 TSS。 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;现代操作系统（如 Linux 或 Windows） 通常不再为每个进程创建单独的 TSS，而是为每个 CPU 核心维护一个全局 TSS。在进程切换时，内核只需动态更新这个全局 TSS 中的堆栈指针即可。&lt;/p&gt;</description></item><item><title>asm AT&amp;T vs intel</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/</link><pubDate>Tue, 14 Apr 2026 22:47:49 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/</guid><description>&lt;p&gt;The primary difference between AT&amp;amp;T and Intel assembly syntax is the operand order. Intel syntax (destination first) is the native format for x86 processors used in Windows and official 
+
+&lt;a href="https://imada.sdu.dk/~kslarsen/dm546/Material/IntelnATT.htm" target="_blank"&gt;Intel manuals&lt;/a&gt;
+, while AT&amp;amp;T syntax (source first) is the default for 
+
+&lt;a href="https://stackoverflow.com/questions/972602/limitations-of-intel-assembly-syntax-compared-to-att" target="_blank"&gt;GNU tools&lt;/a&gt;
+ like GCC and GDB on Linux/Unix systems. [1, 2, 3]&lt;/p&gt;
+
+
+&lt;h2 id="key-syntax-differences"&gt;
+ Key Syntax Differences
+ &lt;a class="anchor" href="#key-syntax-differences" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Feature [2, 4, 5, 6, 7]&lt;/th&gt;
+ &lt;th&gt;Intel Syntax&lt;/th&gt;
+ &lt;th&gt;AT&amp;amp;T Syntax&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Operand Order&lt;/td&gt;
+ &lt;td&gt;Opcode Dest, Src&lt;/td&gt;
+ &lt;td&gt;Opcode Src, Dest&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Register Prefix&lt;/td&gt;
+ &lt;td&gt;None (e.g., eax)&lt;/td&gt;
+ &lt;td&gt;% (e.g., %eax)&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Immediate Value&lt;/td&gt;
+ &lt;td&gt;None (e.g., 5)&lt;/td&gt;
+ &lt;td&gt;$ (e.g., $5)&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Size Suffixes&lt;/td&gt;
+ &lt;td&gt;Explicit specifiers (dword ptr)&lt;/td&gt;
+ &lt;td&gt;Suffixes on mnemonics (movl)&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;Memory Access&lt;/td&gt;
+ &lt;td&gt;[base + index*scale + disp]&lt;/td&gt;
+ &lt;td&gt;disp(base, index, scale)&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+
+
+&lt;h2 id="detailed-breakdown"&gt;
+ Detailed Breakdown
+ &lt;a class="anchor" href="#detailed-breakdown" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Operand Direction: In Intel syntax, mov eax, 1 means &amp;ldquo;move 1 into eax&amp;rdquo; (reads like a variable assignment: eax = 1). In AT&amp;amp;T syntax, movl $1, %eax means &amp;ldquo;move 1 into eax&amp;rdquo; (reads like a function call or English sentence: &amp;ldquo;move 1 to eax&amp;rdquo;).&lt;/li&gt;
+&lt;li&gt;Memory Addressing: Intel uses a mathematical expression inside brackets, which many find more intuitive. AT&amp;amp;T uses a comma-separated format where the displacement is outside the parentheses, e.g., 8(%ebp, %ecx, 4).&lt;/li&gt;
+&lt;li&gt;Instruction Suffixes: AT&amp;amp;T uses a letter at the end of the instruction to denote data size: b (byte), w (word), l (long/32-bit), and q (quad/64-bit). Intel handles this with prefixes like byte ptr or qword ptr when the size is not clear from the registers. [2, 8, 9, 10, 11, 12]&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="which-one-should-you-use"&gt;
+ Which One Should You Use?
+ &lt;a class="anchor" href="#which-one-should-you-use" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Use Intel if you are developing for Windows (MASM/NASM), doing reverse engineering (IDA Pro/Ghidra default to Intel), or following official 
+
+&lt;a href="https://www.reddit.com/r/osdev/comments/sz65bk/intel_or_att_syntax_assembly_for_x86_64/" target="_blank"&gt;Intel/AMD documentation&lt;/a&gt;
+.&lt;/li&gt;
+&lt;li&gt;Use 
+
+&lt;a href="https://www.att.com/" target="_blank"&gt;AT&amp;amp;T&lt;/a&gt;
+ if you are writing inline assembly for 
+
+&lt;a href="https://marcelofern.com/posts/asm/att-vs-intel-syntax/index.html" target="_blank"&gt;GCC or Clang&lt;/a&gt;
+ or working extensively in the Linux kernel where it is the established standard. [1, 8, 13, 14]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Note: Most modern tools allow you to switch. For example, in GDB, you can use set disassembly-flavor intel to see Intel syntax instead of the default AT&amp;amp;T. [8]
+Are you working on a specific project, like a Linux driver or a Windows application, that requires one of these?&lt;/p&gt;</description></item></channel></rss>

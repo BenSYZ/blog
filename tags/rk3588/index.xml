@@ -1,5 +1,43 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>rk3588 on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/rk3588/</link><description>Recent content in rk3588 on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 23 Nov 2023 10:51:55 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/rk3588/index.xml" rel="self" type="application/rss+xml"/><item><title>RK3588 PCIe Introduction</title><link>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</link><pubDate>Thu, 23 Nov 2023 10:51:55 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</guid><description>Intro # 起因是发现启动的时候 PCIe 有关于 fe160000 的报错信息:
-[ 1.712561] rk-pcie fe160000.pcie: invalid prsnt-gpios property in node [ 1.728638] rk-pcie fe160000.pcie: IRQ msi not found [ 1.728645] rk-pcie fe160000.pcie: use outband MSI support [ 1.728647] rk-pcie fe160000.pcie: Missing *config* reg space [ 1.728660] rk-pcie fe160000.pcie: host bridge /pcie@fe160000 ranges: [ 1.728670] rk-pcie fe160000.pcie: err 0x00f1000000..0x00f10fffff -&amp;gt; 0x00f1000000 [ 1.728677] rk-pcie fe160000.pcie: IO 0x00f1100000..0x00f11fffff -&amp;gt; 0x00f1100000 [ 1.728686] rk-pcie fe160000.pcie: MEM 0x00f1200000.</description></item><item><title>about rk3588 disk partitions(未完待续) and fdisk, dd</title><link>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</link><pubDate>Wed, 16 Aug 2023 09:28:51 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</guid><description>推荐文档：
-Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf
-以前在 Windows 上 用 RKDevTool_Release.exe 烧录镜像时一直有个疑惑： miniloader 和 parameter 的地址为什么是 0x0，好像是烧到其他地方去了，并且 lsblk 也看不到这两个文件所在的分区。
-$ lsblk NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT mmcblk0 179:0 0 14.6G 0 disk ├─mmcblk0p1 179:1 0 4M 0 part ├─mmcblk0p2 179:2 0 4M 0 part ├─mmcblk0p3 179:3 0 64M 0 part ├─mmcblk0p4 179:4 0 128M 0 part ├─mmcblk0p5 179:5 0 32M 0 part ├─mmcblk0p6 179:6 0 14G 0 part / ├─mmcblk0p7 179:7 0 128M 0 part /oem └─mmcblk0p8 179:8 0 206M 0 part /userdata mmcblk0boot0 179:32 0 4M 1 disk mmcblk0boot1 179:64 0 4M 1 disk 这两天在看 uboot 的文档时，Rockchip_Developer_Guide_UBoot_Nextdev_CN.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rk3588 on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/rk3588/</link><description>Recent content in Rk3588 on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 06 Oct 2024 12:09:02 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/rk3588/index.xml" rel="self" type="application/rss+xml"/><item><title>RK3588 PCIe Introduction</title><link>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</link><pubDate>Thu, 23 Nov 2023 10:51:55 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/rk3588_PCIe_intro/</guid><description>&lt;h2 id="intro"&gt;
+ Intro
+ &lt;a class="anchor" href="#intro" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;起因是发现启动的时候 PCIe 有关于 &lt;code&gt;fe160000&lt;/code&gt; 的报错信息:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-dmesg" data-lang="dmesg"&gt;[ 1.712561] rk-pcie fe160000.pcie: invalid prsnt-gpios property in node
+[ 1.728638] rk-pcie fe160000.pcie: IRQ msi not found
+[ 1.728645] rk-pcie fe160000.pcie: use outband MSI support
+[ 1.728647] rk-pcie fe160000.pcie: Missing *config* reg space
+[ 1.728660] rk-pcie fe160000.pcie: host bridge /pcie@fe160000 ranges:
+[ 1.728670] rk-pcie fe160000.pcie: err 0x00f1000000..0x00f10fffff -&amp;gt; 0x00f1000000
+[ 1.728677] rk-pcie fe160000.pcie: IO 0x00f1100000..0x00f11fffff -&amp;gt; 0x00f1100000
+[ 1.728686] rk-pcie fe160000.pcie: MEM 0x00f1200000..0x00f1ffffff -&amp;gt; 0x00f1200000
+[ 1.728691] rk-pcie fe160000.pcie: MEM 0x0940000000..0x097fffffff -&amp;gt; 0x0940000000
+[ 1.728712] rk-pcie fe160000.pcie: Missing *config* reg space
+[ 1.728739] rk-pcie fe160000.pcie: invalid resource
+[ 1.934114] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 1.959670] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x1
+[ 1.986337] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.013002] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.043004] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 2.069669] rk-pcie fe160000.pcie: PCIe Linking... LTSSM is 0x0
+[ 4.629670] rk-pcie fe160000.pcie: PCIe Link Fail
+[ 4.629679] rk-pcie fe160000.pcie: failed to initialize host
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;于是阅读 RK3588 SDK 中关于 PCIe 的文档 &lt;code&gt;docs/cn/Common/PCIe/Rockchip_Developer_Guide_PCIe_CN.pdf&lt;/code&gt;，想了解这个错究竟是什么，对于纯新手的我来说不是很好理解，因而边画，边学习，整理如下，如有错误之处，还请谅解并告知于我，十分感谢。&lt;/p&gt;</description></item><item><title>about rk3588 disk partitions(未完待续) and fdisk, dd</title><link>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</link><pubDate>Wed, 16 Aug 2023 09:28:51 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_rk3588_disk_partitions_and_fdisk_dd/</guid><description>&lt;p&gt;推荐文档：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;以前在 Windows 上 用 &lt;code&gt;RKDevTool_Release.exe&lt;/code&gt; 烧录镜像时一直有个疑惑： &lt;code&gt;miniloader&lt;/code&gt; 和 &lt;code&gt;parameter&lt;/code&gt; 的地址为什么是 &lt;code&gt;0x0&lt;/code&gt;，好像是烧到其他地方去了，并且 &lt;code&gt;lsblk&lt;/code&gt; 也看不到这两个文件所在的分区。&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/rk_burn_window.png" alt="rk_burn_window"&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ lsblk
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;mmcblk0 179:0 0 14.6G 0 disk
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p1 179:1 0 4M 0 part
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p2 179:2 0 4M 0 part
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p3 179:3 0 64M 0 part
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p4 179:4 0 128M 0 part
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p5 179:5 0 32M 0 part
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p6 179:6 0 14G 0 part /
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;├─mmcblk0p7 179:7 0 128M 0 part /oem
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;└─mmcblk0p8 179:8 0 206M 0 part /userdata
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;mmcblk0boot0 179:32 0 4M 1 disk
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;mmcblk0boot1 179:64 0 4M 1 disk
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这两天在看 uboot 的文档时，&lt;code&gt;Rockchip_Developer_Guide_UBoot_Nextdev_CN.pdf&lt;/code&gt; 看到 &lt;code&gt;2.6 存储布局&lt;/code&gt; 这个疑惑接被解决了。&lt;/p&gt;</description></item></channel></rss>

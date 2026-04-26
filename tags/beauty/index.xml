@@ -1,8 +1,51 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>beauty on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/beauty/</link><description>Recent content in beauty on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Apr 2022 12:23:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/beauty/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell echo 输出带样式 (style) 的文字</title><link>https://bensyz.github.io/blog/blogs/shell_color/</link><pubDate>Mon, 04 Apr 2022 12:23:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_color/</guid><description>Introduction # 好久没明白 Shell 的格式化输出，这次看了一些资料，整理了一下。
-Method &amp;amp; Result # 我们知道 shell 可以用 -e 来转义 \n 这些符号。由于样式输出也是特殊的输出，所以要使用样式输出也要打开这个开关。那如何表示样式的符号是什么呢？基本格式是这样
-\033[ + 样式码 + m + &amp;#34;要打印的字符&amp;#34; 这里的样式码就是一些数字，比如 1 代表加粗，32 代表绿色：
-#!/bin/sh echo -e &amp;#39;\033[1mBold&amp;#39; echo -e &amp;#39;\033[32mGreen&amp;#39; 样式的分开 # 由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：
-#!/bin/sh echo -e &amp;#39;\033[1mBold&amp;#39; &amp;#39;\033[32mGreen&amp;#39; 所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。
-#!/bin/sh echo -e &amp;#39;\033[1mBold\033[0m&amp;#39; &amp;#39;\033[32mGreen\033[0m&amp;#39; 样式的合并 # 根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:
-#!/bin/sh echo -e &amp;#39;\033[1m\033[32mBold and Green\033[0m&amp;#39; 它有个简略的写法：用分号 ; 分开两个样式码。比如加粗又加绿:
-#!/bin/sh echo -e &amp;#39;\033[1;32mBold and Green\033[0m&amp;#39; 列出 Shell 支持的所有样式： # 我们可以用一个小的脚本来列出所有样式</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Beauty on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/beauty/</link><description>Recent content in Beauty on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 04 Apr 2022 12:23:29 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/beauty/index.xml" rel="self" type="application/rss+xml"/><item><title>Shell echo 输出带样式 (style) 的文字</title><link>https://bensyz.github.io/blog/blogs/shell_color/</link><pubDate>Mon, 04 Apr 2022 12:23:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_color/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;好久没明白 Shell 的格式化输出，这次看了一些资料，整理了一下。&lt;/p&gt;
+
+
+&lt;h2 id="method--result"&gt;
+ Method &amp;amp; Result
+ &lt;a class="anchor" href="#method--result" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;我们知道 shell 可以用 &lt;code&gt;-e&lt;/code&gt; 来转义 &lt;code&gt;\n&lt;/code&gt; 这些符号。由于样式输出也是特殊的输出，所以要使用样式输出也要打开这个开关。那如何表示样式的符号是什么呢？基本格式是这样&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;\033[ + 样式码 + m + &amp;#34;要打印的字符&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的样式码就是一些数字，比如 &lt;code&gt;1&lt;/code&gt; 代表加粗，&lt;code&gt;32&lt;/code&gt; 代表绿色：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold.png" alt="bold"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/green.png" alt="green"&gt;&lt;/p&gt;
+
+
+&lt;h3 id="样式的分开"&gt;
+ 样式的分开
+ &lt;a class="anchor" href="#%e6%a0%b7%e5%bc%8f%e7%9a%84%e5%88%86%e5%bc%80" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold&amp;#39;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_mixed.png" alt="bold_and_green_mixed"&gt;&lt;/p&gt;
+&lt;p&gt;所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold\033[0m&amp;#39;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_seperated.png" alt="bold_and_green_seperated"&gt;&lt;/p&gt;
+
+
+&lt;h3 id="样式的合并"&gt;
+ 样式的合并
+ &lt;a class="anchor" href="#%e6%a0%b7%e5%bc%8f%e7%9a%84%e5%90%88%e5%b9%b6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1m\033[32mBold and Green\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_together.png" alt="bold_and_green_together"&gt;&lt;/p&gt;
+&lt;p&gt;它有个简略的写法：用分号 &lt;code&gt;;&lt;/code&gt; 分开两个样式码。比如加粗又加绿:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1;32mBold and Green\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_together_simpler.png" alt="bold_and_green_together_simpler"&gt;&lt;/p&gt;</description></item></channel></rss>

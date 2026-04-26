@@ -1,14 +1,130 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>c on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/c/</link><description>Recent content in c on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Jun 2023 07:48:40 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/c/index.xml" rel="self" type="application/rss+xml"/><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>2023-06-06 update: # windows does not support shell basename. Makefile native support basname like, it&amp;rsquo;s notdir.
-contents # Since gcc-12, gcc native support __FILE_NAME__ macro. ref Here we provide some methods to make gcc version lower than 12 support __FILE_NAME__:
-Makefile:
-CXX_FLAGS+=-D__FILE_NAME__=\&amp;#34;$(notdir $&amp;lt;)\&amp;#34; test: test.c gcc-7 $(CXX_FLAGS) $&amp;lt; Qt pro:
-DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;#34;$(notdir $&amp;lt;)\\\&amp;#34;&amp;#39; Some information of macro is at here .</description></item><item><title>about nested struct and anonymous struct in c</title><link>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</link><pubDate>Sat, 20 May 2023 16:55:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</guid><description>看书的时候没明白一个 macro 的用法，搜了一下，发现这个 问题 ，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个 问题 ，一下把我能想到的关于结构体的情况都写出来了
-struct s { int abc; struct { int a; }; struct { int b; } intern; struct i { int c; }; struct i2 { int d; } intern2; struct i3 { int e; }; struct i3 intern3; }; struct i3 AA; int main(int argc, char const *argv[]) { struct s mystruct; mystruct.abc = 0; mystruct.a = 1; mystruct.intern.b = 2; mystruct.</description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>C 和 Qt 中 socket 的创建和删除 # [toc]
-C # example code 客户端 # 客户端相对来说比较简单：创建，然后 connect
-connect(sockfd, (SA*)&amp;amp;servaddr, sizeof(servaddr)); 服务端 # 服务端相对来说会复杂一些
-bind(sockfd, (SA*)&amp;amp;servaddr, sizeof(servaddr)); listen(sockfd, 5); connfd = accept(sockfd, (SA*)&amp;amp;cli, &amp;amp;len); 先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket
-从 man 2 accept 可以知道 accept 做了这些事：
-从这个监听的 socket 中取出第一个连接请求 创建一个新的连接着的socket， 返回一个指向这个 socket 的文件描述符 这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。
-文件描述符： # 文件描述符号是 int。
-在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。
-文件描述符在系统中在这里 /proc/&amp;lt;PID&amp;gt;/fd/&amp;lt;fdNum&amp;gt; 虽然新的socket 的描述符还是 21，但它的软连接对象已经变了。</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>C on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/c/</link><description>Recent content in C on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 06 Jun 2023 05:55:00 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/c/index.xml" rel="self" type="application/rss+xml"/><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>&lt;h2 id="2023-06-06-update"&gt;
+ 2023-06-06 update:
+ &lt;a class="anchor" href="#2023-06-06-update" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;windows does not support shell basename. Makefile native support &lt;code&gt;basname&lt;/code&gt; like, it&amp;rsquo;s &lt;code&gt;notdir&lt;/code&gt;.&lt;/p&gt;
+
+
+&lt;h2 id="contents"&gt;
+ contents
+ &lt;a class="anchor" href="#contents" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;Since gcc-12, gcc native support &lt;code&gt;__FILE_NAME__&lt;/code&gt; macro. 
+
+&lt;a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=42579" target="_blank"&gt;ref&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;Here we provide some methods to make gcc version lower than 12 support &lt;code&gt;__FILE_NAME__&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;Makefile:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-make" data-lang="make"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;CXX_FLAGS&lt;span style="color:#f92672"&gt;+=&lt;/span&gt;-D__FILE_NAME__&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;\&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;notdir $&amp;lt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;\&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;test&lt;/span&gt;&lt;span style="color:#f92672"&gt;:&lt;/span&gt; test.c
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	gcc-7 &lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;CXX_FLAGS&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt; $&amp;lt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Qt pro:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-config" data-lang="config"&gt;DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;#34;$(notdir $&amp;lt;)\\\&amp;#34;&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Some information of macro is at 
+
+&lt;a href="../macro_in_gcc_Makefile_qmake"&gt;here&lt;/a&gt;
+.&lt;/p&gt;</description></item><item><title>about nested struct and anonymous struct in c</title><link>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</link><pubDate>Sat, 20 May 2023 16:55:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_nested_struct_and_anonymous_struct_in_c/</guid><description>&lt;p&gt;看书的时候没明白一个 macro 的用法，搜了一下，发现这个
+
+&lt;a href="https://stackoverflow.com/questions/58346036/c-c-macro-parameter-containing-dot-member-access-operator" target="_blank"&gt;问题&lt;/a&gt;
+，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个
+
+&lt;a href="https://stackoverflow.com/questions/38457109/c-how-to-access-different-types-of-anonymous-or-unnamed-nested-structs/38457240" target="_blank"&gt;问题&lt;/a&gt;
+，一下把我能想到的关于结构体的情况都写出来了&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; s {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; abc;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } intern;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; i {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; i2 {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; d;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } intern2;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; i3 {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; e;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; i3 intern3;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; i3 AA;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; argc, &lt;span style="color:#66d9ef"&gt;char&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#f92672"&gt;*&lt;/span&gt;argv[])
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; s mystruct;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.abc &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.a &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.intern.b &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.c &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt;; &lt;span style="color:#75715e"&gt;// &amp;lt;-- does not compile
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.intern2.d &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;4&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mystruct.intern3.e &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; AA.e&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;两个回答都很好：&lt;/p&gt;</description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除"&gt;
+ C 和 Qt 中 socket 的创建和删除
+ &lt;a class="anchor" href="#c-%e5%92%8c-qt-%e4%b8%ad-socket-%e7%9a%84%e5%88%9b%e5%bb%ba%e5%92%8c%e5%88%a0%e9%99%a4" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="c"&gt;
+ C
+ &lt;a class="anchor" href="#c" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/" target="_blank"&gt;example code&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="客户端"&gt;
+ 客户端
+ &lt;a class="anchor" href="#%e5%ae%a2%e6%88%b7%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;客户端相对来说比较简单：创建，然后 connect&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;connect&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="服务端"&gt;
+ 服务端
+ &lt;a class="anchor" href="#%e6%9c%8d%e5%8a%a1%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;服务端相对来说会复杂一些&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;bind&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;listen&lt;/span&gt;(sockfd, &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;connfd &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;accept&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;cli, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;len);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p&gt;
+&lt;p&gt;从 &lt;code&gt;man 2 accept&lt;/code&gt; 可以知道 accept 做了这些事：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从这个监听的 socket 中取出第一个连接请求&lt;/li&gt;
+&lt;li&gt;创建一个新的连接着的socket，&lt;/li&gt;
+&lt;li&gt;返回一个指向这个 socket 的文件描述符&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p&gt;
+
+
+&lt;h4 id="文件描述符"&gt;
+ 文件描述符：
+ &lt;a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;p&gt;文件描述符号是 int。&lt;/p&gt;
+&lt;p&gt;在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p&gt;</description></item></channel></rss>

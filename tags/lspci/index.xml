@@ -1,7 +1,79 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>lspci on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/lspci/</link><description>Recent content in lspci on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 08 May 2024 08:06:33 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/lspci/index.xml" rel="self" type="application/rss+xml"/><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>PCIe 基础介绍 # Wikipedia 上对 PCI_Express 的介绍 如下：
-Peripheral Component Interconnect Express，简称 PCI-E，官方简称 PCIe，是计算机总线的一个重要分支，它沿用既有的 PCI 编程概念及信号标准，并且构建了更加高速的串行通信系统标准。目前这一标准由 PCI-SIG 组织制定和维护。PCIe 仅应用于内部互连。由于 PCIe 是基于既有的 PCI 系统，所以只需修改物理层而无须修改软件就可将现有 PCI 系统转换为 PCIe。
-版本、传输通道数和速率 # 我们在买固态硬盘和显卡的时候，经常需要确定 PCIe 的 版本 和 通道数(x几)，那这两个和速率有什么关系？
-首先，什么是 PCIe 的版本和通道数：
-版本：无疑就是 PCIe 技术迭代之后，速率有了极大地提升。例如：PCIe 3.0 通道数：lane 数，一条 lane 对应两组“差分信号对”，一组差分信号对用于传输 TX，另一组用于传输 RX。由于 PCIe 是串行传输，多条 lane 的数据传输是由 PCIe 上层应用来自行做 IO 多路复用的。例如：x4。 其次，上边两个参数和速率有什么关系？同一版本，通道数每增一个速率就翻倍。版本每增一个，速率几乎翻倍（除了 PCIe 1.0 到 PCIe 2.0）
-不同版本对应的速率关系：
-Version Transfer rate per lane(GT/s) Line code Throughput for x1 1.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Lspci on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/lspci/</link><description>Recent content in Lspci on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 08 Oct 2024 06:29:36 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/lspci/index.xml" rel="self" type="application/rss+xml"/><item><title>PCIe 和 lspci</title><link>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</link><pubDate>Wed, 08 May 2024 08:06:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCIe_and_lspci/</guid><description>&lt;h2 id="pcie-基础介绍"&gt;
+ PCIe 基础介绍
+ &lt;a class="anchor" href="#pcie-%e5%9f%ba%e7%a1%80%e4%bb%8b%e7%bb%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;Wikipedia 上对 
+
+&lt;a href="https://zh.wikipedia.org/wiki/PCI_Express" target="_blank"&gt;PCI_Express&lt;/a&gt;
+ 的介绍
+如下：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Peripheral Component Interconnect Express，简称 PCI-E，官方简称 PCIe，是计算机总线的一个重要分支，它沿用既有的 PCI 编程概念及信号标准，并且构建了更加高速的串行通信系统标准。目前这一标准由 PCI-SIG 组织制定和维护。PCIe 仅应用于内部互连。由于 PCIe 是基于既有的 PCI 系统，所以只需修改物理层而无须修改软件就可将现有 PCI 系统转换为 PCIe。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+
+&lt;h3 id="版本传输通道数和速率"&gt;
+ 版本、传输通道数和速率
+ &lt;a class="anchor" href="#%e7%89%88%e6%9c%ac%e4%bc%a0%e8%be%93%e9%80%9a%e9%81%93%e6%95%b0%e5%92%8c%e9%80%9f%e7%8e%87" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;我们在买固态硬盘和显卡的时候，经常需要确定 PCIe 的 &lt;strong&gt;版本&lt;/strong&gt; 和 &lt;strong&gt;通道数(x几)&lt;/strong&gt;，那这两个和速率有什么关系？&lt;/p&gt;
+&lt;p&gt;首先，什么是 PCIe 的版本和通道数：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;版本：无疑就是 PCIe 技术迭代之后，速率有了极大地提升。例如：&lt;code&gt;PCIe 3.0&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;通道数：lane 数，一条 lane 对应两组“差分信号对”，一组差分信号对用于传输 TX，另一组用于传输 RX。由于 PCIe 是串行传输，多条 lane 的数据传输是由 PCIe 上层应用来自行做 IO 多路复用的。例如：&lt;code&gt;x4&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其次，上边两个参数和速率有什么关系？同一版本，通道数每增一个速率就翻倍。版本每增一个，速率几乎翻倍（除了 PCIe 1.0 到 PCIe 2.0）&lt;/p&gt;
+&lt;p&gt;不同版本对应的速率关系：&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Version&lt;/th&gt;
+ &lt;th&gt;Transfer rate per lane(GT/s)&lt;/th&gt;
+ &lt;th&gt;Line code&lt;/th&gt;
+ &lt;th&gt;Throughput for &lt;code&gt;x1&lt;/code&gt;&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;1.0&lt;/td&gt;
+ &lt;td&gt;2.5&lt;/td&gt;
+ &lt;td&gt;8b/10b&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;2.5 Gib/s*(8b/10b)=2.0 Gib/s=0.250 GiB/s&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;2.0&lt;/td&gt;
+ &lt;td&gt;5.0&lt;/td&gt;
+ &lt;td&gt;8b/10b&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;5.0 Gib/s*(8b/10b)=4.0 Gib/s=0.500 GiB/s&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;3.0&lt;/td&gt;
+ &lt;td&gt;8.0&lt;/td&gt;
+ &lt;td&gt;128b/130b&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;8.0 Gib/s*(128b/130b)=7.88 Gib/s=0.985 GiB/s&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;4.0&lt;/td&gt;
+ &lt;td&gt;16.0&lt;/td&gt;
+ &lt;td&gt;128b/130b&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;16.0 Gib/s*(128b/130b)=15.753 Gib/s=1.969 GiB/s&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;5.0&lt;/td&gt;
+ &lt;td&gt;32.0&lt;/td&gt;
+ &lt;td&gt;128b/130b&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;32.0 Gib/s*(128b/130b)=31.508 Gib/s=3.938 GiB/s&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;Tips:
+&lt;ul&gt;
+&lt;li&gt;1 GT/s 表示每秒有 1*10^9 次传输，一次传输传输 1 个bit&lt;/li&gt;
+&lt;li&gt;为了避免多个低信号连续传输无法被区分，我们使用 8b/10b 等 Line code 来编码。所以实际传输速率的计算，如最后一列所写：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;而通道数的增长就非常简单了，直接对应版本的 &lt;code&gt;x1&lt;/code&gt; 的速率上乘几。&lt;/p&gt;</description></item></channel></rss>

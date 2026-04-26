@@ -1,5 +1,70 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gcc on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/gcc/</link><description>Recent content in gcc on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 08 Oct 2024 12:04:22 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/gcc/index.xml" rel="self" type="application/rss+xml"/><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>2023-06-06 update: # windows does not support shell basename. Makefile native support basname like, it&amp;rsquo;s notdir.
-contents # Since gcc-12, gcc native support __FILE_NAME__ macro. ref Here we provide some methods to make gcc version lower than 12 support __FILE_NAME__:
-Makefile:
-CXX_FLAGS+=-D__FILE_NAME__=\&amp;#34;$(notdir $&amp;lt;)\&amp;#34; test: test.c gcc-7 $(CXX_FLAGS) $&amp;lt; Qt pro:
-DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;#34;$(notdir $&amp;lt;)\\\&amp;#34;&amp;#39; Some information of macro is at here .</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Gcc on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/gcc/</link><description>Recent content in Gcc on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 12 Oct 2024 06:06:00 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/gcc/index.xml" rel="self" type="application/rss+xml"/><item><title>Introduction to precompiled headers(PCH)</title><link>https://bensyz.github.io/blog/blogs/PCH/</link><pubDate>Tue, 08 Oct 2024 12:04:22 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/PCH/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在讲预编译头文件 PCH 的之前，我们简单回顾一下编译的流程，编译大致有以下几个步骤：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;预处理：将源代码中的宏、头文件等展开&lt;/li&gt;
+&lt;li&gt;编译：将源代码转成汇编代码&lt;/li&gt;
+&lt;li&gt;汇编：将汇编代码转成 object 文件&lt;/li&gt;
+&lt;li&gt;链接：生成可执行文件&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;如果有一个头文件，内容特别多，而且在好多源代码中都被引入了，那是不是会导致：每一个源代码文件在编译的时候都要展开一大段，然后在编译每一个源代码文件的时候都要重新编译这一大段，最终导致许多重复展开重复编译。那么我们是否可以将这种重复动作优化一下呢？让他只做一次，然后下次谁要用，就直接去取就完了？这就是“预编译头文件（precompiled header, PCH）” 最初的想法。&lt;/p&gt;
+
+
+&lt;h2 id="what-is-pch"&gt;
+ What is PCH?
+ &lt;a class="anchor" href="#what-is-pch" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;这是 
+
+&lt;a href="https://zh.wikipedia.org/zh-cn/%e9%a2%84%e7%bc%96%e8%af%91%e5%a4%b4" target="_blank"&gt;Wikipedia 上对 PCH 的介绍&lt;/a&gt;
+:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;预编译头（precompiled header）是程序设计时把头文件编译为中间格式（如目标文件），以节约在开发过程中编译器反复编译该头文件的开销。 C 语言、C++语言、Objective C 语言等都有类似的技术。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;那这个中间格式实际又是什么呢？我们在下节 “如何生成 PCH 文件” 中会来实际看看它是什么文件。&lt;/p&gt;
+
+
+&lt;h2 id="如何生成-pch-文件"&gt;
+ 如何生成 PCH 文件？
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e7%94%9f%e6%88%90-pch-%e6%96%87%e4%bb%b6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;非常简单，和编译普通的源文件一样，只需对头文件做编译即可：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;gcc blah.h
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Tips:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;gcc&lt;/code&gt;/&lt;code&gt;g++&lt;/code&gt; 会根据扩展名来选择默认的编译选项，对 &lt;code&gt;h&lt;/code&gt; 文件，会默认使用 &lt;code&gt;-x c-header&lt;/code&gt;，我们也可以强制将一个 &lt;code&gt;c&lt;/code&gt; 文件用 &lt;code&gt;-x c-header&lt;/code&gt; 来编译，编译成 PCH （具体请 &lt;code&gt;man 1 gcc&lt;/code&gt; 搜索 &lt;code&gt;-x&lt;/code&gt; 参数）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们会发现，经过上一条命令的执行，我们得到了 &lt;code&gt;blah.h.gch&lt;/code&gt; 让我们来看看这个文件是什么：&lt;/p&gt;</description></item><item><title>gcc support __FILE_NAME__ macro</title><link>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</link><pubDate>Fri, 02 Jun 2023 07:48:40 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/gcc_support_filename_macro/</guid><description>&lt;h2 id="2023-06-06-update"&gt;
+ 2023-06-06 update:
+ &lt;a class="anchor" href="#2023-06-06-update" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;windows does not support shell basename. Makefile native support &lt;code&gt;basname&lt;/code&gt; like, it&amp;rsquo;s &lt;code&gt;notdir&lt;/code&gt;.&lt;/p&gt;
+
+
+&lt;h2 id="contents"&gt;
+ contents
+ &lt;a class="anchor" href="#contents" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;Since gcc-12, gcc native support &lt;code&gt;__FILE_NAME__&lt;/code&gt; macro. 
+
+&lt;a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=42579" target="_blank"&gt;ref&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;Here we provide some methods to make gcc version lower than 12 support &lt;code&gt;__FILE_NAME__&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;Makefile:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-make" data-lang="make"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;CXX_FLAGS&lt;span style="color:#f92672"&gt;+=&lt;/span&gt;-D__FILE_NAME__&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;\&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;notdir $&amp;lt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;\&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;test&lt;/span&gt;&lt;span style="color:#f92672"&gt;:&lt;/span&gt; test.c
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	gcc-7 &lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;CXX_FLAGS&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt; $&amp;lt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Qt pro:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-config" data-lang="config"&gt;DEFINES += &amp;#39;__FILE_NAME__=\\\&amp;#34;$(notdir $&amp;lt;)\\\&amp;#34;&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Some information of macro is at 
+
+&lt;a href="../macro_in_gcc_Makefile_qmake"&gt;here&lt;/a&gt;
+.&lt;/p&gt;</description></item></channel></rss>
