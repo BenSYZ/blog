@@ -1,6 +1,5 @@
 ---
 title: "about effective voltage and rms"
-description: "about effective voltage and rms"
 date: 2023-04-21T15:18:29+08:00
 lastMod: 2023-04-21T16:54:56+08:00
 code: true

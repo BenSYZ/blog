@@ -9,8 +9,6 @@ draft: false
 author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
-description: "debian_install_package_with_newer_version"
-tags: ["debian_install_package_with_newer_version"]
 description: "feh 没有认出一种 bmp 的格式，发现是 file 版本太旧，从而通过 apt source 安装高版本的 file"
 tags: [ "file", "magic number", "feh", "debian", "deb", "apt", "gdb" ]
 ---
