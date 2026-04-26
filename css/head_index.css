@@ -1,0 +1,31 @@
+/* --- 1. 正文标题计数 (H2-H5) --- */
+#content {
+  counter-reset: h2; /* 在正文容器重置计数 */
+}
+#content h2 { counter-reset: h3; counter-increment: h2; }
+#content h3 { counter-reset: h4; counter-increment: h3; }
+#content h4 { counter-reset: h5; counter-increment: h4; }
+#content h5 { counter-reset: h6; counter-increment: h5; }
+#content h6 { counter-increment: h6; }
+
+#content h2::before { content: counter(h2) ". "; }
+#content h3::before { content: counter(h2) "." counter(h3) " "; }
+#content h4::before { content: counter(h2) "." counter(h3) "." counter(h4) " "; }
+#content h5::before { content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) " "; }
+#content h6::before { content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) "." counter(h6) " "; }
+
+/* --- 2. 目录同步计数 --- */
+#TableOfContents ol {
+  counter-reset: toc-item;
+  list-style-type: none; /* 禁用默认的 1. 2. 3. */
+  padding-left: 1.5em;
+}
+#TableOfContents li {
+  counter-increment: toc-item;
+}
+#TableOfContents li::before {
+  /* 使用 counters() 自动递归生成 1.1, 1.1.1 结构 */
+  content: counters(toc-item, ".") "."; 
+  margin-right: 0.5em;
+  /*font-weight: bold;*/
+}

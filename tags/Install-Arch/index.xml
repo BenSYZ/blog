@@ -1,70 +1,7 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Install Arch on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Install-Arch/</link><description>Recent content in Install Arch on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 30 Sep 2021 19:13:30 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Install-Arch/index.xml" rel="self" type="application/rss+xml"/><item><title>将服务器的 Ubuntu 系统换成 Arch Linux</title><link>https://bensyz.github.io/blog/blogs/vps2arch/</link><pubDate>Thu, 30 Sep 2021 19:13:30 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/vps2arch/</guid><description>&lt;h2 id="introduction">Introduction&lt;/h2>
-&lt;p>这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。&lt;/p>
-&lt;p>早就听说了有一个叫 &lt;code>vps2arch&lt;/code> 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#从一个主机运行另一个%20Linux%20发行版">Arch wiki&lt;/a> 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)&lt;/p>
-&lt;p>然而 Arch wiki 在后面&lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux（简体中文）#安装提示">安装提示&lt;/a> 那节让我从 &lt;a href="https://wiki.archlinux.org/title/Installation_guide_（简体中文）">Installation Guide&lt;/a> 中的重新分区开始，继续后面的操作，我就这样试了，然后….🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。&lt;/p>
-&lt;p>后来我找到了这篇&lt;a href="https://blog.inkuang.com/2020/114/">博客&lt;/a>，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。&lt;/p>
-&lt;p>写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏&lt;/p>
-&lt;h2 id="原理">原理&lt;/h2>
-&lt;p>通过 &lt;code>chroot&lt;/code> 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 &lt;em>内核&lt;/em> 和 &lt;em>操作系统&lt;/em> 的关系可以看看我的这篇关于 &lt;a href="https://bensyz.github.io/blog/blogs/gpio/">gpio&lt;/a> 的文章。&lt;/p>
-&lt;p>在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 &lt;code>/proc&lt;/code> &lt;code>/sys&lt;/code> &lt;code>/run&lt;/code> 下的各种文件等等，还有设备文件夹 &lt;code>/dev&lt;/code> 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 &lt;code>ls&lt;/code> 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 &lt;code>/bin/ls&lt;/code> 和它所依赖的各种库 （通过 &lt;code>ldd /bin/ls&lt;/code> 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。&lt;/p>
-&lt;h2 id="实验">实验&lt;/h2>
-&lt;p>&lt;strong>注意&lt;/strong>: 记得对当前系统创建快照，因为有可能网不好，而你又还没配置好系统，那就没了….&lt;/p>
-&lt;p>按照 Arch wiki &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_（简体中文）">Install Arch Linux from existing Linux&lt;/a>&lt;/p>
-&lt;h3 id="去这里-挑个镜像网站下-bootstrap-的-tar-包放到-tmp-解压">1. 去&lt;a href="https://archlinux.org/download/">这里&lt;/a> 挑个镜像网站，下 bootstrap 的 tar 包，放到 &lt;code>/tmp&lt;/code> ，解压：&lt;/h3>
-&lt;pre class="shell">&lt;code># tar xzf /tmp/archlinux-bootstrap-...-x86_64.tar.gz&lt;/code>&lt;/pre>
-&lt;h3 id="编辑-mirrorlist">2. 编辑 &lt;code>mirrorlist&lt;/code>&lt;/h3>
-&lt;p>由于 bootstrap 中没有编辑器，你需要先编辑 &lt;code>mirrorlist&lt;/code> ，选一个镜像网站&lt;/p>
-&lt;pre class="shell">&lt;code># vim /tmp/root.x86_64/etc/pacman.d/mirrorlist&lt;/code>&lt;/pre>
-&lt;p>如果忘记了，然后 Ubuntu 系统又删了，可以使用 &lt;code>sed&lt;/code> 或者&lt;code>echo &amp;gt;&amp;gt;&lt;/code>&lt;/p>
-&lt;pre class="shell">&lt;code># sed -i &amp;#39;s/#\(.*ustc.*\)/\1/p&amp;#39; /etc/pacman.d/mirrorlist&lt;/code>&lt;/pre>
-&lt;h3 id="chroot">3. &lt;code>chroot&lt;/code>&lt;/h3>
-&lt;p>将这个目录绑到这个目录，大概率是要这条 &lt;code>mount&lt;/code> 的，应该是意味着这是一个 mount point，这样在 &lt;code>chroot&lt;/code> 的时候不会有警告。并 &lt;code>chroot&lt;/code>&lt;/p>
-&lt;pre class="shell">&lt;code># mount --bind /tmp/root.x86_64 /tmp/root.x86_64&lt;/code>&lt;/pre>
-&lt;pre class="shell">&lt;code># /tmp/root.x86_64/bin/arch-chroot /tmp/root.x86_64/&lt;/code>&lt;/pre>
-&lt;p>&lt;code>arch-chroot&lt;/code> 相对于 &lt;code>chroot&lt;/code> 的区别在于，它把一些内核空间的目录挂载到了 &lt;code>chroot&lt;/code> 环境中，可以看 Arch wiki 的 &lt;a href="https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_（简体中文）#安装提示">方法一：使用 Bootstrap 镜像&lt;/a>节&lt;/p>
-&lt;h3 id="初始化-pacman-密钥">4. 初始化 &lt;code>pacman&lt;/code> 密钥&lt;/h3>
-&lt;pre class="shell">&lt;code># pacman-key --init
-# pacman-key --populate archlinux&lt;/code>&lt;/pre>
-&lt;h3 id="把分区再挂到-chroot-的-mnt-下">5. 把分区再挂到 &lt;code>chroot&lt;/code> 的 &lt;code>/mnt&lt;/code> 下&lt;/h3>
-&lt;p>我们这个时候可以看一下分区表：&lt;/p>
-&lt;div class="sourceCode" id="cb7">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb7-1">&lt;a href="#cb7-1" aria-hidden="true">&lt;/a>$ &lt;span class="ex">lsblk&lt;/span>&lt;/span>
-&lt;span id="cb7-2">&lt;a href="#cb7-2" aria-hidden="true">&lt;/a>&lt;span class="ex">NAME&lt;/span> MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS&lt;/span>
-&lt;span id="cb7-3">&lt;a href="#cb7-3" aria-hidden="true">&lt;/a>&lt;span class="ex">sr0&lt;/span> 11:0 1 145.7M 0 rom&lt;/span>
-&lt;span id="cb7-4">&lt;a href="#cb7-4" aria-hidden="true">&lt;/a>&lt;span class="ex">vda&lt;/span> 254:0 0 80G 0 disk&lt;/span>
-&lt;span id="cb7-5">&lt;a href="#cb7-5" aria-hidden="true">&lt;/a>&lt;span class="kw">|&lt;/span>&lt;span class="ex">-vda1&lt;/span> 254:1 0 1M 0 part&lt;/span>
-&lt;span id="cb7-6">&lt;a href="#cb7-6" aria-hidden="true">&lt;/a>└&lt;span class="ex">-vda2&lt;/span> 254:2 0 80G 0 part /etc/resolv.conf&lt;/span>
-&lt;span id="cb7-7">&lt;a href="#cb7-7" aria-hidden="true">&lt;/a> &lt;span class="ex">/mnt&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;p>&lt;code>/etc/resolve.conf&lt;/code> 是 &lt;code>arch-chroot&lt;/code> 导致的，这里的 &lt;code>/mnt&lt;/code> 就是 Installation guide 中的 &lt;code>/mnt&lt;/code> 了。&lt;/p>
-&lt;h3 id="删-ubuntu-的系统文件">6. 删 Ubuntu 的系统文件&lt;/h3>
-&lt;p>现在可以删除 Ubuntu 的系统文件了。(Ubuntu 也是 GNU 系统的一种） 但要注意不要删掉 &lt;code>/tmp&lt;/code> , &lt;code>/dev&lt;/code> , &lt;code>/proc&lt;/code> , &lt;code>/run&lt;/code> , &lt;code>/sys&lt;/code> 。因为 &lt;code>/tmp&lt;/code> 里有 bootstrap 解压后的文件，也就是我们现在在使用的 Arch Linux 的系统文件，后面 4 个是内核映射到文件系统的文件，也不能删，你也可以保留你的 &lt;code>/home&lt;/code> 目录，如果需要保留其他根目录下的配置文件，记得备份，因为 arch 在安装的过程中也会覆盖。&lt;/p>
-&lt;p>当然你也可以不删，安装好之后再用 &lt;a href="https://wiki.archlinux.org/title/Pacman/Tips_and_tricks#Identify_files_not_owned_by_any_package">pacman 列出来&lt;/a>，不要在改了配置之后再删哦，有些类似 &lt;code>/etc/hostname&lt;/code> 是不被 &lt;code>pacman&lt;/code> 跟踪的&lt;/p>
-&lt;pre class="shell">&lt;code># find /etc /usr /opt | LC_ALL=C pacman -Qqo - 2&amp;gt;&amp;amp;1 &amp;gt;&amp;amp;- &amp;gt;/dev/null | cut -d &amp;#39; &amp;#39; -f 5-&lt;/code>&lt;/pre>
-&lt;h3 id="按照-installation-guide安装-arch-linux">7. 按照 &lt;a href="https://wiki.archlinux.org/title/Installation_guide_（简体中文）#安装">Installation guide&lt;/a>，安装 Arch Linux。&lt;/h3>
-&lt;p>这里只是提一下需要哪些&lt;/p>
-&lt;ol type="1">
-&lt;li>&lt;p>安装：&lt;code>pacstrap /mnt base linux linux-firmware&lt;/code>&lt;/p>&lt;/li>
-&lt;li>&lt;p>分区：&lt;code>genfstab -U /mnt &amp;gt;&amp;gt; /mnt/etc/fstab&lt;/code>&lt;/p>&lt;/li>
-&lt;li>&lt;p>&lt;code>arc:chroot /mnt&lt;/code>&lt;/p>&lt;/li>
-&lt;li>&lt;p>时区：&lt;code>ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime&lt;/code> , &lt;code>hwclock --systohc&lt;/code>&lt;/p>&lt;/li>
-&lt;li>&lt;p>文字编码：&lt;code>/etc/locale.gen&lt;/code> &lt;code>locale-gen&lt;/code>&lt;/p>&lt;/li>
-&lt;li>&lt;p>grub:&lt;/p>&lt;/li>
-&lt;/ol>
-&lt;div class="sourceCode" id="cb9">&lt;pre class="sourceCode sh">&lt;code class="sourceCode bash">&lt;span id="cb9-1">&lt;a href="#cb9-1" aria-hidden="true">&lt;/a>&lt;span class="ex">pacman&lt;/span> -s intel-ucode&lt;/span>
-&lt;span id="cb9-2">&lt;a href="#cb9-2" aria-hidden="true">&lt;/a>&lt;span class="ex">grub-install&lt;/span> --target=i386-pc /dev/vda&lt;/span>
-&lt;span id="cb9-3">&lt;a href="#cb9-3" aria-hidden="true">&lt;/a>&lt;span class="ex">grub-mkconfig&lt;/span> -o /boot/grub/grub.cfg&lt;span class="kw">`&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>
-&lt;ol start="6" type="1">
-&lt;li>网络：&lt;code>/etc/hostname&lt;/code> , &lt;code>/etc/hosts&lt;/code> , &lt;code>/etc/systemd/network/en.network&lt;/code> ，enable it&lt;/li>
-&lt;/ol>
-&lt;pre class="conf">&lt;code>[Match]
-Name=en*
-# arch 是 ens5 这种的
-# Ubuntu 的网卡名还是 eth0
-# 不放心可以用 e*
-[Network]
-DHCP=ipv4&lt;/code>&lt;/pre>
-&lt;ol start="8" type="1">
-&lt;li>&lt;p>&lt;code>pacman -S neovim openssh sudo&lt;/code> , enable ssh&lt;/p>&lt;/li>
-&lt;li>&lt;p>用户、密码、 &lt;code>sudo&lt;/code> : &lt;code>passwd&lt;/code> , &lt;code>useradd -a -G wheel ben&lt;/code> , &lt;code>passwd ben&lt;/code> , &lt;code>visudo&lt;/code>&lt;/p>&lt;/li>
-&lt;/ol>
-&lt;h3 id="重启">7. 重启&lt;/h3>
-&lt;p>如果启动失败可以通过 VNC 的方式登录，可以看到 grub 等界面&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Install Arch on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Install-Arch/</link><description>Recent content in Install Arch on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 30 Sep 2021 19:13:30 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Install-Arch/index.xml" rel="self" type="application/rss+xml"/><item><title>将服务器的 Ubuntu 系统换成 Arch Linux</title><link>https://bensyz.github.io/blog/blogs/vps2arch/</link><pubDate>Thu, 30 Sep 2021 19:13:30 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/vps2arch/</guid><description>Introduction # 这两天腾讯在搞活动，有便宜的服务器，于是买了，如之前的阿里云一样没有 Arch Linux 的系统镜像。
+早就听说了有一个叫 vps2arch 的脚本可以将服务器上的 Ubuntu 系统转成其他系统，然后看 [Arch wiki]( https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux （简体中文）#从一个主机运行另一个 Linux 发行版) 的时候发现了不止它，还有好多，它还介绍了如何手动转到 Arch Linux。玩 Arch 的人怎么能不手动试试呢🤪（发现这个脚本是在原来阿里云过期之后的事了。然后一直没机会，虽然虚拟机上也行，但懒啊)
+然而 Arch wiki 在后面 安装提示 那节让我从 Installation Guide 中的重新分区开始，继续后面的操作，我就这样试了，然后&amp;hellip;.🤦系统挂了。那个时候也没懂原理，一开始的想法是是否能够把系统全加载到内存中，然后就可以把原分区删了重新分区，然后又看到 wiki 是这样说的，就尽信了。
+后来我找到了这篇 博客 ，然后就成啦，原来后面的步骤是“挂载分区”而不是”建立分区“。
+写博客的时候才发现，原来中文手册里说的就是“挂载”，而英文手册里是“分区” 😠 ，当然现在我把它改好啦😏
+原理 # 通过 chroot 进入 Arch Linux 系统，删除原 Ubuntu 系统文件，此时原来系统的内核还在内存中，我们通过 Arch Linux 系统向这个内核发送指令。 内核 和 操作系统 的关系可以看看我的这篇关于 gpio 的文章。
+在这里操作系统可以简单理解为你能看到的各种文件，除了内核把一些内核空间的文件映射到文件系统内的文件，比方说 /proc /sys /run 下的各种文件等等，还有设备文件夹 /dev 下的内容也应该是内核生成出来的。我们通过 Arch linux 系统向原内核发送命令是怎么发送的，举个例子：我们可以通过 ls 查看当前目录下的文件，那这个命令对应的是这个命令文件本身 /bin/ls 和它所依赖的各种库 （通过 ldd /bin/ls 可以查看）这里的库类似于 python 的包。现在我们有 Arch 这个完整的 chroot 的系统，那当然可以向内核发送命令啦。</description></item></channel></rss>

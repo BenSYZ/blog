@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>2.Electrostatics on Ben's Blog</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/</link><description>Recent content in 2.Electrostatics on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 23 Sep 2021 00:30:00 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/index.xml" rel="self" type="application/rss+xml"/><item><title>Electrostatic 2</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link><pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</guid><description>Maxwell&amp;rsquo;s equation # Gauss&amp;rsquo;s Law # Charge &amp;lt;-&amp;gt; Electric field Flux
+一个体积内的电荷 vs 这个体积表面的通量
+$$ \nabla \cdot E = \frac{\rho}{\epsilon_0} $$
+点电荷 $$ \rho = Q \delta(r) $$ $$ \int_V (\nabla \cdot E) dV = \int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV = \frac{Q}{\epsilon_0} $$ ???
+$$ \int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV $$
+$$ LS= E \cdot R^2 dr d\theta $$ $$ RS = \int \frac{Q \delta(r)}{\epsilon_0} dV $$</description></item></channel></rss>

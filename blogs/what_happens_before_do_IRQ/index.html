@@ -1,0 +1,802 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>what happens before do_IRQ</title><script src=/js/if_mobile.js></script>
+<script>!function(){$("pre > code").each(function(){var s,n=$(this).parent().attr("class");n==null||n===""?$(this).addClass("hljs"):(s={js:"javascript"},s[n]&&(n=s[n]),$(this).addClass(n))})}</script><link rel=stylesheet href=/css/hljs/snazzy.css><link rel=stylesheet href=/css/hljs/line-numbers.min.css><script src=/js/hljs/highlight.min.js></script>
+<script src=/js/hljs/highlightjs-line-numbers.min.js></script>
+<script>hljs.highlightAll()</script><script>hljs.initLineNumbersOnLoad()</script><link rel=stylesheet href=/css/code.css><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/footer.css><link rel=stylesheet href=/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/js/favicon.js></script>
+<link rel=stylesheet href=/css/head_index.css></head><body><div class=container><div class=header><h1>what happens before do_IRQ</h1><div>Sat, 2026-04-18</div><hr></div><div class=middle><div id=TitleWithToc><div id=TitleOfToc>what happens before do_IRQ</div><nav id=TableOfContents><ol><li><a href=#introduction>Introduction</a></li><li><a href=#caller-of-do_irq-common_interrupt>caller of <code>do_IRQ</code>: <code>common_interrupt</code></a><ol><li><a href=#save_args>SAVE_ARGS</a></li><li><a href=#leaq--argoffsetrsprdi><code>leaq -ARGOFFSET(%rsp),%rdi</code></a></li><li><a href=#stack-change>stack change</a></li><li><a href=#arguments-of-do_irq-和-leaq--argoffsetrsp-rdi>arguments of do_IRQ 和 <code>leaq -ARGOFFSET(%rsp), %rdi</code></a></li><li><a href=#restore_args-和-iretq>RESTORE_ARGS 和 iretq</a></li><li><a href=#summary-of-common_interrupt>summary of <code>common_interrupt</code></a></li></ol></li><li><a href=#caller-of-common_interrupt-irq0xxy_interrupt>caller of <code>common_interrupt</code>: <code>IRQ0xXY_interrupt</code></a></li><li><a href=#construct-and--register-irq0xxy_interrupt>Construct and register <code>IRQ0xXY_interrupt</code></a><ol><li><a href=#construct-irq0xxy_interrupt-and-convert-irq0xxy_interrupt-to-void-interrupt>Construct <code>IRQ0xXY_interrupt</code> and convert <code>IRQ0xXY_interrupt</code> to <code>void* (interrupt[])()</code></a></li><li><a href=#register-void-interrupt-irq0xxy_interrupt-to-cpu>Register <code>void* (interrupt[])()</code> (<code>IRQ0xXY_interrupt</code>) to CPU</a><ol><li><a href=#internal-vector>internal vector</a></li></ol></li></ol></li><li><a href=#caller-of-irq0xxy_interrupt-x86-cpu>caller of <code>IRQ0xXY_interrupt</code>: x86 CPU</a><ol><li><a href=#tss>TSS</a></li></ol></li><li><a href=#conclusion>Conclusion</a><ol><li><a href=#q1-int-到-do_irq>Q1: INT 到 <code>do_IRQ</code></a></li><li><a href=#q2-栈的变更和寄存器的保存>Q2: 栈的变更和寄存器的保存</a></li><li><a href=#调用-do_irq-前的准备结果>调用 <code>do_IRQ</code> 前的准备结果</a><ol><li><a href=#pt_regs><code>pt_regs</code></a></li><li><a href=#设置-rdi-指向-pt_regs>设置 <code>rdi</code> 指向 <code>pt_regs</code></a></li></ol></li></ol></li><li><a href=#gdb-追踪栈和栈上数据>gdb 追踪栈和栈上数据</a><ol><li><a href=#at-irq0xxy_interrupt>at <code>IRQ0xXY_interrupt</code></a></li><li><a href=#at-common_interrupt>at <code>common_interrupt</code></a><ol><li><a href=#dwarf-and-cfi>dwarf and cfi</a></li><li><a href=#before-inclgspda_irqcount>before <code>incl %gs:pda_irqcount</code></a></li><li><a href=#换栈前的栈上数据和-pt_regs>换栈前的栈上数据和 pt_regs</a><ol><li><a href=#此时的-bt>此时的 bt</a></li></ol></li><li><a href=#rsp-切换到中断栈>rsp 切换到中断栈</a></li><li><a href=#退出-do_irq>退出 do_IRQ</a><ol><li><a href=#leave-前>leave 前</a></li><li><a href=#leave-后>leave 后</a></li></ol></li><li><a href=#恢复寄存器和-iret>恢复寄存器和 iret</a></li><li><a href=#iret-前>iret 前</a></li></ol></li><li><a href=#error-code>Error Code</a><ol><li><a href=#divide-error-exception>Divide Error Exception</a></li><li><a href=#page-fault-exception>Page-Fault Exception</a></li></ol></li></ol></li></ol></nav></div><div id=content><h2 id=introduction>Introduction
+<a class=anchor href=#introduction aria-hidden=true>#</a></h2><p>本文主要探究了以下几个问题：</p><ol><li>在 CPU 发现 INT 引脚电平变更，中断当前指令片段的执行后，到调用 <code>do_IRQ</code> 之间到底发生了什么？</li><li>do_IRQ 时，被中断的任务，用户栈、内核栈、中断栈之间是如何变更的？</li><li>中断当前的指令片段，需要保存寄存器，这些寄存器是如何保存和恢复的？</li></ol><p>本文需要的预备知识：</p><ul><li><a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/>asm 中的 mov/lea</a></li><li><a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/>asm 中函数的传参</a></li><li><a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/>asm 中函数的调用和栈的变化</a></li><li><a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/>x86 中寄存器的名字</a></li><li><a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/>AT&amp;T 和 intel 汇编</a></li><li>汇编代码的 “man-pages”：
+<a href=https://cdrdv2.intel.com/v1/dl/getContent/671200 target=_blank>Intel® 64 and IA-32 Architectures Software Developer’s Manual</a>
+，可以查看 x86 的指令定义。</li></ul><h2 id=caller-of-do_irq-common_interrupt>caller of <code>do_IRQ</code>: <code>common_interrupt</code>
+<a class=anchor href=#caller-of-do_irq-common_interrupt aria-hidden=true>#</a></h2><p>在 gdb 中 bt 或者目录搜索，我们会发现 do_IRQ 的调用者是汇编的 <code>common_interrupt</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// linux-2.6.24/arch/x86/kernel/entry_64.S
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>common_interrupt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>interrupt</span> <span style=color:#66d9ef>do_IRQ</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>leaveq</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>END</span>(<span style=color:#66d9ef>common_interrupt</span>)
+</span></span></code></pre></div><p>其中 <code>interrupt</code> 是一个宏，在调用 <code>do_IRQ</code> 前需要做一系列保存寄存器的动作，通过一个宏做了封装，我们只保留了最关键的几行：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// linux-2.6.24/arch/x86/kernel/entry_64.S
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>.macro</span> <span style=color:#66d9ef>interrupt</span> <span style=color:#66d9ef>func</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>SAVE_ARGS</span>                   <span style=color:#75715e># 保存寄存器
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>leaq</span> -<span style=color:#66d9ef>ARGOFFSET</span>(%rsp),%rdi	<span style=color:#75715e># arg1 for handler
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>call</span> <span style=color:#960050;background-color:#1e0010>\</span><span style=color:#66d9ef>func</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endm</span>
+</span></span></code></pre></div><h3 id=save_args>SAVE_ARGS
+<a class=anchor href=#save_args aria-hidden=true>#</a></h3><p>从宏命名地来看，<code>SAVE_ARGS</code> 是保存 do_IRQ 需要的参数（<code>struct pt_regs</code>）也就是，它会在将寄存器保存到栈上</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// linux-2.6.24/include/asm-x86/calling.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>.macro</span> <span style=color:#66d9ef>SAVE_ARGS</span> <span style=color:#66d9ef>addskip</span><span style=color:#960050;background-color:#1e0010>=</span><span style=color:#ae81ff>0</span>,<span style=color:#66d9ef>norcx</span><span style=color:#960050;background-color:#1e0010>=</span><span style=color:#ae81ff>0</span>,<span style=color:#66d9ef>nor891011</span><span style=color:#960050;background-color:#1e0010>=</span><span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>subq</span>  <span style=color:#66d9ef>$9</span>*<span style=color:#ae81ff>8</span><span style=color:#960050;background-color:#1e0010>+\</span><span style=color:#66d9ef>addskip</span>,%rsp
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>CFI_ADJUST_CFA_OFFSET</span>	<span style=color:#ae81ff>9</span>*<span style=color:#ae81ff>8</span><span style=color:#960050;background-color:#1e0010>+\</span><span style=color:#66d9ef>addskip</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %rdi,<span style=color:#ae81ff>8</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>rdi</span>,<span style=color:#ae81ff>8</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %rsi,<span style=color:#ae81ff>7</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>rsi</span>,<span style=color:#ae81ff>7</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %rdx,<span style=color:#ae81ff>6</span>*<span style=color:#ae81ff>8</span>(%rsp)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>rdx</span>,<span style=color:#ae81ff>6</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.if</span> <span style=color:#960050;background-color:#1e0010>\</span><span style=color:#66d9ef>norcx</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.else</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %rcx,<span style=color:#ae81ff>5</span>*<span style=color:#ae81ff>8</span>(%rsp)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>rcx</span>,<span style=color:#ae81ff>5</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endif</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %rax,<span style=color:#ae81ff>4</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>rax</span>,<span style=color:#ae81ff>4</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.if</span> <span style=color:#960050;background-color:#1e0010>\</span><span style=color:#66d9ef>nor891011</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.else</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %r8,<span style=color:#ae81ff>3</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>r8</span>,<span style=color:#ae81ff>3</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %r9,<span style=color:#ae81ff>2</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>r9</span>,<span style=color:#ae81ff>2</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %r10,<span style=color:#ae81ff>1</span>*<span style=color:#ae81ff>8</span>(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>r10</span>,<span style=color:#ae81ff>1</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>  %r11,(%rsp) 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>CFI_REL_OFFSET</span>	<span style=color:#66d9ef>r11</span>,<span style=color:#ae81ff>0</span>*<span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endif</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endm</span>
+</span></span></code></pre></div><p>确实，我们在这个宏中看到有很多寄存器被保存到了栈上。但有一个问题：都到这里了那被打断继续执行的 RIP，那里的 RSP 去了哪里了？现在的 RSP 又是哪来的。这部分的内容会在
+<a href=#caller-of-irq0xxy_interrupt-x86-cpu>该节</a>
+得到解答。</p><h3 id=leaq--argoffsetrsprdi><code>leaq -ARGOFFSET(%rsp),%rdi</code>
+<a class=anchor href=#leaq--argoffsetrsprdi aria-hidden=true>#</a></h3><p>我们看到注释说这行是给 function 传参，好，那就先不管等
+<a href=#arguments-of-do_irq-%e5%92%8c-leaq--argoffsetrsp-rdi>下下节</a>
+再看。</p><h3 id=stack-change>stack change
+<a class=anchor href=#stack-change aria-hidden=true>#</a></h3><p>我们继续往下看</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// linux-2.6.24/arch/x86/kernel/entry_64.S
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>.macro</span> <span style=color:#66d9ef>interrupt</span> <span style=color:#66d9ef>func</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>SAVE_ARGS</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span> -<span style=color:#66d9ef>ARGOFFSET</span>(%rsp),%rdi	<span style=color:#75715e># arg1 for handler
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>pushq</span> %rbp
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>movq</span> %rsp,%rbp
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>cmoveq</span> %gs:<span style=color:#66d9ef>pda_irqstackptr</span>,%rsp
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>push</span>    %rbp				<span style=color:#75715e># backlink for old unwinder
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>call</span> <span style=color:#960050;background-color:#1e0010>\</span><span style=color:#66d9ef>func</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endm</span>
+</span></span></code></pre></div><p>终于，我们看到了 rsp 被变更的地方了：<code>cmoveq %gs:pda_irqstackptr,%rsp</code>，变栈好变，但是回退要怎么做呢？我们在
+<a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/>asm 中函数的调用</a>
+中看到了我们只保存了 rbp 和 rip 在栈上，从而，在函数回退时可以找到他们。但我们并没有保存 rsp，当函数调用发生在同一个栈上时，rsp 是自动退的，不保存也可以，但是如果我们换栈了，rsp 回退不到旧栈了，因为新栈和旧栈不连续。</p><p>换栈，意味着在内核栈上，我们改了 rsp 的内容，如果我们不保存，就会有信息丢失，也就回不到旧栈了。所以，在换之前我们需要保存 rsp 到栈上，，ret 之后把保存的通过 rbp+offset 弹出到 rsp。内核采用的是：在内核栈上，做一个 leave （mov %rbp, %rsp, pop %rbp) 需要的结构，然后执行一下 leave（在 common_interrupt 中）。可能是因为 push/pop rsp 有点问题 push 本身改了 rsp 又要把 rsp 压入。（测试来看是没问题的：都是先改内存在改寄存器。）</p><pre tabindex=0><code>f0 upper function
+f1 interrupted function
+f2 interrupt function
+</code></pre><p>正常函数调用：</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    | ← rbp
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   | ← rsp
+     +---------------+
+</code></pre><p>正常现在应该 call interrupt，然后压入 rip，但是我们要换栈，先保存 rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    | ← rbp
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rsp
+     +---------------+
+</code></pre><p>然后移动 rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    | ← rbp(old)
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rsp/rbp
+     +---------------+
+</code></pre><p><code>cmoveq %gs:pda_irqstackptr,%rsp</code>
+<a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_gs/>gs</a>
+偏移 pda_irqstackptr 这么长，拿到 pda->irqstackptr，关于 gs 和 pda 参考
+<a href=/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/>这篇文章</a></p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               | ← rsp/(pda-&gt;irqstackptr)
+     +---------------+
+</code></pre><p><code>push %rbp # backlink for old unwinder</code> 我们先压了也更 rbp，其实可以不用压的，到时候 ret 的时候就指向 stack 的第一个位置，0x0，压了之后，在 ret 之后，rsp 还是指向一个有效值。</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               | ← rsp(old)
+     | rbp of fn2    | ← rsp
+     +---------------+
+</code></pre><p>call do_IRQ</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    | ← rsp(old)
+     | rip of fn2    | ← rsp
+     +---------------+
+</code></pre><p>fn 前置准备，push rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    | ← rsp(old)
+     | rbp of fn2    | ← rsp
+     +---------------+
+</code></pre><p>fn 前置准备，mov %rsp, %rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp(old)
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    |
+     | rbp of fn2    | ← rsp/rbp
+     +---------------+
+</code></pre><p>rsp 下移准备临时变量空间</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    |
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    |
+     | rbp of fn2    | ← rsp(old)/rbp
+     | irq stack var | ← rsp
+     +---------------+
+</code></pre><p>退出时</p><p>leave 之 mov %rbp, %rsp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    |
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    |
+     | rbp of fn2    | ← rbp/rsp
+     | irq stack var | ← rsp(old)
+     +---------------+
+</code></pre><p>leave 之 pop %rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    | ← rsp
+     | rbp of fn2    | ← rbp(old)/rsp(old)
+     | irq stack var |
+     +---------------+
+</code></pre><p>ret</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    | ← rsp
+     | rip of fn2    | ← rsp(old)
+     | rbp of fn2    |
+     | irq stack var |
+     +---------------+
+</code></pre><p>common_interrupt leave 之 mov %rbp, %rsp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    |
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   |
+     | rbp of fn1    | ← rbp/rsp
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    | ← rsp(old)
+     | rip of fn2    |
+     | rbp of fn2    |
+     | irq stack var |
+     +---------------+
+</code></pre><p>common_interrupt leave 之 pop %rbp</p><pre tabindex=0><code>        kernel stack
+     +---------------+
+     | rbp of fn0    | ← rbp
+     | fn1 stack var |
+     | fn1 stack var |
+     | fn2 arg var   |
+     | fn2 arg var   | ← rsp
+     | rbp of fn1    | ← rbp(old)/rsp(old)
+     +---------------+
+
+       irq stack
+     +---------------+
+     |               |
+     | rbp of fn2    |
+     | rip of fn2    |
+     | rbp of fn2    |
+     | irq stack var |
+     +---------------+
+</code></pre><h3 id=arguments-of-do_irq-和-leaq--argoffsetrsp-rdi>arguments of do_IRQ 和 <code>leaq -ARGOFFSET(%rsp), %rdi</code>
+<a class=anchor href=#arguments-of-do_irq-%e5%92%8c-leaq--argoffsetrsp-rdi aria-hidden=true>#</a></h3><p>事实上 do_IRQ 的参数结构不是如上这么简单，rbp 也不是压在栈顶上，</p><p>传递给 rdi 的地址是 <code>-ARGOFFSET(%rsp)</code></p><pre tabindex=0><code># common_interrupt 中
+	SAVE_ARGS
+	leaq -ARGOFFSET(%rsp),%rdi	# arg1 for handler
+	pushq %rbp
+</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// include/asm-x86/calling.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#75715e>#define R11 48
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define ARGOFFSET R11
+</span></span></span></code></pre></div><p>也就是 rsp 地址向低位偏移 0x30 个地址编号，也就是对应 6 个 unsigned long, 才是 pt_regs，也就是说 rsp 当前指向的是 r11, 在内核栈上 push rbp 是给 <code>pt_regs->rbx</code> 赋值。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>struct</span> pt_regs {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r15;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r14;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r13;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r12;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rbp;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rbx;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* arguments: non interrupts/non tracing syscalls only save upto here*/</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r11;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r10;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r9;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r8;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rax;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rcx;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rdx;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rsi;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rdi;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> orig_rax;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* end of arguments */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* cpu exception frame or undefined */</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rip;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> cs;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> eflags;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rsp;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> ss;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* top of stack page */</span>
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><p>为啥要有这个偏移？为什么不直接 <code>movq %rsp, %rdi</code>，我们可以从两方面看到：</p><ol><li>在 <code>pt_regs</code> 中可以看到，system call 只设置了最前的几个变量。</li><li>在 <code>SAVE_ARGS</code> 中有很多 if else，在 <code>system_call</code> 时，<code>SAVE_ARGS</code> 是带参数的，有很多寄存器是被跳过的。</li></ol><p>对于 common_interrupt，虽然 SAVE_ARGS 中所有的参数看起来都没有跳过，其实我们可以看到 <code>SAVE_ARGS</code> 中</p><pre tabindex=0><code>	subq  $9*8+\addskip,%rsp
+</code></pre><p><code>rsp</code> 留出的空间是 8*9 个地址，一个地址一个字节，那就是留出了 72 个字节。而 pt_regs 中的寄存器都是 64 bit 的，也就是 8 个字节一个寄存器。所以 rsp 留出的空间是 9 个寄存器。如果 rsp 指向 r11 的话，只留出了从 rdi 到 r11 的空间。</p><p>虽然，我们的 do_IRQ 在新栈上，但是 pt_regs 是在旧栈上的。（符合汇编栈上参数在上级函数处）</p><h3 id=restore_args-和-iretq>RESTORE_ARGS 和 iretq
+<a class=anchor href=#restore_args-%e5%92%8c-iretq aria-hidden=true>#</a></h3><p>从 gdb 运行结果来看很多的如果没有发生 reint，后续基本就是 restore_args 和 iret 了</p><h3 id=summary-of-common_interrupt>summary of <code>common_interrupt</code>
+<a class=anchor href=#summary-of-common_interrupt aria-hidden=true>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// linux-2.6.24/arch/x86/kernel/entry_64.S
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>.macro</span> <span style=color:#66d9ef>interrupt</span> <span style=color:#66d9ef>func</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>SAVE_ARGS</span>                       <span style=color:#75715e># 在 interrupt 中，保留了 rdi 到 r11（system call 另说）
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>leaq</span> -<span style=color:#66d9ef>ARGOFFSET</span>(%rsp),%rdi      <span style=color:#75715e># 把做好的 pt_regs 结构的地址存入了 rdi 寄存器，linux 用 rdi rxi 传参
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>pushq</span> %rbp                      <span style=color:#75715e># 把 rbp 压入栈（位于 pt_regs-&gt;rbx），用于退出中断时调用 leaveq(2. pop %rbp)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>movq</span> %rsp,%rbp                  <span style=color:#75715e># 把栈顶地址存入 rbp，用于退出中断时调用 leaveq(1. movq %rbp, %rsp)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#960050;background-color:#1e0010>1:</span>	<span style=color:#a6e22e>incl</span>	%gs:<span style=color:#66d9ef>pda_irqcount</span>        <span style=color:#75715e># Process Data Area 中断计数+1，Irq nesting counter, include/asm-x86/pda.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>cmoveq</span> %gs:<span style=color:#66d9ef>pda_irqstackptr</span>,%rsp <span style=color:#75715e># 切换到 pda_irqstackptr 栈
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>push</span>    %rbp                    <span style=color:#75715e># 在新栈上压入 rbp # 可以不用，func 里面也会 push %rbp (backlink for old unwinder）
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>call</span> <span style=color:#960050;background-color:#1e0010>\</span><span style=color:#66d9ef>func</span>                      <span style=color:#75715e># 在新栈上压入 rip
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>.endm</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>common_interrupt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>interrupt</span> <span style=color:#66d9ef>do_IRQ</span>
+</span></span><span style=display:flex><span>ret_from_intr:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>cli</span>                             <span style=color:#75715e># CLear Interrupt Flag
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>decl</span> %gs:<span style=color:#66d9ef>pda_irqcount</span>           <span style=color:#75715e># Irq nesting counter - 1
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>leaveq</span>                          <span style=color:#75715e># 是 interrupt 中的 movq 和 pushq 的逆操作
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#75715e>///...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>restore_args:
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>RESTORE_ARGS</span> <span style=color:#ae81ff>0</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>iret_label:	
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>iretq</span>
+</span></span></code></pre></div><h2 id=caller-of-common_interrupt-irq0xxy_interrupt>caller of <code>common_interrupt</code>: <code>IRQ0xXY_interrupt</code>
+<a class=anchor href=#caller-of-common_interrupt-irq0xxy_interrupt aria-hidden=true>#</a></h2><p>全局搜搜 common_interrupt 发现，它只在这里出现</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>#define BUILD_IRQ(nr) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>asmlinkage void IRQ_NAME(nr); \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>__asm__( \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>&#34;\n.p2align\n&#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>&#34;IRQ&#34; #nr &#34;_interrupt:\n\t&#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	&#34;push $~(&#34; #nr &#34;) ; &#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	&#34;jmp common_interrupt&#34;);
+</span></span></span></code></pre></div><p>展开上述的 <code>BUILD_IRQ</code>，以得到 <code>IRQ0xXY_interrupt</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// BUILD_IRQ(0x30)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>void</span> <span style=color:#a6e22e>IRQ_NAME</span>(<span style=color:#ae81ff>0x30</span>);
+</span></span><span style=display:flex><span><span style=color:#a6e22e>__asm__</span>(...)
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#a6e22e>.p2align</span>
+</span></span><span style=display:flex><span>    IRQ0x30_interrupt:
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>push</span> <span style=color:#66d9ef>$</span><span style=color:#960050;background-color:#1e0010>~</span>(<span style=color:#ae81ff>0x30</span>)
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>jmp</span> <span style=color:#66d9ef>common_interrupt</span>
+</span></span></code></pre></div><p>Break <code>push $~(0x30)</code> down:</p><ul><li>0x30 = interrupt number</li><li>~(0x30) = bitwise NOT<ul><li>~0x30 = 0xffffffffffffffcb</li></ul></li><li><code>$</code> = immediate value</li></ul><p>So this instruction:</p><pre tabindex=0><code>push $0xffffffffffffffcb
+</code></pre><p>Reason to do bitwise Not:</p><p>In common_interrupt:</p><ul><li>Negative → IRQ</li><li>Non-negative → exception error code</li></ul><p>所以这里做的是将 <code>~(0x30)</code> 压入栈，然后跳转到 common_interrupt</p><p>从 gdb 中我们也可以看到确实压了</p><pre tabindex=0><code># break at common_interrupt
+
+(gdb) bt
+#0  0xffffffff8020c480 in common_interrupt ()
+#1  0xffffffffffffffcb in ?? ()
+
+(gdb) x/xg $rsp
+0xffffffff80563f10 &lt;init_thread_union+7952&gt;:    0xffffffffffffffcb
+</code></pre><p>压入了哪个位置？在 common_interrupt 中，我们偏移 rsp 保留了 rdi 到 r11 的寄存器，那么在 jmp 前，rsp 指向的内存对应的是 pt_regs 中的 orig_rax，这也和 do_IRQ 中通过 <code>unsigned vector = ~regs->orig_rax;</code> 取到 vector 一致。</p><h2 id=construct-and--register-irq0xxy_interrupt>Construct and register <code>IRQ0xXY_interrupt</code>
+<a class=anchor href=#construct-and--register-irq0xxy_interrupt aria-hidden=true>#</a></h2><p>在讨论是谁调用 <code>IRQ0xXY_interrupt</code> 前我们需要看一下 <code>IRQ0xXY_interrupt</code> 是如何被构造，以及它注册到了哪里。</p><h3 id=construct-irq0xxy_interrupt-and-convert-irq0xxy_interrupt-to-void-interrupt>Construct <code>IRQ0xXY_interrupt</code> and convert <code>IRQ0xXY_interrupt</code> to <code>void* (interrupt[])()</code>
+<a class=anchor href=#construct-irq0xxy_interrupt-and-convert-irq0xxy_interrupt-to-void-interrupt aria-hidden=true>#</a></h3><p>通过一系列宏，构造了 224 个名为 <code>IRQ0xXY_interrupt</code> 的中断函数</p><p>并做了一个名为 interrupt 的函数指针表，其中包含 <code>IRQ0xXY_interrupt</code> 函数名</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/i8259_64.c
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#75715e>#define BUILD_IRQ(nr) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>asmlinkage void IRQ_NAME(nr); \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>__asm__( \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>&#34;\n.p2align\n&#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>&#34;IRQ&#34; #nr &#34;_interrupt:\n\t&#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        &#34;push $~(&#34; #nr &#34;) ; &#34; \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        &#34;jmp common_interrupt&#34;);
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define BI(x,y) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        BUILD_IRQ(x##y)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define BUILD_16_IRQS(x) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        BI(x,0) BI(x,1) BI(x,2) BI(x,3) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        BI(x,4) BI(x,5) BI(x,6) BI(x,7) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        BI(x,8) BI(x,9) BI(x,a) BI(x,b) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        BI(x,c) BI(x,d) BI(x,e) BI(x,f)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>                                      <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x2</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x3</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x4</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x5</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x6</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x7</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x8</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0x9</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xa</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xb</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xc</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xd</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xe</span>) <span style=color:#a6e22e>BUILD_16_IRQS</span>(<span style=color:#ae81ff>0xf</span>)
+</span></span><span style=display:flex><span><span style=color:#75715e>/* 以上一系列宏用于构造 IRQ0xXY_interrupt */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* 上面是用 BUILD_IRQ 拼成函数名的，下面是用 IRQ 拼成函数名的。数量上都是 224。*/</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* 不太合适：名字、数量是分离的*/</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* 以下几个宏用于是构造 interrupt 这个函数指针数组指向 IRQ0xXY_interrupt */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define IRQ(x,y) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        IRQ##x##y##_interrupt
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define IRQLIST_16(x) \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        IRQ(x,0), IRQ(x,1), IRQ(x,2), IRQ(x,3), \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        IRQ(x,4), IRQ(x,5), IRQ(x,6), IRQ(x,7), \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        IRQ(x,8), IRQ(x,9), IRQ(x,a), IRQ(x,b), \
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        IRQ(x,c), IRQ(x,d), IRQ(x,e), IRQ(x,f)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define NR_VECTORS 256
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define FIRST_EXTERNAL_VECTOR        0x20
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> (<span style=color:#f92672>*</span>interrupt[NR_VECTORS <span style=color:#f92672>-</span> FIRST_EXTERNAL_VECTOR])(<span style=color:#66d9ef>void</span>) <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>                                          <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x2</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x3</span>),
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x4</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x5</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x6</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x7</span>),
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x8</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0x9</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xa</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xb</span>),
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xc</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xd</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xe</span>), <span style=color:#a6e22e>IRQLIST_16</span>(<span style=color:#ae81ff>0xf</span>)
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><p>至此，我们实现了：</p><ul><li>一系列 <code>IRQ0xXY_interrupt</code> 被构造出来，被转换成了 <code>void* (interrupt[])()</code> 函数指针表，存了起来。</li><li>不同的 <code>IRQ0xXY_interrupt</code> 会压入不同的 vector number（取反的）。</li></ul><h3 id=register-void-interrupt-irq0xxy_interrupt-to-cpu>Register <code>void* (interrupt[])()</code> (<code>IRQ0xXY_interrupt</code>) to CPU
+<a class=anchor href=#register-void-interrupt-irq0xxy_interrupt-to-cpu aria-hidden=true>#</a></h3><p>搜索全文我们并没有找到 <code>IRQ0xXY_interrupt</code> 的调用点，但是看到了 interrupt 函数指针表的调用，也一样，注册一堆函数指针到别处，非常像 device driver。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span>start_kernel;
+</span></span><span style=display:flex><span>  init_IRQ;
+</span></span><span style=display:flex><span>    set_intr_gate;
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>_set_gate</span>(<span style=color:#f92672>&amp;</span>idt_table[nr], GATE_INTERRUPT, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) interrupt[i], <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>);
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>idt_table</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.skip</span> <span style=color:#ae81ff>256</span> * <span style=color:#ae81ff>16</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#66d9ef>.bss.page_aligned</span>, <span style=color:#e6db74>&#34;aw&#34;</span>, <span style=color:#a6e22e>@nobits</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.align</span> <span style=color:#66d9ef>PAGE_SIZE</span>
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/setup64.c
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>struct</span> desc_ptr idt_descr <span style=color:#f92672>=</span> { <span style=color:#ae81ff>256</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>16</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) idt_table };
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>start_kernel</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>trap_init</span>();
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>cpu_init</span>();
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>asm</span> <span style=color:#a6e22e>volatile</span>(<span style=color:#e6db74>&#34;lidt %w0&#34;</span><span style=color:#f92672>::</span><span style=color:#e6db74>&#34;m&#34;</span> (<span style=color:#f92672>*</span>ptr));
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>start_secondary</span>()
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>cpu_init</span>();
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>asm</span> <span style=color:#a6e22e>volatile</span>(<span style=color:#e6db74>&#34;lidt %w0&#34;</span><span style=color:#f92672>::</span><span style=color:#e6db74>&#34;m&#34;</span> (<span style=color:#f92672>*</span>ptr));
+</span></span></code></pre></div><p>所以这张函数指针表是被加载到 idtr(interrupt descriptor table register) 中。当 CPU 发生中断时会读取 idtr 中保存的内存地址（对应的正是一系列 <code>IRQ0xXY_interrupt</code>），然后 CPU 会然后跳转到该地址（+ vector 偏移）执行正确的 <code>IRQ0xXY_interrupt</code>。</p><h4 id=internal-vector>internal vector
+<a class=anchor href=#internal-vector aria-hidden=true>#</a></h4><p>我们在构造 <code>IRQ0xXY_interrupt</code> 时看到</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>#define FIRST_EXTERNAL_VECTOR        0x20
+</span></span></span></code></pre></div><p>也就是说外部的中断是从 0x20 开始到 0xff，共 224 个，前面几个是 CPU 内部的中断</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/traps_64.c
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>start_kernel;
+</span></span><span style=display:flex><span>    trap_init;
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>set_intr_gate</span>(<span style=color:#ae81ff>0</span>,<span style=color:#f92672>&amp;</span>divide_error);
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>_set_gate</span>(<span style=color:#f92672>&amp;</span>idt_table[nr], GATE_INTERRUPT, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) func, <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>); 
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// (1..13)
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#a6e22e>set_intr_gate</span>(<span style=color:#ae81ff>14</span>,<span style=color:#f92672>&amp;</span>page_fault);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// (15..19)
+</span></span></span></code></pre></div><p>在 <code>trap_init</code> 中我们可以看到很多 exception 的处理函数被写入 <code>idt_table</code>，在 cpu_init 时一起加载到 idtr 中</p><pre tabindex=0><code class=language-gdb data-lang=gdb>set $i=0
+set $number_of_vectors=256
+while ($i &lt; $number_of_vectors)
+    set $idt_func = ((unsigned long long)idt_table[$i].offset_high &lt;&lt; 32) | \
+                ((unsigned long long)idt_table[$i].offset_middle &lt;&lt; 16) | \
+                (unsigned long long)idt_table[$i].offset_low
+    printf &#34;vector=0x%02x: &#34;, $i
+    x/a $idt_func
+    set $i=$i+1
+end
+</code></pre><pre tabindex=0><code class=language-gdb data-lang=gdb>(gdb) source print_interrupt_table.gdb
+vector=0x00: 0xffffffff8020d090 &lt;divide_error&gt;:	0xf85058d4850006a             ← internal interrupt
+# ...
+vector=0x13: 0xffffffff8020ced0 &lt;simd_coprocessor_error&gt;:	0xf3c058d4850006a ← the last vector(19) that trap_init set
+vector=0x14: 0xffffffff802001c0 &lt;early_idt_handler&gt;:	0x7402000000443d83    ← 在 x86_64_start_kernel 中初始化的
+# ...
+vector=0x21: 0xffffffff80211617 &lt;IRQ0x21_interrupt&gt;:	0x6affffae62e9de6a    ← 外部中断处理函数
+# ...
+vector=0x7f: 0xffffffff802118a9 &lt;IRQ0x7f_interrupt&gt;:	0x68ffffabd0e9806a
+vector=0x80: 0xffffffff80226170 &lt;ia32_syscall&gt;:	0xfc50c089fbf8010f
+vector=0x81: 0xffffffff802118ba &lt;IRQ0x81_interrupt&gt;:	0xabbce9ffffff7e68
+# ...
+vector=0xee: 0xffffffff80211cfc &lt;IRQ0xee_interrupt&gt;:	0xa77ae9ffffff1168
+vector=0xef: 0xffffffff8020cba0 &lt;apic_timer_interrupt&gt;:	0x8348fcffffff1068
+# ...
+</code></pre><h2 id=caller-of-irq0xxy_interrupt-x86-cpu>caller of <code>IRQ0xXY_interrupt</code>: x86 CPU
+<a class=anchor href=#caller-of-irq0xxy_interrupt-x86-cpu aria-hidden=true>#</a></h2><p>到 IDT 似乎一切都完成了，但是我们还遗留几个问题：</p><ol><li>pt_regs 中的 最下部 ss 到 rip 是谁保存的</li><li>pt_regs 是在哪个栈上？内核栈。但如果现在在执行用户代码，怎么跳转到内核栈的？</li></ol><p>这两个问题都定义在了 intel 的 x86 和 x86_64 的手册（
+<a href=https://cdrdv2.intel.com/v1/dl/getContent/671200 target=_blank>Intel® 64 and IA-32 Architectures Software Developer’s Manual</a>
+）中！</p><p>在 INT 引脚被识别后，在调用 <code>IRQ0xXY_interrupt</code> 前。这段时间内，所有的行为都是 CPU 硬件自动完成的，这种 CPU 硬件的行为当然定义在了硬件手册中。</p><p>手册中关于中断的描述在 Volume 1 中的 6.5 节 INTERRUPTS AND EXCEPTIONS，简单来说这节说到，INT 被识别到后：</p><ol><li>栈会切换<ul><li>ring 级别不够时，会从
+<a href=/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/>TSS</a>
+中读取内核栈的地址，切换到内核栈</li><li>如果够（一般是在 ring0 内核态），就直接在内核栈上压入</li></ul></li><li>会将如下的寄存器会压入栈</li><li>执行注册的中断函数<ul><li>即 jmp 到 idt 中记录的地址</li></ul></li></ol><pre tabindex=0><code>        (high address)
+                          ← RSP before
+     +------------------+
+     |   SS             |
+     |   ESP            |
+     |   EFLAGS         |
+     |   CS             |
+     |   EIP            |
+     +------------------+
+     |   Error Code     | ← RSP after
+     +------------------+
+
+        (low address)
+
+Figure 6-7. Stack Usage on Transfers to Interrupt and Exception Handling Routines
+</code></pre><p>Error Code 可能有，可能无，在 Volume 3A 的 7.13 ERROR CODE 节中有如下描述：</p><blockquote><p>When an exception condition is related to a specific segment selector or IDT
+vector, the processor pushes an error code onto the stack of the exception
+handler (whether it is a procedure or task). The error code has the format
+shown in Figure 7-7. The error code resembles a segment selector; however,
+instead of a TI flag and RPL field, the error code contains 3 flags:</p></blockquote><p>在 7.15 EXCEPTION AND INTERRUPT REFERENCE 中对各种 Exception 或者说 CPU 内部的 interrupt 作了描述，例如 Divide Error Exception(#DE)这种是不会压入 Exception Error Code 的。而 Page-Fault Exception (#PF) 是会压入一个 Error Code 的，格式如下：</p><p><img src=figures/Figure_7-11._Page-Fault_Error_Code.png alt="Figure 7-11. Page-Fault Error Code"></p><h3 id=tss>TSS
+<a class=anchor href=#tss aria-hidden=true>#</a></h3><ul><li>TSS(Task State Segment): 在内存中，per task，CPU 有定义它需要的结构，Linux 负责做好这里的数据。在 context_switch 时会修改这里的数据。</li><li>GDT: TSS 在内存中的地址存于 GDT 中，per CPU</li></ul><h2 id=conclusion>Conclusion
+<a class=anchor href=#conclusion aria-hidden=true>#</a></h2><p>至此，一切皆明朗，让我们来总结一下在 INT 引脚被 CPU 检测到后发生的事情吧</p><h3 id=q1-int-到-do_irq>Q1: INT 到 <code>do_IRQ</code>
+<a class=anchor href=#q1-int-%e5%88%b0-do_irq aria-hidden=true>#</a></h3><blockquote><ol><li>在 CPU 发现 INT 引脚电平变更，中断当前指令片段的执行后，到调用 <code>do_IRQ</code> 之间到底发生了什么？</li></ol></blockquote><ol><li>CPU 通过 GDT 取到当前 Task 的 TSS，并取到内核栈所在的内存地址，切换到内核栈</li><li>CPU 压入基础寄存器，并跳转到 idtr 中记录的地址（带偏移），该地址上的数据由 Linux 构造，是 <code>IRQ0xXY_interrupt</code></li><li><code>IRQ0xXY_interrupt</code>: 压入 interrupt vector（取反）</li><li><code>common_interrupt</code>:<ol><li>压入所有剩余的寄存器</li><li>准备 <code>do_IRQ</code> 的参数 (<code>struct *pt_regs</code>)</li><li>切换栈，以及退出后的恢复</li></ol></li><li><code>do_IRQ</code>: 拿到 <code>pt_regs -> orig_rax</code> 中保存的 <code>vector</code></li></ol><h3 id=q2-栈的变更和寄存器的保存>Q2: 栈的变更和寄存器的保存
+<a class=anchor href=#q2-%e6%a0%88%e7%9a%84%e5%8f%98%e6%9b%b4%e5%92%8c%e5%af%84%e5%ad%98%e5%99%a8%e7%9a%84%e4%bf%9d%e5%ad%98 aria-hidden=true>#</a></h3><blockquote><ol start=2><li>do_IRQ 时，被中断的任务，用户栈、内核栈、中断栈之间是如何变更的？</li><li>中断当前的指令片段，需要保存寄存器，这些寄存器是如何保存和恢复的？</li></ol></blockquote><ol><li>被中断的如果是普通用户的任务，CPU 会从 GS 拿到 TSS 地址（per core），从 TSS 中拿到 内核栈地址（per task），并由 CPU 硬件压入基础寄存器到内核栈</li><li>IRQ0xXY_interrupt 压入中断向量</li><li>common_interrupt 继续压入所有剩余的寄存器，并做好换栈前的准备</li><li>common_interrupt 从 GS 中拿到中断栈地址（per core），然后切换到中断栈</li></ol><p>详见
+<a href=#gdb-%e8%bf%bd%e8%b8%aa%e6%a0%88%e5%92%8c%e6%a0%88%e4%b8%8a%e6%95%b0%e6%8d%ae>gdb 追踪栈和栈上数据</a></p><h3 id=调用-do_irq-前的准备结果>调用 <code>do_IRQ</code> 前的准备结果
+<a class=anchor href=#%e8%b0%83%e7%94%a8-do_irq-%e5%89%8d%e7%9a%84%e5%87%86%e5%a4%87%e7%bb%93%e6%9e%9c aria-hidden=true>#</a></h3><h4 id=pt_regs><code>pt_regs</code>
+<a class=anchor href=#pt_regs aria-hidden=true>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>struct</span> pt_regs {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r15;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r14;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r13;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r12;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rbp;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rbx;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* arguments: non interrupts/non tracing syscalls only save upto here*/</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r11;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r10;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r9;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> r8;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rax;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rcx;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rdx;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rsi;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rdi;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> orig_rax;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* end of arguments */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* cpu exception frame or undefined */</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rip;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> cs;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> eflags;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> rsp;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> ss;
+</span></span><span style=display:flex><span><span style=color:#75715e>/* top of stack page */</span>
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><ul><li>栈底的 5 个寄存器，由 CPU 硬件压入</li><li><code>orig_rax</code> 由 <code>IRQ0xXY_interrupt</code> 压入</li><li>剩余的上半部寄存器由 <code>common_interrupt</code> 中的 <code>SAVE_ARGS</code> 压入</li></ul><h4 id=设置-rdi-指向-pt_regs>设置 <code>rdi</code> 指向 <code>pt_regs</code>
+<a class=anchor href=#%e8%ae%be%e7%bd%ae-rdi-%e6%8c%87%e5%90%91-pt_regs aria-hidden=true>#</a></h4><p>使用 <code>leaq</code> 算出 该结构在内存中的地址，存入 rdi，作为 do_IRQ 的第一个参数</p><h2 id=gdb-追踪栈和栈上数据>gdb 追踪栈和栈上数据
+<a class=anchor href=#gdb-%e8%bf%bd%e8%b8%aa%e6%a0%88%e5%92%8c%e6%a0%88%e4%b8%8a%e6%95%b0%e6%8d%ae aria-hidden=true>#</a></h2><h3 id=at-irq0xxy_interrupt>at <code>IRQ0xXY_interrupt</code>
+<a class=anchor href=#at-irq0xxy_interrupt aria-hidden=true>#</a></h3><pre tabindex=0><code>(gdb) bt
+#0  0xffffffff80211680 in IRQ0x30_interrupt ()
+#1  0xffffffff80587a7f in tty_init () at drivers/char/tty_io.c:4111
+#2  0xffffffff8056c119 in x86_64_start_kernel (real_mode_data=0x0) at arch/x86/kernel/head64.c:73
+#3  0x0000000000000000 in ?? ()
+(gdb) x/16gx $rsp
+0xffffffff80563f58 &lt;init_thread_union+8024&gt;:	0xffffffff80587a7f	0x0000000000000010
+0xffffffff80563f68 &lt;init_thread_union+8040&gt;:	0x0000000000000246	0xffffffff80563f80
+0xffffffff80563f78 &lt;init_thread_union+8056&gt;:	0x0000000000000018	0xffffffff8056c9d5
+0xffffffff80563f88 &lt;init_thread_union+8072&gt;:	0x0000000000000000	0xffffffff805900a0
+0xffffffff80563f98 &lt;init_thread_union+8088&gt;:	0xffff810000000000	0x0000000000013120
+0xffffffff80563fa8 &lt;init_thread_union+8104&gt;:	0x0000000000000000	0x0000000000000000
+0xffffffff80563fb8 &lt;init_thread_union+8120&gt;:	0xffffffff80563fe8	0xffffffff8056c119
+0xffffffff80563fc8 &lt;init_thread_union+8136&gt;:	0x80208e00001001c0	0x00000000ffffffff
+</code></pre><p>栈上有：</p><ul><li><code>0xffffffff80587a7f</code> 是 PC (RIP, EIP, instruction pointer)</li></ul><table><thead><tr><th>Stack Address</th><th>Value</th><th>Register Equivalent</th></tr></thead><tbody><tr><td>0xffffffff80563f58</td><td>0xffffffff80587a7f</td><td>RIP (Instruction Pointer)</td></tr><tr><td>0xffffffff80563f60</td><td>0x0000000000000010</td><td>CS (Code Segment)</td></tr><tr><td>0xffffffff80563f68</td><td>0x0000000000000246</td><td>RFLAGS (Status Flags)</td></tr><tr><td>0xffffffff80563f70</td><td>0xffffffff80563f80</td><td>RSP (Stack Pointer)</td></tr><tr><td>0xffffffff80563f78</td><td>0x0000000000000018</td><td>SS (Stack Segment)</td></tr></tbody></table><p>因为是 interrupt 不是 exception 所以这里没有压 Error code</p><p>确实符合 intel 手册中所说，这些寄存器确实是被压入了。再贴一下 intel 手册中说的</p><pre tabindex=0><code>                          ← RSP before
+     +------------------+
+     |   SS             |
+     |   ESP            |
+     |   EFLAGS         |
+     |   CS             |
+     |   EIP            |
+     +------------------+
+     |   Error Code     | ← RSP after
+     +------------------+
+
+Figure 6-7. Stack Usage on Transfers to Interrupt and Exception Handling Routines
+</code></pre><h3 id=at-common_interrupt>at <code>common_interrupt</code>
+<a class=anchor href=#at-common_interrupt aria-hidden=true>#</a></h3><p>到 common_interrupt</p><pre tabindex=0><code>(gdb) bt
+#0  0xffffffff8020c480 in common_interrupt ()
+#1  0xffffffffffffffcf in ?? ()
+#2  0xffffffff80587a7f in tty_init () at drivers/char/tty_io.c:4111
+#3  0xffffffff8056c119 in x86_64_start_kernel (real_mode_data=0x0) at arch/x86/kernel/head64.c:73
+#4  0x0000000000000000 in ?? ()
+(gdb) x/8x $rsp
+0xffffffff80563f50 &lt;init_thread_union+8016&gt;:    0xffffffffffffffcf      0xffffffff80587a7f
+0xffffffff80563f60 &lt;init_thread_union+8032&gt;:    0x0000000000000010      0x0000000000000246
+0xffffffff80563f70 &lt;init_thread_union+8048&gt;:    0xffffffff80563f80      0x0000000000000018
+0xffffffff80563f80 &lt;init_thread_union+8064&gt;:    0xffffffff8056c9d5      0x0000000000000000
+</code></pre><p>因为是 jmp 过来的所以栈就乱了，因为 common_interrupt 没有栈上参数，所以推测栈顶存的是上层函数的 rip，但它是 vector (0xffffffffffffffcf)，再根据符号表 (Symbol Table) 判断不是，所以打印 ??，再往上找，</p><pre tabindex=0><code>(gdb) info symbol *(unsigned long *)($rsp+8)
+console_init in section .init.text
+(gdb) p/a *(unsigned long *)($rsp+8)
+$6 = 0xffffffff80587a7f &lt;console_init&gt;
+(gdb) x/i *(unsigned long *)($rsp+8)
+   0xffffffff80587a7f &lt;console_init&gt;:   push   %rbp
+</code></pre><p>此时的汇编代码</p><pre tabindex=0><code>0xffffffff8020c480 &lt;common_interrupt&gt;           cld
+0xffffffff8020c481 &lt;common_interrupt+1&gt;         sub    $0x48,%rsp
+0xffffffff8020c485 &lt;common_interrupt+5&gt;         mov    %rdi,0x40(%rsp)
+0xffffffff8020c48a &lt;common_interrupt+10&gt;        mov    %rsi,0x38(%rsp)
+0xffffffff8020c48f &lt;common_interrupt+15&gt;        mov    %rdx,0x30(%rsp)
+0xffffffff8020c494 &lt;common_interrupt+20&gt;        mov    %rcx,0x28(%rsp)
+0xffffffff8020c499 &lt;common_interrupt+25&gt;        mov    %rax,0x20(%rsp)
+0xffffffff8020c49e &lt;common_interrupt+30&gt;        mov    %r8,0x18(%rsp)
+0xffffffff8020c4a3 &lt;common_interrupt+35&gt;        mov    %r9,0x10(%rsp)
+0xffffffff8020c4a8 &lt;common_interrupt+40&gt;        mov    %r10,0x8(%rsp)
+0xffffffff8020c4ad &lt;common_interrupt+45&gt;        mov    %r11,(%rsp)
+0xffffffff8020c4b1 &lt;common_interrupt+49&gt;        lea    -0x30(%rsp),%rdi
+0xffffffff8020c4b6 &lt;common_interrupt+54&gt;        push   %rbp
+0xffffffff8020c4b7 &lt;common_interrupt+55&gt;        mov    %rsp,%rbp
+0xffffffff8020c4ba &lt;common_interrupt+58&gt;        testl  $0x3,0x88(%rdi)
+0xffffffff8020c4c4 &lt;common_interrupt+68&gt;        je     0xffffffff8020c4c9 &lt;common_interrupt+73&gt;
+0xffffffff8020c4c6 &lt;common_interrupt+70&gt;        swapgs
+0xffffffff8020c4c9 &lt;common_interrupt+73&gt;        incl   %gs:0x20
+0xffffffff8020c4d1 &lt;common_interrupt+81&gt;        cmove  %gs:0x28,%rsp
+0xffffffff8020c4db &lt;common_interrupt+91&gt;        push   %rbp
+0xffffffff8020c4dc &lt;common_interrupt+92&gt;        call   0xffffffff8020f027 &lt;do_IRQ&gt;
+0xffffffff8020c4e1 &lt;common_interrupt+97&gt;        cli
+0xffffffff8020c4e2 &lt;common_interrupt+98&gt;        decl   %gs:0x20
+0xffffffff8020c4ea &lt;common_interrupt+106&gt;       leave
+0xffffffff8020c4eb &lt;common_interrupt+107&gt;       mov    %gs:0x10,%rcx
+0xffffffff8020c4f4 &lt;common_interrupt+116&gt;       sub    $0x1fd8,%rcx
+0xffffffff8020c4fb &lt;common_interrupt+123&gt;       testl  $0x3,0x58(%rsp)
+</code></pre><h4 id=dwarf-and-cfi>dwarf and cfi
+<a class=anchor href=#dwarf-and-cfi aria-hidden=true>#</a></h4><p><a href=https://dwarfstd.org/doc/Debugging%20using%20DWARF-2012.pdf target=_blank>Debugging using DWARF-2012</a></p><blockquote><p>with gemini:</p><p>How does gdb bt know 0xffffffff80587a7f is upper rip? In my mind. it should goes up to $rbp+0x8 to get the upper rip.</p><p>Your logic regarding $rbp + 0x8 is exactly how a &ldquo;standard&rdquo; frame pointer-based backtrace works. However, in the output you provided, GDB is navigating a Kernel Interrupt Stack Frame, which follows different rules than a standard function prologue.</p><p>GDB isn&rsquo;t guessing; it&rsquo;s using DWARF Unwind Records. These records tell GDB: &ldquo;If you are inside common_interrupt, the return address isn&rsquo;t at RBP+8; it&rsquo;s at RSP+8 because the CPU pushed a hardware frame.&rdquo; The value 0xffffffffffffffcf (which GDB shows as Frame #1) is likely the result of the kernel pushing a &ldquo;trap number&rdquo; or &ldquo;error code&rdquo; onto the stack right before the RIP, which GDB is trying its best to interpret.</p><p>DWARF Call Frame Information (CFI) is a standardized data format used by debuggers (like GDB) and exception handlers to unwind the stack, allowing them to map machine states back to source code across function calls. It describes how to restore registers and find the Call Frame Address (CFA) at any point in a program</p><p>Directives: Assembler directives (e.g., .cfi_startproc, .cfi_def_cfa, .cfi_offset) allow programmers to manually encode this information in handwritten assembly.</p></blockquote><h4 id=before-inclgspda_irqcount>before <code>incl %gs:pda_irqcount</code>
+<a class=anchor href=#before-inclgspda_irqcount aria-hidden=true>#</a></h4><p>ni 到执行 <code>incl %gs:0x20</code> 前（swapgs 这里被 je 跳过了）</p><p>从 qemu 中拿到 GS 是 <code>0xffffffff8052a000</code></p><pre tabindex=0><code>(gdb) # 查看 nesting irq counter 从 -1 变成了 0
+(gdb) x 0xffffffff8052a000+0x20
+0xffffffff8052a020 &lt;boot_cpu_pda+32&gt;:   0x00000000ffffffff
+(gdb) ni # incl	%gs:pda_irqcount
+0xffffffff8020c4d1 in common_interrupt ()
+(gdb) x 0xffffffff8052a000+0x20
+0xffffffff8052a020 &lt;boot_cpu_pda+32&gt;:   0x0000000000000000
+</code></pre><h4 id=换栈前的栈上数据和-pt_regs>换栈前的栈上数据和 pt_regs
+<a class=anchor href=#%e6%8d%a2%e6%a0%88%e5%89%8d%e7%9a%84%e6%a0%88%e4%b8%8a%e6%95%b0%e6%8d%ae%e5%92%8c-pt_regs aria-hidden=true>#</a></h4><pre tabindex=0><code>(gdb) x/16xg $rsp
+0xffffffff80563f00 &lt;init_thread_union+7936&gt;:    0xffffffff80563fb8      0x0000000000000012
+0xffffffff80563f10 &lt;init_thread_union+7952&gt;:    0xffffffff805deba0      0xffffffffffffffff
+0xffffffff80563f20 &lt;init_thread_union+7968&gt;:    0x0000000000000000      0x0000000000000046
+0xffffffff80563f30 &lt;init_thread_union+7984&gt;:    0x00000000fffedb85      0xffffffff805ef768
+0xffffffff80563f40 &lt;init_thread_union+8000&gt;:    0x0000000000000096      0xffffffff805004c8
+0xffffffff80563f50 &lt;init_thread_union+8016&gt;:    0xffffffffffffffcf      0xffffffff80587a7f
+0xffffffff80563f60 &lt;init_thread_union+8032&gt;:    0x0000000000000010      0x0000000000000246
+0xffffffff80563f70 &lt;init_thread_union+8048&gt;:    0xffffffff80563f80      0x0000000000000018
+# pt_regs
+(gdb) x/21xg $rdi
+0xffffffff80563ed8 &lt;init_thread_union+7896&gt;:	0x0000000000000086	0xffffffff804f3d00
+0xffffffff80563ee8 &lt;init_thread_union+7912&gt;:	0x0000000000000096	0x0000000000000000
+0xffffffff80563ef8 &lt;init_thread_union+7928&gt;:	0xffffffff805900a0	0xffffffff80563fb8
+0xffffffff80563f08 &lt;init_thread_union+7944&gt;:	0x0000000000000012	0xffffffff805deba0
+0xffffffff80563f18 &lt;init_thread_union+7960&gt;:	0xffffffffffffffff	0x0000000000000000
+0xffffffff80563f28 &lt;init_thread_union+7976&gt;:	0x0000000000000046	0x00000000fffedb85
+0xffffffff80563f38 &lt;init_thread_union+7992&gt;:	0xffffffff805ef768	0x0000000000000096
+0xffffffff80563f48 &lt;init_thread_union+8008&gt;:	0xffffffff805004c8	0xffffffffffffffcf
+0xffffffff80563f58 &lt;init_thread_union+8024&gt;:	0xffffffff80587a7f	0x0000000000000010
+0xffffffff80563f68 &lt;init_thread_union+8040&gt;:	0x0000000000000246	0xffffffff80563f80
+0xffffffff80563f78 &lt;init_thread_union+8056&gt;:	0x0000000000000018
+</code></pre><h5 id=此时的-bt>此时的 bt
+<a class=anchor href=#%e6%ad%a4%e6%97%b6%e7%9a%84-bt aria-hidden=true>#</a></h5><pre tabindex=0><code class=language-gdb data-lang=gdb>(gdb) x/32xg $rdi
+0xffffffff80563ed8 &lt;init_thread_union+7896&gt;:	0x0000000000000086	0xffffffff804f3d00
+0xffffffff80563ee8 &lt;init_thread_union+7912&gt;:	0x0000000000000096	0x0000000000000000
+0xffffffff80563ef8 &lt;init_thread_union+7928&gt;:	0xffffffff805900a0	0xffffffff80563fb8
+0xffffffff80563f08 &lt;init_thread_union+7944&gt;:	0x0000000000000012	0xffffffff805deba0
+0xffffffff80563f18 &lt;init_thread_union+7960&gt;:	0xffffffffffffffff	0x0000000000000000
+0xffffffff80563f28 &lt;init_thread_union+7976&gt;:	0x0000000000000046	0x00000000fffedb85
+0xffffffff80563f38 &lt;init_thread_union+7992&gt;:	0xffffffff805ef768	0x0000000000000096
+0xffffffff80563f48 &lt;init_thread_union+8008&gt;:	0xffffffff805004c8	0xffffffffffffffcf
+0xffffffff80563f58 &lt;init_thread_union+8024&gt;:	0xffffffff80587a7f	0x0000000000000010
+0xffffffff80563f68 &lt;init_thread_union+8040&gt;:	0x0000000000000246	0xffffffff80563f80
+0xffffffff80563f78 &lt;init_thread_union+8056&gt;:	0x0000000000000018	0xffffffff8056c9d5
+0xffffffff80563f88 &lt;init_thread_union+8072&gt;:	0x0000000000000000	0xffffffff805900a0
+0xffffffff80563f98 &lt;init_thread_union+8088&gt;:	0xffff810000000000	0x0000000000013120
+0xffffffff80563fa8 &lt;init_thread_union+8104&gt;:	0x0000000000000000	0x0000000000000000
+0xffffffff80563fb8 &lt;init_thread_union+8120&gt;:	0xffffffff80563fe8	0xffffffff8056c119
+0xffffffff80563fc8 &lt;init_thread_union+8136&gt;:	0x80208e00001001c0	0x00000000ffffffff
+(gdb) bt
+#0  0xffffffff8020c4b1 in common_interrupt ()
+#1  0x000000000000000e in ?? ()
+#2  0xffffffff805deba0 in printk_buf ()
+#3  0xffffffffffffffff in ?? ()
+#4  0x0000000000000000 in ?? ()
+(gdb) info register
+r10            0xffffffff805deba0  -2141328480
+</code></pre><p>gdb 一直往上找，直到栈上存着 r10 的值，以为是 rip，就解析位了 printk_buf，再下一几个就是 0xffffffffffffffff 和 0x0000000000000000，GDB 有一个内部限制，如果它认为栈已经损坏或到达了 0 地址，就会停止。</p><p>手动把 0 改掉</p><pre tabindex=0><code>(gdb) set *0xffffffff80563f20=0xffffffffffffffff
+(gdb) p *0xffffffff80563f20
+$7 = -1
+(gdb) bt
+#0  0xffffffff8020c4db in common_interrupt ()
+#1  0xffffffff80563fb8 in init_thread_union ()
+#2  0x0000000000000012 in ?? ()
+#3  0xffffffff805deba0 in printk_buf ()
+#4  0xffffffffffffffff in ?? ()
+#5  0x00000000ffffffff in ?? ()
+#6  0x0000000000000046 in ?? ()
+#7  0x00000000fffedb85 in ?? ()
+#8  0xffffffff805ef768 in boot_tvec_bases ()
+#9  0x0000000000000096 in ?? ()
+#10 0xffffffff805004c8 in curr_clocksource ()
+#11 0xffffffffffffffcf in ?? ()
+#12 0xffffffff80587a7f in tty_init () at drivers/char/tty_io.c:4111
+Backtrace stopped: previous frame inner to this frame (corrupt stack?)
+(gdb) p $rbp
+$8 = (void *) 0xffffffff80563f00 &lt;init_thread_union+7936&gt;
+(gdb) set *0xffffffff80563f20=0x0
+</code></pre><p>一般情况的 gdb bt 的逻辑大概是这样的：</p><pre tabindex=0><code>set $tmp_rbp=$rbp
+set $tmp_rip=$rip
+
+while ($tmp_rbp != 0)
+    print/x $tmp_rip
+    set $tmp_rip=*(unsigned long *)($tmp_rbp+0x8)
+    set $tmp_rbp=*(unsigned long *)($tmp_rbp)
+end
+</code></pre><p>但这里有 DWARF，所以找的方式不是完全按照这个方式的，我们先不深究了。</p><h4 id=rsp-切换到中断栈>rsp 切换到中断栈
+<a class=anchor href=#rsp-%e5%88%87%e6%8d%a2%e5%88%b0%e4%b8%ad%e6%96%ad%e6%a0%88 aria-hidden=true>#</a></h4><p>同样从 qemu 中拿到 GS 是 <code>0xffffffff8052a000</code>，偏移 0x28 就是 <code>irqstackptr</code></p><pre tabindex=0><code>(gdb) x $rsp
+0xffffffff80563f00 &lt;init_thread_union+7936&gt;:    0xffffffff80563fb8
+(gdb) x 0xffffffff8052a000+0x28 # %gs:pda_irqstackptr
+0xffffffff8052a028 &lt;boot_cpu_pda+40&gt;:   0xffffffff805c0fc0
+(gdb) ni # cmoveq %gs:pda_irqstackptr,%rsp
+0xffffffff8020c4db in common_interrupt ()
+(gdb) x $rsp
+0xffffffff805c0fc0 &lt;boot_cpu_stack+16320&gt;:      0x0000000000000000
+(gdb) ni # push %rbp
+(gdb) x/2xg $rsp
+0xffffffff805c0fb8 &lt;boot_cpu_stack+16312&gt;:	0xffffffff80563f00	0x0000000000000000
+(gdb) bt
+#0  0xffffffff8020c4dc in common_interrupt ()
+#1  0xffffffff80563f00 in init_thread_union ()
+#2  0x0000000000000000 in ?? ()
+(gdb) x/xg $rdi
+0xffffffff80563ed8 &lt;init_thread_union+7896&gt;:    0x0000000000000086
+</code></pre><p>rsp 记录的内存中存的是 rbp 内核栈正常运行的程序的 rbp</p><h4 id=退出-do_irq>退出 do_IRQ
+<a class=anchor href=#%e9%80%80%e5%87%ba-do_irq aria-hidden=true>#</a></h4><p>在 do_IRQ 后面打个断点，如果在 common_interrupt 停太久会触发嵌套 interrupt</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-b data-lang=b><span style=display:flex><span><span style=color:#75715e>b *0xffffffff8020c4ea
+</span></span></span></code></pre></div><h5 id=leave-前>leave 前
+<a class=anchor href=#leave-%e5%89%8d aria-hidden=true>#</a></h5><pre tabindex=0><code>(gdb) p $rsp
+$10 = (void *) 0xffffffff805c0fb8 &lt;boot_cpu_stack+16312&gt;
+(gdb) x/gx $rbp
+0xffffffff80563f00 &lt;init_thread_union+7936&gt;:    0xffffffff80563fb8
+(gdb) bt
+#0  0xffffffff8020c4ea in common_interrupt ()
+#1  0xffffffff80563f00 in init_thread_union ()
+#2  0x0000000000000000 in ?? ()
+</code></pre><p>此时 rbp 已经回到内核栈上了，rsp 还在中断栈上，而且并没有归位到传入时的位置，但是无所谓，因为马上就会被 common_interrupt 减回了。</p><p>此时 rbp 指在存放被中断函数的 rbp 的内存上，是在 common_interrupt 压入的</p><h5 id=leave-后>leave 后
+<a class=anchor href=#leave-%e5%90%8e aria-hidden=true>#</a></h5><pre tabindex=0><code>(gdb) ni # leaveq
+0xffffffff8020c4eb in common_interrupt ()
+(gdb) p $rsp
+$12 = (void *) 0xffffffff80563f08 &lt;init_thread_union+7944&gt;
+(gdb) p $rbp
+$13 = (void *) 0xffffffff80563fb8 &lt;init_thread_union+8120&gt;
+(gdb) bt
+#0  0xffffffff8020c4eb in common_interrupt ()
+#1  0x0000000000000013 in ?? ()
+#2  0xffffffff805deba0 in printk_buf ()
+#3  0xffffffffffffffff in ?? ()
+#4  0x0000000000000000 in ?? ()
+</code></pre><ul><li>rbp 已经恢复到了内核栈正常运行的程序的 rbp （也就是 leaveq 前的 (x/gx $rbp)）</li><li>rsp 也恢复到了内核栈 push rbp 前的 rsp，（也就是 leaveq 前的 ($rbp+0x8)）</li></ul><h4 id=恢复寄存器和-iret>恢复寄存器和 iret
+<a class=anchor href=#%e6%81%a2%e5%a4%8d%e5%af%84%e5%ad%98%e5%99%a8%e5%92%8c-iret aria-hidden=true>#</a></h4><pre tabindex=0><code>// ...
+0xffffffff8020c517 &lt;common_interrupt+151&gt;       cli
+0xffffffff8020c518 &lt;common_interrupt+152&gt;       mov    (%rsp),%r11
+0xffffffff8020c51c &lt;common_interrupt+156&gt;       mov    0x8(%rsp),%r10
+0xffffffff8020c521 &lt;common_interrupt+161&gt;       mov    0x10(%rsp),%r9
+0xffffffff8020c526 &lt;common_interrupt+166&gt;       mov    0x18(%rsp),%r8
+0xffffffff8020c52b &lt;common_interrupt+171&gt;       mov    0x20(%rsp),%rax
+0xffffffff8020c530 &lt;common_interrupt+176&gt;       mov    0x28(%rsp),%rcx
+0xffffffff8020c535 &lt;common_interrupt+181&gt;       mov    0x30(%rsp),%rdx
+0xffffffff8020c53a &lt;common_interrupt+186&gt;       mov    0x38(%rsp),%rsi
+0xffffffff8020c53f &lt;common_interrupt+191&gt;       mov    0x40(%rsp),%rdi
+0xffffffff8020c544 &lt;common_interrupt+196&gt;       add    $0x50,%rsp
+0xffffffff8020c548 &lt;common_interrupt+200&gt;       iretq
+</code></pre><h4 id=iret-前>iret 前
+<a class=anchor href=#iret-%e5%89%8d aria-hidden=true>#</a></h4><pre tabindex=0><code>(gdb) bt
+#0  0xffffffff8020c548 in common_interrupt ()
+#1  0xffffffff80587a7f in tty_init () at drivers/char/tty_io.c:4111
+#2  0xffffffff8056c119 in x86_64_start_kernel (real_mode_data=0x0) at arch/x86/kernel/head64.c:73
+#3  0x0000000000000000 in ?? ()
+(gdb) x/16gx $rsp
+0xffffffff80563f58 &lt;init_thread_union+8024&gt;:	0xffffffff80587a7f	0x0000000000000010
+0xffffffff80563f68 &lt;init_thread_union+8040&gt;:	0x0000000000000246	0xffffffff80563f80
+0xffffffff80563f78 &lt;init_thread_union+8056&gt;:	0x0000000000000018	0xffffffff8056c9d5
+0xffffffff80563f88 &lt;init_thread_union+8072&gt;:	0x0000000000000000	0xffffffff805900a0
+0xffffffff80563f98 &lt;init_thread_union+8088&gt;:	0xffff810000000000	0x0000000000013120
+0xffffffff80563fa8 &lt;init_thread_union+8104&gt;:	0x0000000000000000	0x0000000000000000
+0xffffffff80563fb8 &lt;init_thread_union+8120&gt;:	0xffffffff80563fe8	0xffffffff8056c119
+0xffffffff80563fc8 &lt;init_thread_union+8136&gt;:	0x80208e00001001c0	0x00000000ffffffff
+</code></pre><p>栈和刚进 IRQ0x30_interrupt 一样</p><h3 id=error-code>Error Code
+<a class=anchor href=#error-code aria-hidden=true>#</a></h3><p>由于 Error Code 是可选的，我们对比一下 Divide Error 和 Page Fault 这两种 Exception 在交给汇编前的栈上数据的区别</p><h4 id=divide-error-exception>Divide Error Exception
+<a class=anchor href=#divide-error-exception aria-hidden=true>#</a></h4><p>写一个简单的除以 0 的 C 程序，并在 <code>divide_error</code> <code>do_divide_error</code> 上打断点，前者是 CPU 跳转的位置，汇编代码（类似 <code>IRQ0xXY_interrupt</code>），后者是内核的 C 代码部分（等同于 <code>do_IRQ</code>）</p><p>在 Divide Error 中</p><pre tabindex=0><code>(gdb) x/8gx $rsp
+0xffff8100078d9fd8:     0x000000000040028b      0x0000000000000033
+0xffff8100078d9fe8:     0x0000000000010246      0x00007ffff1ea3a10
+0xffff8100078d9ff8:     0x000000000000002b      0x0000000000000000
+0xffff8100078da008:     0x0000000000000000      0x0000000000000000
+</code></pre><p>continue 至 do_divide_error 中</p><pre tabindex=0><code>(gdb) p/x *regs
+$5 = {r15 = 0x0, r14 = 0x400940, r13 = 0x400900, r12 = 0x0, rbp = 0x7ffff1ea3a10, rbx = 0x7ffff1ea3a40, r11 = 0x14, r10 = 0x4, r9 = 0x2f2f2f2f2f2f2f2f, r8 = 0xfefefefefefefeff, rax = 0xa, rcx = 0x0, rdx = 0x0, rsi = 0x7ffff1ea3cd8, rdi = 0x1, orig_rax = 0xffffffffffffffff, rip = 0x40028b, cs = 0x33, eflags = 0x10246, rsp = 0x7ffff1ea3a10, ss = 0x2b}
+</code></pre><p>可以看到压上的只有 rip，并没有 error code</p><h4 id=page-fault-exception>Page-Fault Exception
+<a class=anchor href=#page-fault-exception aria-hidden=true>#</a></h4><p>At <code>page_fault</code></p><pre tabindex=0><code>(gdb) x/8gx $rsp
+0xffff81000797ffd0:     0x0000000000000007      0x00000000004b1625
+0xffff81000797ffe0:     0x0000000000000033      0x0000000000010206
+0xffff81000797fff0:     0x00007fff60bbade0      0x000000000000002b
+0xffff810007980000:     0x0000000000000000      0x0000000000000000
+</code></pre><p>At <code>do_page_fault</code></p><pre tabindex=0><code>(gdb) p/x *regs
+$10 = {r15 = 0x81fc28, r14 = 0x0, r13 = 0x81fbf0, r12 = 0x7fff60bbade0, rbp = 0x7fff60bbae50, rbx = 0x0, r11 = 0x246, r10 = 0x85f900, r9 = 0x1d4, r8 = 0x0, rax = 0xd1fdea5a, rcx = 0x4b15c2, rdx = 0x85ed1fdea5a, rsi = 0x0, rdi = 0x1200011, orig_rax = 0xffffffffffffffff, rip = 0x4b1625, cs = 0x33, eflags = 0x10206, rsp = 0x7fff60bbade0, ss = 0x2b}
+</code></pre><p>可以看到栈上多了个 0x7，并没有 error code，相关的含义，在贴一下：</p><p><img src=figures/Figure_7-11._Page-Fault_Error_Code.png alt="Figure 7-11. Page-Fault Error Code"></p></div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/avatar.jpg></div><ul><li><a href=/about>About Me</a></li><li><a href=/donate>Donate Me</a></li><li><a href=/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div></div><div class=footer><div id=tags><a href=https://bensyz.github.io/blog/tags><i class="fas fa-tags"></i></a>
+Keywords:<ul><li><a href=https://bensyz.github.io/blog/tags/Linux>Linux</a></li><li><a href=https://bensyz.github.io/blog/tags/asm>asm</a></li><li><a href=https://bensyz.github.io/blog/tags/IRQ>IRQ</a></li><li><a href=https://bensyz.github.io/blog/tags/x86-64>x86-64</a></li><li><a href=https://bensyz.github.io/blog/tags/interrupt>interrupt</a></li></ul></div><footer><hr><div><a href=/>Ben's Blog</a></div><div>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div><div><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/icons/public_safety_icon.png>
+浙公网安备 33028102001039 号</a>
+<span style="margin:0 10px"></span>
+<a target=_blank href=https://beian.miit.gov.cn/>浙ICP备2021032097号-1</a></div></footer></div></div></body></html>

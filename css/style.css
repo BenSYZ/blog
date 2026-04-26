@@ -54,6 +54,20 @@ footer > a > img{
     padding:0 0 0 10%;
 }
 
+dt::before {
+    content: "•"; /* The marker character */
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;    /* Space for the marker */
+    margin-left: -1em;
+}
+dt {
+    margin-left: 1em; /* Indent the term */
+}
+#content > dl > dd {
+    font-size:70%;
+    color:#999;
+}
 
 img {
     max-width:100%;

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Theoretical Mechanics on Ben's Blog</title><link>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/</link><description>Recent content in Theoretical Mechanics on Ben's Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 16 Sep 2021 12:30:00 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/study_notes/theoretical_mechanics/index.xml" rel="self" type="application/rss+xml"/><item><title>210916</title><link>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</link><pubDate>Thu, 16 Sep 2021 12:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/theoretical_mechanics/210916/</guid><description>Review # $F=ma$ 推出一些东西 动量定理&amp;hellip;
+最小做用量原理，路径积分
+Variational Method(变分法) # differential calculus ($d$,微分) $\to$ variational calculus($\delta$,变分)
+泛函，把函数变一点，区别于之前的微分是$x+\delta x$
+微分 $$ f(x+\delta x) = (x+\delta x)^2 = x^2 +2 \delta x x + (\delta x)^2 $$
+$$ \frac{dx^2}{dx} =2x $$
+变分： 函数变化，basis change, eg. Laplace and zeta 作基底
+Define: $\tilde{f}(x) = f(x)+\alpha \eta(x)$ as a set of function(泛函)
+$f(x)$ change little can be written as: $$ f(x) + \delta \eta(x) $$</description></item></channel></rss>
