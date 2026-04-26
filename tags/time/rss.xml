@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Time on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/time/</link><description>Recent content in Time on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 26 Feb 2020 10:05:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/time/rss.xml" rel="self" type="application/rss+xml"/><item><title>统一Linux Windows 时区</title><link>https://bensyz.github.io/blog/blogs/timezone_win_linux/</link><pubDate>Wed, 26 Feb 2020 10:05:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/timezone_win_linux/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="思路"&gt;
+ 思路
+ &lt;a class="anchor" href="#%e6%80%9d%e8%b7%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;把硬件时间修改为UTC，system的修改为local time。&lt;/p&gt;
+
+
+&lt;h2 id="windows"&gt;
+ windows
+ &lt;a class="anchor" href="#windows" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;参考
+
+&lt;a href="https://blog.csdn.net/qq_40197828/article/details/79334158" target="_blank"&gt;https://blog.csdn.net/qq_40197828/article/details/79334158&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="打开注册表编辑器"&gt;
+ 打开注册表编辑器
+ &lt;a class="anchor" href="#%e6%89%93%e5%bc%80%e6%b3%a8%e5%86%8c%e8%a1%a8%e7%bc%96%e8%be%91%e5%99%a8" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;regedit
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="新建表项"&gt;
+ 新建表项
+ &lt;a class="anchor" href="#%e6%96%b0%e5%bb%ba%e8%a1%a8%e9%a1%b9" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;在 &lt;code&gt;HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation&lt;/code&gt;中新建&lt;code&gt;RealTimeIsUniversal&lt;/code&gt;项目&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;64 位系统，“QWORD（64位）值”。&lt;/li&gt;
+&lt;li&gt;32 位系统，“DWORD（32位）值”。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;它的大体意思是，硬件时间被作为全球统一时间。&lt;/p&gt;
+
+
+&lt;h3 id="修改表项值"&gt;
+ 修改表项值
+ &lt;a class="anchor" href="#%e4%bf%ae%e6%94%b9%e8%a1%a8%e9%a1%b9%e5%80%bc" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;然后双击这一条目，弹出“编辑 QWORD（64位）值”的对话框，确保选中了“十六进制”，然后将“数值数据”改为“1”。最后点击“确定”。&lt;/p&gt;
+
+
+&lt;h3 id="可以备份下次直接注入注册表即可"&gt;
+ 可以备份下次直接注入注册表即可
+ &lt;a class="anchor" href="#%e5%8f%af%e4%bb%a5%e5%a4%87%e4%bb%bd%e4%b8%8b%e6%ac%a1%e7%9b%b4%e6%8e%a5%e6%b3%a8%e5%85%a5%e6%b3%a8%e5%86%8c%e8%a1%a8%e5%8d%b3%e5%8f%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h2 id="linux"&gt;
+ 
+
+&lt;a href="https://wiki.archlinux.org/index.php/Installation_guide" target="_blank"&gt;linux&lt;/a&gt;
+
+ &lt;a class="anchor" href="#linux" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;按照官方的操作，好像市区还是有点问题。具体是那个命令我忘记了就是搞着搞着就可以了，大家如果知道是哪个还请在评论区告诉我&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ls -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localetime
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo hwclock --systohc
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;timedatectl set-local-rtc false
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;timedatectl set-timezone Asia/Shanghai
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;timedatectl status
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;后来发现其实windows和arch linux 没必要设置时区，因为它们都是把硬件时间当作当地时间，但是ubuntu就不一样了。&lt;/p&gt;</description></item></channel></rss>

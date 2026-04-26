@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>2.Electrostatics on Ben's Blog</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/</link><description>Recent content in 2.Electrostatics on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 23 Sep 2021 00:30:00 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/rss.xml" rel="self" type="application/rss+xml"/><item><title>Electrostatic 2</title><link>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</link><pubDate>Thu, 23 Sep 2021 00:30:00 +0800</pubDate><guid>https://bensyz.github.io/blog/study_notes/electrodynamics/2.Electrostatics/1/</guid><description>&lt;h2 id="maxwells-equation"&gt;
+ Maxwell&amp;rsquo;s equation
+ &lt;a class="anchor" href="#maxwells-equation" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="gausss-law"&gt;
+ Gauss&amp;rsquo;s Law
+ &lt;a class="anchor" href="#gausss-law" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;Charge &amp;lt;-&amp;gt; Electric field Flux&lt;/p&gt;
+&lt;p&gt;一个体积内的电荷 vs 这个体积表面的通量&lt;/p&gt;
+$$
+\nabla \cdot E = \frac{\rho}{\epsilon_0}
+$$&lt;ul&gt;
+&lt;li&gt;点电荷
+
+$$
+\rho = Q \delta(r)
+$$&lt;/li&gt;
+&lt;/ul&gt;
+$$
+\int_V (\nabla \cdot E) dV = \int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV = \frac{Q}{\epsilon_0}
+$$&lt;p&gt;
+???&lt;/p&gt;
+$$
+\int_S E \cdot dS = \int_V \frac{\rho}{\epsilon_0} dV
+$$$$
+LS= E \cdot R^2 dr d\theta
+$$&lt;p&gt;
+&lt;/p&gt;
+$$
+RS = \int \frac{Q \delta(r)}{\epsilon_0} dV
+$$&lt;p&gt;&amp;hellip;&lt;/p&gt;</description></item></channel></rss>

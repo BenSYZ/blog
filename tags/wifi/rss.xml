@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Wifi on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/wifi/</link><description>Recent content in Wifi on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 25 Sep 2020 11:45:08 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/wifi/rss.xml" rel="self" type="application/rss+xml"/><item><title>树莓派4B连不上wifi的一个意想不到的原因</title><link>https://bensyz.github.io/blog/blogs/raspberrypi4B_wifi/</link><pubDate>Fri, 31 Jul 2020 15:34:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/raspberrypi4B_wifi/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="wpa_supplicant-无法配置wifi"&gt;
+ wpa_supplicant 无法配置wifi
+ &lt;a class="anchor" href="#wpa_supplicant-%e6%97%a0%e6%b3%95%e9%85%8d%e7%bd%aewifi" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;输出结果如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ➜ sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicatn/wpa_supplicant.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Successfully initialized wpa_supplicant
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: Trying to associate with SSID &lt;span style="color:#e6db74"&gt;&amp;#39;xxxxxxx&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-ASSOC-REJECT bssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;00:00:00:00:00:00 status_code&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: Trying to associate with SSID &lt;span style="color:#e6db74"&gt;&amp;#39;xxxxxxx&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-ASSOC-REJECT bssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;00:00:00:00:00:00 status_code&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: Trying to associate with SSID &lt;span style="color:#e6db74"&gt;&amp;#39;xxxxxxx&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-ASSOC-REJECT bssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;00:00:00:00:00:00 status_code&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: Trying to associate with SSID &lt;span style="color:#e6db74"&gt;&amp;#39;xxxxxxx&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-ASSOC-REJECT bssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;00:00:00:00:00:00 status_code&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-SSID-TEMP-DISABLED id&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; ssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;xxxxxxx&amp;#34;&lt;/span&gt; auth_failures&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; duration&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;10&lt;/span&gt; reason&lt;span style="color:#f92672"&gt;=&lt;/span&gt;CONN_FAILED
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: Failed to initiate sched scan
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wlan0: CTRL-EVENT-SSID-REENABLED id&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt; ssid&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;xxxxxxx&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用 &lt;code&gt;sudo iwlist wlan0 scan |grep SSID&lt;/code&gt; 能搜到，但是就是连不上。&lt;/p&gt;</description></item><item><title>Linux开机自动连接网络</title><link>https://bensyz.github.io/blog/blogs/connect_wifi_on_startup/</link><pubDate>Wed, 26 Feb 2020 10:26:09 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/connect_wifi_on_startup/</guid><description>&lt;p&gt;整合自: 
+
+&lt;a href="https://bbs.archlinux.org/viewtopic.php?id=178625" target="_blank"&gt;https://bbs.archlinux.org/viewtopic.php?id=178625&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;上一篇
+
+&lt;a href="../connect_wifi_command"&gt;文章&lt;/a&gt;
+讲到如何用命令行连接wifi，大家可以去看看。&lt;/p&gt;
+&lt;p&gt;本文参考 
+
+&lt;a href="https://bbs.archlinux.org/viewtopic.php?id=178625" target="_blank"&gt;https://bbs.archlinux.org/viewtopic.php?id=178625&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="tldr"&gt;
+ TL,DR
+ &lt;a class="anchor" href="#tldr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="wpa_supplicant"&gt;
+ &lt;code&gt;wpa_supplicant&lt;/code&gt;
+ &lt;a class="anchor" href="#wpa_supplicant" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# config wpa_supplicant&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#/etc/wpa_supplicant/wpa_supplicant-wlp5s0.conf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# enable wpa_supplicant&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;systemctl enable wpa_supplicant@wlp5s0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="config-systemd-network"&gt;
+ &lt;code&gt;config systemd-network&lt;/code&gt;
+ &lt;a class="anchor" href="#config-systemd-network" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# config systemd-network&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# /etc/systemd/network/00-wireless-dhcp.network&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;Match&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Name&lt;span style="color:#f92672"&gt;=&lt;/span&gt;wlp5s0
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;Network&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;DHCP&lt;span style="color:#f92672"&gt;=&lt;/span&gt;yes
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# enable systemd-networkd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;systemctl enable systemd-networkd.service
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="需要工具"&gt;
+ 需要工具
+ &lt;a class="anchor" href="#%e9%9c%80%e8%a6%81%e5%b7%a5%e5%85%b7" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;wpa_supplicant&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dhcpcd&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="配置文件"&gt;
+ 配置文件
+ &lt;a class="anchor" href="#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;/etc/wpa_supplicant/wpa_supplicant-网卡名.conf&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;/etc/systemd/network/00-wireless-dhcp.network&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="步骤"&gt;
+ 步骤
+ &lt;a class="anchor" href="#%e6%ad%a5%e9%aa%a4" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="1-wpa_supplicant"&gt;
+ 1. &lt;code&gt;wpa_supplicant&lt;/code&gt;
+ &lt;a class="anchor" href="#1-wpa_supplicant" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h4 id="11-查看网卡名字"&gt;
+ 1.1 查看网卡名字
+ &lt;a class="anchor" href="#11-%e6%9f%a5%e7%9c%8b%e7%bd%91%e5%8d%a1%e5%90%8d%e5%ad%97" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ip link
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 1: lo&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 2: enp4s0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 3: wlp5s0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol&gt;
+&lt;li&gt;lo 是loop设备&lt;/li&gt;
+&lt;li&gt;enp4s0 是有线设备&lt;/li&gt;
+&lt;li&gt;wlp5s0 是无线设备&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;注意我的网卡名是 &lt;code&gt;wlp5s0&lt;/code&gt;，下文中的&lt;code&gt;wlp5s0&lt;/code&gt; 都需替换成你的&lt;/strong&gt;&lt;/p&gt;</description></item></channel></rss>

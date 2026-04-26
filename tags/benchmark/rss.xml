@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Benchmark on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/benchmark/</link><description>Recent content in Benchmark on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 30 Oct 2024 11:26:47 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/benchmark/rss.xml" rel="self" type="application/rss+xml"/><item><title>7zr CPU 性能测试结果解析</title><link>https://bensyz.github.io/blog/blogs/7zr_CPU_benchmark_result_parse/</link><pubDate>Wed, 30 Oct 2024 10:07:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/7zr_CPU_benchmark_result_parse/</guid><description>&lt;h2 id="tldr"&gt;
+ TL;DR
+ &lt;a class="anchor" href="#tldr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Speed(KiB/s) = 解压大小(B) * 重复次数(#)/time(s) /1024(B/KiB)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;usage(%) ≈ 程序占用 CPU 时间/程序开始到现在为止总耗时*100%&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;R/U(MIPS) ≈ 产生的指令数(MI)/占用 CPU 的时间&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Rating(MIPS) ≈ 产生的指令数(MI)/程序耗时(s)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;7zr b -mmt1&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt; Compressing | Decompressing
+Dict Speed Usage R/U Rating | Speed Usage R/U Rating
+ KiB/s % MIPS MIPS | KiB/s % MIPS MIPS
+
+22: 4515 100 4403 4393 | 51373 100 4395 4386
+23: 3883 100 3966 3956 | 50676 100 4395 4387
+24: 3724 100 4014 4004 | 48750 100 4292 4280
+25: 3520 100 4032 4020 | 48064 100 4293 4278
+---------------------------------- | ------------------------------
+Avr: 100 4104 4093 | 100 4344 4333
+Tot: 100 4224 4213
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id="speed"&gt;
+ Speed
+ &lt;a class="anchor" href="#speed" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;这段打印在&lt;/p&gt;</description></item></channel></rss>

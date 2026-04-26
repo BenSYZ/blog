@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Struct on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/struct/</link><description>Recent content in Struct on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 05 Oct 2024 13:17:10 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/struct/rss.xml" rel="self" type="application/rss+xml"/><item><title>struct initialization in C Lang</title><link>https://bensyz.github.io/blog/blogs/struct_initialization_in_C_Lang/</link><pubDate>Sat, 20 May 2023 17:49:48 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/struct_initialization_in_C_Lang/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;看内核源码关于任务初始化的时候看到一个很奇怪的写法：&lt;code&gt;struct task_struct init_task = INIT_TASK(init_task);&lt;/code&gt;，一个没被定义变量怎么可以传给一个函数，用来
+初始化它自己。&lt;/p&gt;
+&lt;p&gt;我们把原始代码用一下这个 demo 展示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; myStruct {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; myStruct &lt;span style="color:#f92672"&gt;*&lt;/span&gt;self;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#define INIT_TASK(tsk){\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; .self = &amp;amp;tsk, \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; .a = 0, \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; .b = 1, \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; myStruct init_task &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;INIT_TASK&lt;/span&gt;(init_task);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/*
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 展开后：
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * struct myStruct init_task = { .self = &amp;amp;init_task, .a = 0, .b = 1, };
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="whats-this"&gt;
+ What&amp;rsquo;s this?
+ &lt;a class="anchor" href="#whats-this" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;INIT_TASK&lt;/code&gt; 是一个宏，由于宏是在编译时展开，所以 &lt;code&gt;init_task&lt;/code&gt; 其实并不是作为
+参数被传入的，而是在这里展开。同时 &lt;code&gt;INIT_TASK&lt;/code&gt; 只用了 &lt;code&gt;init_task&lt;/code&gt; 的地址，而
+并没有用 &lt;code&gt;init_task&lt;/code&gt; 这个结构体本身。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;{.self = &amp;amp;tsk, .a = 0, .b = 1,}&lt;/code&gt; 是什么？结构体的初始化。&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h3 id="何时分配-init_task-的地址"&gt;
+ 何时分配 &lt;code&gt;init_task&lt;/code&gt; 的地址
+ &lt;a class="anchor" href="#%e4%bd%95%e6%97%b6%e5%88%86%e9%85%8d-init_task-%e7%9a%84%e5%9c%b0%e5%9d%80" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;那 &lt;code&gt;init_task&lt;/code&gt; 的地址是在什么时候分配的呢？这个结构体的赋值有些复杂，因为涉及到
+取址。我们看一个简单的例子：&lt;/p&gt;</description></item></channel></rss>

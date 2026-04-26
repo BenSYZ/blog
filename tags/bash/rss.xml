@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Bash on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/bash/</link><description>Recent content in Bash on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 18 Jul 2025 16:18:39 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/bash/rss.xml" rel="self" type="application/rss+xml"/><item><title>file descriptor and fd redirection in bash</title><link>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</link><pubDate>Fri, 18 Jul 2025 16:18:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</guid><description>&lt;h2 id="文件描述符"&gt;
+ 文件描述符
+ &lt;a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;文件描述符（file descriptor，简称 fd）在 Linux 中表示文件的句柄（file handle）但它到底是个啥呢？我们知道在 Linux 中，我们可以用 &lt;code&gt;open&lt;/code&gt; 函数打开一个文件，返回的是 &lt;code&gt;int&lt;/code&gt;，所以 fd 就是一个整型数组。我们可以在 &lt;code&gt;/proc/&amp;lt;pid&amp;gt;/fd&lt;/code&gt; 中看到某个进程当前打开的文件。如果是磁盘上的文件，那就是一个 symbolic link 指向那个文件。当然还有其他管道文件。&lt;/p&gt;
+&lt;p&gt;那这个整型变量 fd 到底是什么呢？我们会发现 fd 的来源 &lt;code&gt;open&lt;/code&gt; 其实不是普通的函数，它其实是一个系统调用，是 Linux 内核提供给应用程序的 API。在内核中 fd 这个整型是指该进程（&lt;code&gt;struct task&lt;/code&gt;）打开的文件列表（（&lt;code&gt;struct task -&amp;gt; struct files_struct -&amp;gt; struct file *&lt;/code&gt;））数组的下标。应用程序将来要操作这个文件只需要将这个 &lt;code&gt;int&lt;/code&gt; 丢给操作系统，操作系统就会代替程序去读取写入实际的文件。&lt;/p&gt;
+
+
+&lt;h2 id="标准输入标准输出和错误输出"&gt;
+ 标准输入、标准输出和错误输出
+ &lt;a class="anchor" href="#%e6%a0%87%e5%87%86%e8%be%93%e5%85%a5%e6%a0%87%e5%87%86%e8%be%93%e5%87%ba%e5%92%8c%e9%94%99%e8%af%af%e8%be%93%e5%87%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在 Linux 中有三个较为特殊的文件描述符，它们是&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;标准输入（stdin）：&lt;code&gt;fd=0&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;标准输出（stdout）：&lt;code&gt;fd=1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;标准错误输出（stderr）：&lt;code&gt;fd=2&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们在用 &lt;code&gt;fprintf&lt;/code&gt; 的时候会用到他们，因为对应用程序来说，往屏幕上输出东西，也非它所能做的，也需要操作系统这个代理来实现。因为他们太基础了，所以默认这三个是开给所有的进程的。&lt;/p&gt;
+
+
+&lt;h2 id="bash-中的-fd"&gt;
+ bash 中的 fd
+ &lt;a class="anchor" href="#bash-%e4%b8%ad%e7%9a%84-fd" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;man bash 中 REDIRECTION 节有详细的介绍&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Tips: 在下面的例子中，我们可以用 &lt;code&gt;echo $$&lt;/code&gt; 得到当前进程的 PID，在合适的地方 &lt;code&gt;sleep&lt;/code&gt;，然后外部去访问 &lt;code&gt;/proc/&amp;lt;pid&amp;gt;/fd&lt;/code&gt; 查看当前 &lt;code&gt;fd&lt;/code&gt; 的情况。&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="fd-的表示"&gt;
+ fd 的表示
+ &lt;a class="anchor" href="#fd-%e7%9a%84%e8%a1%a8%e7%a4%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;输入：&lt;code&gt;[fd]&amp;lt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;输出：&lt;code&gt;[fd]&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="fd-的新建"&gt;
+ fd 的新建
+ &lt;a class="anchor" href="#fd-%e7%9a%84%e6%96%b0%e5%bb%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h4 id="输入"&gt;
+ 输入
+ &lt;a class="anchor" href="#%e8%be%93%e5%85%a5" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;[fd]&amp;lt; input_file&lt;/code&gt;&lt;/p&gt;</description></item></channel></rss>

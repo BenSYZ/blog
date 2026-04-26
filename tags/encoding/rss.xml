@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Encoding on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/encoding/</link><description>Recent content in Encoding on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 17 Mar 2026 21:04:49 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/encoding/rss.xml" rel="self" type="application/rss+xml"/><item><title>charset, encoding and locale</title><link>https://bensyz.github.io/blog/blogs/charset_encoding_and_locale/</link><pubDate>Sat, 07 Mar 2026 18:03:16 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/charset_encoding_and_locale/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;最近遇到了好几次编码的问题，命令行用 &lt;code&gt;printf&lt;/code&gt; 打印 16 进制，top 内存越界，然后正好有时间，就将这块知识了解了一下。&lt;/p&gt;
+&lt;p&gt;以及在安装 Linux 的时候经常会设置语言 &lt;code&gt;zh_CN.UTF-8&lt;/code&gt; 或者 &lt;code&gt;en_US.UTF-8&lt;/code&gt;。&lt;/p&gt;
+
+
+&lt;h2 id="tldr"&gt;
+ TL;DR;
+ &lt;a class="anchor" href="#tldr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;Unicode 前，人类字符存于计算机只有一次编码：&lt;/p&gt;
+&lt;div class="mermaid"&gt;
+ graph LR
+A[人类字符] --&gt; B[存于计算机的字节]
+&lt;/div&gt;
+
+&lt;p&gt;Unicode 后，人类字符存于计算机有两次编码：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;人工将人类字符编码成 Unicode，在计算机中就用 Unicode 就代表人类字符。&lt;/li&gt;
+&lt;li&gt;代表人类字符的 Unicode 存于计算机时，需要编码成其他字节流。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="mermaid"&gt;
+ graph LR
+A[人类字符] &lt;--&gt; B[Unicode] --&gt; C[存于计算机的字节]
+&lt;/div&gt;
+
+&lt;p&gt;Unicode 是计算机可以描述人类字符的全集。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;字符集：
+&lt;ul&gt;
+&lt;li&gt;Unicode 前：等同于编码&lt;/li&gt;
+&lt;li&gt;Unicode 后：Unicode UCS-4 的子集，选用其中的部分字符作为字符集&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;编码：Unicode 字符编号如何实际存储&lt;/li&gt;
+&lt;li&gt;字体：Unicode 编号对应的字形&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="编码和字符集"&gt;
+ 编码和字符集
+ &lt;a class="anchor" href="#%e7%bc%96%e7%a0%81%e5%92%8c%e5%ad%97%e7%ac%a6%e9%9b%86" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;我们在学校中学过 ASCII 编码，知道 &lt;code&gt;A&lt;/code&gt; 的 ASCII 码是 &lt;code&gt;65&lt;/code&gt;。中文数字太多，一个字节编码不够，需要用两个字节，用 GB 2312 编码，来表示一个字节不够，而 ASCII 没有用尽一个字节的所有位数，在高位设置一个 bit，来区分原始的 ASCII 还是 GB 2312。&lt;/p&gt;</description></item></channel></rss>

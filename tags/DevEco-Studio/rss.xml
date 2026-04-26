@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>DevEco Studio on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/DevEco-Studio/</link><description>Recent content in DevEco Studio on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 12 Mar 2025 08:16:32 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/DevEco-Studio/rss.xml" rel="self" type="application/rss+xml"/><item><title>为 Open Harmony 编译 Application</title><link>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</link><pubDate>Wed, 12 Mar 2025 08:16:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/dev_eco_studio_build_for_ohos/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;我下载了 OpenHarmony-4.1.2 的 SDK，然后编译了 Hihope/dayu210，并把把生成的镜像烧录到了我们的板子上，板子启动后，现在准备开发上层应用，但是 DevEco Studio 提供的 demo 直接跑不起来，需要做些改动。&lt;/p&gt;
+&lt;p&gt;
+
+&lt;a href="https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/ide-project-V5" target="_blank"&gt;这是华为官方的文档&lt;/a&gt;
+。&lt;/p&gt;
+
+
+&lt;h3 id="environments"&gt;
+ environments
+ &lt;a class="anchor" href="#environments" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;DevEco Studio: Build Version: 5.0.7.210, built on February 11, 2025&lt;/li&gt;
+&lt;li&gt;Soc: rk3588&lt;/li&gt;
+&lt;li&gt;Board: Custom Board&lt;/li&gt;
+&lt;li&gt;System SDK Version: 4.1.2&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="将-demo-跑起来的详细步骤"&gt;
+ 将 Demo 跑起来的详细步骤
+ &lt;a class="anchor" href="#%e5%b0%86-demo-%e8%b7%91%e8%b5%b7%e6%9d%a5%e7%9a%84%e8%af%a6%e7%bb%86%e6%ad%a5%e9%aa%a4" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="创建工程"&gt;
+ 创建工程
+ &lt;a class="anchor" href="#%e5%88%9b%e5%bb%ba%e5%b7%a5%e7%a8%8b" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src="./figures/create_project.png" alt="create_project"&gt;&lt;/p&gt;
+&lt;p&gt;因为我们的 OpenHarmony-4.1.2 的 Sdk version 是 11，所以这边我们选择 11&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/create_project_conf_proj.png" alt="config project"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/create_project_empty_ability.png" alt="select empty ability"&gt;&lt;/p&gt;
+&lt;p&gt;(Native C++) 是一样的配置，只是需要多加一个配置，参考
+
+&lt;a href="#%e9%85%8d%e7%bd%ae-abifilters-%e9%80%89%e7%9a%84%e5%b7%a5%e7%a8%8b%e6%98%af-native-c-%e6%97%b6"&gt;配置 &lt;code&gt;abiFilters&lt;/code&gt; (选的工程是 Native C++ 时)&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;重新创建的路径在：&lt;/p&gt;</description></item></channel></rss>

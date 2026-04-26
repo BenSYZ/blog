@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Network on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/network/</link><description>Recent content in Network on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 27 Apr 2022 07:03:30 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/network/rss.xml" rel="self" type="application/rss+xml"/><item><title>网络断连分析工具介绍</title><link>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</link><pubDate>Tue, 26 Apr 2022 02:32:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</guid><description>&lt;h1 id="网络断连分析工具介绍"&gt;
+ 网络断连分析工具介绍
+ &lt;a class="anchor" href="#%e7%bd%91%e7%bb%9c%e6%96%ad%e8%bf%9e%e5%88%86%e6%9e%90%e5%b7%a5%e5%85%b7%e4%bb%8b%e7%bb%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="抓包工具数据链路层及之上"&gt;
+ 抓包工具（数据链路层及之上）
+ &lt;a class="anchor" href="#%e6%8a%93%e5%8c%85%e5%b7%a5%e5%85%b7%e6%95%b0%e6%8d%ae%e9%93%be%e8%b7%af%e5%b1%82%e5%8f%8a%e4%b9%8b%e4%b8%8a" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="tcpdump"&gt;
+ &lt;code&gt;tcpdump&lt;/code&gt;
+ &lt;a class="anchor" href="#tcpdump" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;网络层：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# tcpdump -i eth0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol start="2"&gt;
+&lt;li&gt;数据链路层&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# tcpdump -e -i eth0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="wireshark"&gt;
+ &lt;code&gt;wireshark&lt;/code&gt;
+ &lt;a class="anchor" href="#wireshark" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;wireshark&lt;/code&gt; 还是更香一点，可以直接抓，抓完还可以看流量图 (statistic-Flow graph)(一应一答的那种)&lt;/p&gt;
+&lt;p&gt;需要注意的是通讯双方的 &lt;code&gt;wireshark&lt;/code&gt; 版本要保持一致，老版本的 sequence number 和新版本的对不上&lt;/p&gt;
+&lt;p&gt;我们这次使用的是 Version 3.6.3，如果没有可以自行 
+
+&lt;a href="https://1.as.dl.wireshark.org/src/wireshark-3.6.3.tar.xz" target="_blank"&gt;下载&lt;/a&gt;
+ 编译，编译方法查看 INSTALL 文件，对于 Ubnutu 来说&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# ./tools/debian-setup.sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# mkdir build
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# cmake -DCMAKE_INSTALL_PREFIX ..
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# make -j4
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# make install
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="phy-芯片的查看物理层"&gt;
+ PHY 芯片的查看（物理层）
+ &lt;a class="anchor" href="#phy-%e8%8a%af%e7%89%87%e7%9a%84%e6%9f%a5%e7%9c%8b%e7%89%a9%e7%90%86%e5%b1%82" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;rtl8169 的手册：
+
+&lt;a href="https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf" target="_blank"&gt;https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf&lt;/a&gt;
+&lt;/p&gt;</description></item><item><title>C 和 Qt 中 socket 的创建和删除</title><link>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</link><pubDate>Thu, 14 Apr 2022 08:36:19 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/creation_and_delete_of_socket_in_c_and_qt/</guid><description>&lt;h1 id="c-和-qt-中-socket-的创建和删除"&gt;
+ C 和 Qt 中 socket 的创建和删除
+ &lt;a class="anchor" href="#c-%e5%92%8c-qt-%e4%b8%ad-socket-%e7%9a%84%e5%88%9b%e5%bb%ba%e5%92%8c%e5%88%a0%e9%99%a4" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="c"&gt;
+ C
+ &lt;a class="anchor" href="#c" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/" target="_blank"&gt;example code&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="客户端"&gt;
+ 客户端
+ &lt;a class="anchor" href="#%e5%ae%a2%e6%88%b7%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;客户端相对来说比较简单：创建，然后 connect&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;connect&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="服务端"&gt;
+ 服务端
+ &lt;a class="anchor" href="#%e6%9c%8d%e5%8a%a1%e7%ab%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;服务端相对来说会复杂一些&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;bind&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;servaddr, &lt;span style="color:#66d9ef"&gt;sizeof&lt;/span&gt;(servaddr));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;listen&lt;/span&gt;(sockfd, &lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;connfd &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;accept&lt;/span&gt;(sockfd, (SA&lt;span style="color:#f92672"&gt;*&lt;/span&gt;)&lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;cli, &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt;len);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先新建一个 socket 然后这个socket 来做监听，用 accept 取到和客户端连接的服务端的socket&lt;/p&gt;
+&lt;p&gt;从 &lt;code&gt;man 2 accept&lt;/code&gt; 可以知道 accept 做了这些事：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从这个监听的 socket 中取出第一个连接请求&lt;/li&gt;
+&lt;li&gt;创建一个新的连接着的socket，&lt;/li&gt;
+&lt;li&gt;返回一个指向这个 socket 的文件描述符&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里返回的 socket 是一个变量，也就是说它是在栈里的，当退出函数的时候，这个 socket 会自动释放。&lt;/p&gt;
+
+
+&lt;h4 id="文件描述符"&gt;
+ 文件描述符：
+ &lt;a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;p&gt;文件描述符号是 int。&lt;/p&gt;
+&lt;p&gt;在 socket 断连再重连的时候我们看到对于一个新的 socket，他的文件描述符没变，那 accept 建立的socket 还是原来的吗？答案是否定的。&lt;/p&gt;</description></item><item><title>通过命令行连接 WiFi</title><link>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</link><pubDate>Wed, 26 Feb 2020 10:15:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_connect_wifi/</guid><description>&lt;p&gt;我原先发于 
+
+&lt;a href="https://blog.csdn.net/BenSYZ" target="_blank"&gt;CSDN&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="检查是哪一个接口来支持无线连接的"&gt;
+ 检查是哪一个接口来支持无线连接的：
+ &lt;a class="anchor" href="#%e6%a3%80%e6%9f%a5%e6%98%af%e5%93%aa%e4%b8%80%e4%b8%aa%e6%8e%a5%e5%8f%a3%e6%9d%a5%e6%94%af%e6%8c%81%e6%97%a0%e7%ba%bf%e8%bf%9e%e6%8e%a5%e7%9a%84" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;iwconfig
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;假定是wlan0，我的是wlp5s0&lt;/p&gt;
+
+
+&lt;h2 id="启动接口服务"&gt;
+ 启动接口服务
+ &lt;a class="anchor" href="#%e5%90%af%e5%8a%a8%e6%8e%a5%e5%8f%a3%e6%9c%8d%e5%8a%a1" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo ip link set wlan0 up
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="扫描附近的无线网络了"&gt;
+ 扫描附近的无线网络了：
+ &lt;a class="anchor" href="#%e6%89%ab%e6%8f%8f%e9%99%84%e8%bf%91%e7%9a%84%e6%97%a0%e7%ba%bf%e7%bd%91%e7%bb%9c%e4%ba%86" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo iw dev wlan0 scan | less
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="连接"&gt;
+ 连接
+ &lt;a class="anchor" href="#%e8%bf%9e%e6%8e%a5" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="没有加密"&gt;
+ 没有加密：
+ &lt;a class="anchor" href="#%e6%b2%a1%e6%9c%89%e5%8a%a0%e5%af%86" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo iw dev wlan0 connect &lt;span style="color:#f92672"&gt;[&lt;/span&gt;网络 SSID&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;也可以通过&lt;code&gt;wpa_supplicant&lt;/code&gt; 连接，见‘WPA or WPA2’。&lt;/p&gt;
+
+
+&lt;h3 id="wep-加密的"&gt;
+ WEP 加密的：
+ &lt;a class="anchor" href="#wep-%e5%8a%a0%e5%af%86%e7%9a%84" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo iw dev wlan0 connect &lt;span style="color:#f92672"&gt;[&lt;/span&gt;网络 SSID&lt;span style="color:#f92672"&gt;]&lt;/span&gt; key 0:&lt;span style="color:#f92672"&gt;[&lt;/span&gt;WEP 密钥&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="wpa-or-wpa2"&gt;
+ WPA or WPA2
+ &lt;a class="anchor" href="#wpa-or-wpa2" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;/etc/wpasupplicant/wpa_supplicant.conf&lt;/code&gt; 文件，增加如下行：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;network={ ssid=&amp;quot;[网络 ssid]&amp;quot; psk=&amp;quot;[密码]&amp;quot; priority=1}&lt;/p&gt;</description></item></channel></rss>

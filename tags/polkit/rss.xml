@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Polkit on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/polkit/</link><description>Recent content in Polkit on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 15 Sep 2022 17:21:28 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/polkit/rss.xml" rel="self" type="application/rss+xml"/><item><title>polkit</title><link>https://bensyz.github.io/blog/blogs/polkit/</link><pubDate>Mon, 06 Jun 2022 08:55:33 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/polkit/</guid><description>&lt;h1 id="polkit"&gt;
+ polkit
+ &lt;a class="anchor" href="#polkit" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+
+
+&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="问题的出现"&gt;
+ 问题的出现
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e7%9a%84%e5%87%ba%e7%8e%b0" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;udisks2&lt;/code&gt; 可以在系统启动后的自动挂载和卸载，但是对于开机时它不会自动挂载所有的分区，我们需要 &lt;code&gt;/etc/fstab&lt;/code&gt; 来自动挂载的分区。但由 &lt;code&gt;/etc/fstab&lt;/code&gt; 挂载的分区却不能直接用 &lt;code&gt;udisks2&lt;/code&gt; 卸载。(虽然加上 &lt;code&gt;users&lt;/code&gt; 这个 option 可以不用 sudo 直接 umount，但 &lt;code&gt;udisks2&lt;/code&gt; 限制了这种动作,后面会提到的 &lt;code&gt;org.freedesktop.udisks2.filesystem-unmount-others&lt;/code&gt;)。又由于 File explorer 中点击卸载，使用的是 &lt;code&gt;udisks2&lt;/code&gt;，所以对于前述的情况，便不能通过鼠标点击卸载。&lt;/p&gt;
+
+
+&lt;h3 id="about-polkit"&gt;
+ about polkit
+ &lt;a class="anchor" href="#about-polkit" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;polkit 实现非特权进程向特权进程发消息的控制，从而可控地让非特权进程达到特权功能，比如，普通用户的挂载和卸载硬盘&lt;/p&gt;
+&lt;p&gt;polkit 配置有两种方式，一种是应用自带的，叫Action，(&lt;code&gt;.policy&lt;/code&gt;)；另一种是类似补丁的形式，叫Authorization rules,(&lt;code&gt;.rules&lt;/code&gt; or &lt;code&gt;.pkla&lt;/code&gt;)&lt;/p&gt;
+
+
+&lt;h2 id="action"&gt;
+ Action:
+ &lt;a class="anchor" href="#action" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;policy file 文件位置：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/usr/share/polkit-1/actions/*.policy&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;在 default section 中，有这几个选项:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;keys:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;allow_any&lt;/code&gt;: 所有&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;allow_inactive&lt;/code&gt;: 远程的 session(ssh vnc, etc.)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;allow_active&lt;/code&gt;: 本地 tty, X display&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;values:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;no&lt;/code&gt;: 无权限&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;yes&lt;/code&gt;: 有权限&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;auth_self[_keep]&lt;/code&gt;: 对 non-sudoer [keep some minutes] 开放权限&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;auth_admin[_keep]&lt;/code&gt;: sudoer 开放权限&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="authorization-rules"&gt;
+ Authorization rules
+ &lt;a class="anchor" href="#authorization-rules" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;文件位置：&lt;/p&gt;</description></item></channel></rss>

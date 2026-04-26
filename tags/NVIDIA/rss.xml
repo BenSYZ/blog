@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>NVIDIA on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/NVIDIA/</link><description>Recent content in NVIDIA on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 02 Sep 2025 16:17:32 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/NVIDIA/rss.xml" rel="self" type="application/rss+xml"/><item><title>NVIDIA GPU components version selection</title><link>https://bensyz.github.io/blog/blogs/NVIDIA_GPU_components_version_selection/</link><pubDate>Tue, 02 Sep 2025 16:17:32 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/NVIDIA_GPU_components_version_selection/</guid><description>&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="big-picture"&gt;
+ Big Picture
+ &lt;a class="anchor" href="#big-picture" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Components Level&lt;/th&gt;
+ &lt;th&gt;Examples&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;PyTorch&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;import torch&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;CUDA Toolkit&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;nvcc&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;CUDA driver&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;libcuda.so&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;device driver&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;nvidia.ko&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;GPU hardware&lt;/td&gt;
+ &lt;td&gt;Architecture and Compute Capability&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;各个层之间以 ABI 对接&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/CUDA-components.png" alt="CUDA-components (by NVIDIA)"&gt;&lt;/p&gt;
+
+
+&lt;h2 id="gpu-hardware-and-compute-capabilitycc"&gt;
+ GPU hardware and Compute Capability(CC)
+ &lt;a class="anchor" href="#gpu-hardware-and-compute-capabilitycc" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Compute Capability (CC) defines the hardware features and supported
+instructions for each NVIDIA GPU architecture.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Compute Capability 其实就是指令集，可能高等级的指令集比低等级的指令更多。硬件定下来了，指令集也就定下来了。&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Compute Capability Major Revision Number&lt;/th&gt;
+ &lt;th&gt;NVIDIA GPU Architecture&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;12&lt;/td&gt;
+ &lt;td&gt;NVIDIA Blackwell GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;11&lt;/td&gt;
+ &lt;td&gt;NVIDIA Blackwell GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;10&lt;/td&gt;
+ &lt;td&gt;NVIDIA Blackwell GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;9&lt;/td&gt;
+ &lt;td&gt;NVIDIA Hopper GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;8&lt;/td&gt;
+ &lt;td&gt;NVIDIA Ampere GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;7&lt;/td&gt;
+ &lt;td&gt;NVIDIA Volta GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;6&lt;/td&gt;
+ &lt;td&gt;NVIDIA Pascal GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;5&lt;/td&gt;
+ &lt;td&gt;NVIDIA Maxwell GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;3&lt;/td&gt;
+ &lt;td&gt;NVIDIA Kepler GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Compute Capability&lt;/th&gt;
+ &lt;th&gt;NVIDIA GPU Architecture&lt;/th&gt;
+ &lt;th&gt;Based On&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;7.5&lt;/td&gt;
+ &lt;td&gt;NVIDIA Turing GPU Architecture&lt;/td&gt;
+ &lt;td&gt;NVIDIA Volta GPU Architecture&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;8.9&lt;/td&gt;
+ &lt;td&gt;NVIDIA Ada GPU Architecture&lt;/td&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Compared to Ampere, Ada delivers more than double the FP16, BF16, TF32, INT8, and INT4 Tensor TFLOPS, and
+also includes the Hopper FP8 Transformer Engine, delivering over 1.45 PetaFLOPS of tensor processing in the
+RTX 6000 Ada Generation.&lt;/p&gt;</description></item><item><title>install NVIDIA supported docker</title><link>https://bensyz.github.io/blog/blogs/install_nvidia_docker/</link><pubDate>Mon, 28 Apr 2025 11:50:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/install_nvidia_docker/</guid><description>&lt;h2 id="docker"&gt;
+ docker
+ &lt;a class="anchor" href="#docker" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank"&gt;official doc&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h3 id="装"&gt;
+ 装
+ &lt;a class="anchor" href="#%e8%a3%85" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 拷自 official doc&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Add Docker&amp;#39;s official GPG key:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo apt-get update
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo apt-get install ca-certificates curl
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo install -m &lt;span style="color:#ae81ff"&gt;0755&lt;/span&gt; -d /etc/apt/keyrings
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo chmod a+r /etc/apt/keyrings/docker.asc
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Add the repository to Apt sources:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;deb [arch=&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;dpkg --print-architecture&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt; signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; &lt;/span&gt;&lt;span style="color:#66d9ef"&gt;$(&lt;/span&gt;. /etc/os-release &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; echo &lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#e6db74"&gt;${&lt;/span&gt;UBUNTU_CODENAME&lt;span style="color:#66d9ef"&gt;:-&lt;/span&gt;$VERSION_CODENAME&lt;span style="color:#e6db74"&gt;}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt; stable&amp;#34;&lt;/span&gt; | &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sudo tee /etc/apt/sources.list.d/docker.list &amp;gt; /dev/null
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo apt-get update
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="配"&gt;
+ 配
+ &lt;a class="anchor" href="#%e9%85%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h4 id="user-add-to-docker-group"&gt;
+ user add to docker group
+ &lt;a class="anchor" href="#user-add-to-docker-group" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;useradd -a -G docker &amp;lt;username&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;重登&lt;/p&gt;</description></item><item><title>migrate from ubuntu16.04 to ubuntu20.04</title><link>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</link><pubDate>Thu, 13 Apr 2023 11:13:20 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/migrate_from_ubuntu16.04_to_20.04_with_nvidia_docker/</guid><description>&lt;p&gt;公司服务器需要升级系统&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;系统升级&lt;/li&gt;
+&lt;li&gt;docker 迁移&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="系统升级"&gt;
+ 系统升级
+ &lt;a class="anchor" href="#%e7%b3%bb%e7%bb%9f%e5%8d%87%e7%ba%a7" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;download and extra to new root&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;curl https://cdimage.ubuntu.com/ubuntu-base/releases/focal/release/ubuntu-base-20.04.5-base-amd64.tar.gz | sudo tar -xzvf - -C /mnt
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol start="2"&gt;
+&lt;li&gt;update and install grub and other needs&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;grub-efi-amd64&lt;/code&gt; # 可能直接 grub 就好，不知道这种基础组建要怎么一下安装&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ubuntu-minimal&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;linux-image-generic&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start="3"&gt;
+&lt;li&gt;然后参考 archlinux wiki installation guide 做些必要的动作，不要忘了 &lt;code&gt;systemd-networkd&lt;/code&gt; 和 &lt;code&gt;sshd&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;特别关注 grub&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;grub-install&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;grub-config&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;efibootmgr&lt;/code&gt; check 一下&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="docker-迁移"&gt;
+ docker 迁移
+ &lt;a class="anchor" href="#docker-%e8%bf%81%e7%a7%bb" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="1-rsync"&gt;
+ 1. &lt;code&gt;rsync&lt;/code&gt;
+ &lt;a class="anchor" href="#1-rsync" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# https://blog.lilydjwg.me/2013/12/29/rsync-btrfs-dm-crypt-full-backup.42219.html&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;rsync --archive --one-file-system --inplace --hard-links &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; --human-readable --numeric-ids --delete --delete-excluded &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; --acls --xattrs --sparse &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; --itemize-changes --verbose --progress &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; /var/lib/docker /mnt/var/lib
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;注意最后 不要变成 &lt;code&gt;/mnt/var/lib&lt;/code&gt; 否则就变成 &lt;code&gt;/mnt/var/lib/docker/docker&lt;/code&gt;&amp;hellip;.&lt;/p&gt;</description></item></channel></rss>

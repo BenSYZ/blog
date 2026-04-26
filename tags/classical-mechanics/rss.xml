@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Classical Mechanics on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/classical-mechanics/</link><description>Recent content in Classical Mechanics on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Tue, 25 Mar 2025 08:14:16 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/classical-mechanics/rss.xml" rel="self" type="application/rss+xml"/><item><title>Euler–Lagrange equation</title><link>https://bensyz.github.io/blog/blogs/Euler_Lagrange_equation/</link><pubDate>Tue, 25 Mar 2025 08:14:16 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/Euler_Lagrange_equation/</guid><description>&lt;h2 id="最速降线"&gt;
+ 最速降线
+ &lt;a class="anchor" href="#%e6%9c%80%e9%80%9f%e9%99%8d%e7%ba%bf" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;以最速降线为例：一个小球从 $A$ 点$(x_1, y_1)$ 移动到 $B$ 点 $(x_2, y_2)$，它耗时最少的路径是怎么样的？不妨设 $(x_1,y_1)$ 为 $(0,0)$ 点，记为 A 点，&lt;/p&gt;
+&lt;p&gt;首先，我们求当小球位于 $(x,y)$ 时，它的位移微分：&lt;/p&gt;
+$$
+ds = \sqrt{(dx)^2+(dy)^2}
+$$&lt;p&gt;其次，我们求当小球位于 $(x,y)$ 时，它的速度：&lt;/p&gt;
+$$
+\frac{1}{2} mv^2 = mg \delta h
+$$$$
+v = \sqrt{2gh} = \sqrt{2g(y-y_1)} = \sqrt{2gy}
+$$&lt;p&gt;所以，我们求当小球位于 $(x,y)$ 时，走过 &lt;code&gt;ds&lt;/code&gt; 所需的时间：&lt;/p&gt;
+$$
+dt = \frac{ds}{v} = \frac{\sqrt{(dx)^2+(dy)^2}}{\sqrt{2gy}}
+$$&lt;p&gt;提取出分子里的 $dx$ 可得：&lt;/p&gt;
+$$
+dt = \frac{\sqrt{1+(\frac{dy}{dx})^2}}{\sqrt{2gy}} dx
+$$&lt;p&gt;通常，我们记 $\frac{dy}{dx} = y'$，所以：&lt;/p&gt;
+$$
+dt = \frac{\sqrt{1+(y')^2}}{\sqrt{2gy}} dx
+$$&lt;p&gt;所以，从 $A$ 点到 $B$ 点的总耗时是：&lt;/p&gt;</description></item></channel></rss>
