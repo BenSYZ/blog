@@ -1,0 +1,39 @@
+title = "Ben's Blog"
+theme = "my-hugo-theme"
+#theme: hugo-theme-nostyleplease
+disablePathToLower = true
+publishDir = "docs"
+languageCode = "en-us"
+
+[sitemap]
+changefreq = "daily"
+filename = "sitemap.xml"
+priority = 0.5
+
+# Hugo uses a library called Goldmark. By default, it might try to interpret underscores (_) or asterisks (*) inside your equations as Markdown emphasis. You need to enable the passthrough extension in your hugo.toml (or config.toml):
+[markup]
+  [markup.goldmark]
+    # mathjax
+    [markup.goldmark.extensions]
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['$$', '$$'], ['\\[', '\\]']]
+          inline = [['$', '$'], ['\\(', '\\)']]
+    # raw html
+    [markup.goldmark.renderer]
+      unsafe = true
+  # toc level
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 6
+    ordered = true  # 必须设为 true，以便 CSS 针对 <ol> 进行计数
+
+[params]
+  [params.author]
+    name = "Ben"
+  [params.filing]
+  ICP="浙ICP备2021032097号-1"
+  GA="浙公网安备 33028102001039 号"
+  GA_code="33028102001039"
+
