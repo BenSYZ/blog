@@ -1,0 +1,20 @@
+title = "Ben's Blog"
+theme = "my-hugo-theme"
+#theme: hugo-theme-nostyleplease
+disablePathToLower = true
+publishDir = "docs"
+languageCode = "en-us"
+
+[sitemap]
+changefreq = "daily"
+filename = "sitemap.xml"
+priority = 0.5
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.extensions]
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['$$', '$$'], ['\\[', '\\]']]
+          inline = [['$', '$'], ['\\(', '\\)']]
