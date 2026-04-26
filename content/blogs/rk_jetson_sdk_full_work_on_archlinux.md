@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "some problems of using RK and Jetson SDK on ArchLinux"
-tags: ["arch", "jetson", "rk", "docker", "linux"]
+tags: ["arch", "jetson", "rk", "docker", "Linux"]
 ---
 
 
