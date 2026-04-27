@@ -94,7 +94,7 @@ figcaption {
     display: inline;
     padding: 0 0 0 0;
 }
-#tags > a{
+.fas {
     color: #000000;
 }
 footer {
@@ -141,7 +141,7 @@ table:not(code table) tr:hover {
 }
  */
 
-/* style.css */
+/* Phone like */
 @media (max-width: 768px) {
     ul{
         padding-left: 1%;
@@ -157,6 +157,7 @@ table:not(code table) tr:hover {
         display: none;
     }
 }
+/* PC like */
 @media (min-width: 769px) {
     #TitleWithToc {
         width:20%;
