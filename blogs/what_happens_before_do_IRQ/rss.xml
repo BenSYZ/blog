@@ -190,7 +190,35 @@ GS =0000 ffffffff8052a000 ffffffff 00c00100&lt;/p&gt;
  &lt;/tr&gt;
  &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;To print 16 bit of sp: force the type&lt;/p&gt;</description></item><item><title>linux gs and pda</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</link><pubDate>Fri, 17 Apr 2026 10:33:24 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</guid><description>&lt;p&gt;换栈的时候&lt;/p&gt;
+&lt;p&gt;To print 16 bit of sp: force the type&lt;/p&gt;</description></item><item><title>结构体中的成员在栈上的顺序</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/elements_of_struct_on_stack/</link><pubDate>Fri, 17 Apr 2026 15:27:07 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/elements_of_struct_on_stack/</guid><description>&lt;p&gt;rdi 传入指针后，指向 r15&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c" data-lang="c"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; pt_regs {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r15;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r14;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r13;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r12;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rbp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rbx;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/* arguments: non interrupts/non tracing syscalls only save upto here*/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r11;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r10;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r9;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; r8;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rax;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rcx;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rdx;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rsi;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rdi;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; orig_rax;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/* end of arguments */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/* cpu exception frame or undefined */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rip;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; cs;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; eflags;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; rsp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;unsigned&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; ss;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/* top of stack page */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;stack graph&lt;/p&gt;</description></item><item><title>linux gs and pda</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</link><pubDate>Fri, 17 Apr 2026 10:33:24 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_gs_and_pda_in_linux/</guid><description>&lt;p&gt;换栈的时候&lt;/p&gt;
 &lt;pre tabindex="0"&gt;&lt;code&gt;cmoveq %gs:pda_irqstackptr,%rsp
 &lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
 &lt;li&gt;
@@ -221,7 +249,43 @@ qemu 中我们可以看到 GS 是&lt;/p&gt;
 0xffffffff8052a028 &amp;lt;boot_cpu_pda+40&amp;gt;: 0xffffffff805c0fc0
 (gdb) p $rsp
 $54 = (void *) 0xffffffff805c0fc0 &amp;lt;boot_cpu_stack+16320&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;GDB 中查看 GS（0xffffffff8052a000） 地址的内存内容是：&lt;/p&gt;</description></item><item><title>gdt, tss and switch_to</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</link><pubDate>Wed, 15 Apr 2026 10:56:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</guid><description>&lt;p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;GDB 中查看 GS（0xffffffff8052a000） 地址的内存内容是：&lt;/p&gt;</description></item><item><title>ring and vm</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/ring_and_vm/</link><pubDate>Wed, 15 Apr 2026 18:09:50 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/ring_and_vm/</guid><description>&lt;ul&gt;
+&lt;li&gt;kernel ring 0&lt;/li&gt;
+&lt;li&gt;user ring 3&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;
+
+&lt;a href="https://en.wikipedia.org/wiki/X86_virtualization" target="_blank"&gt;https://en.wikipedia.org/wiki/X86_virtualization&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;虚拟化主要需要：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;虚拟机软件改写汇编指令，去除特权级的指令&lt;/li&gt;
+&lt;li&gt;隐藏关键的数据结构，例如 page table，使用 segment descriptor&lt;/li&gt;
+&lt;li&gt;模拟 IO 设备&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这是一个非常专业的问题。简短的回答是：不会直接受限于“4层环（Rings）”架构，但受限于硬件虚拟化的实现机制。
+在传统的 x86 架构中，确实存在 Ring 0 到 Ring 3 四个特权级，但嵌套虚拟化的瓶颈不在于 Ring 的数量，而在于 Root 模式与 Non-root 模式 的切换。&lt;/p&gt;
+
+
+&lt;h2 id="1-为什么不是受限于-ring-level"&gt;
+ 1. 为什么不是受限于 Ring Level？
+ &lt;a class="anchor" href="#1-%e4%b8%ba%e4%bb%80%e4%b9%88%e4%b8%8d%e6%98%af%e5%8f%97%e9%99%90%e4%ba%8e-ring-level" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在硬件辅助虚拟化（Intel VT-x 或 AMD-V）引入后，CPU 增加了一个新的维度：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;VMX Root Mode（根模式）：通常由物理机的 Hypervisor（L0）占据。&lt;/li&gt;
+&lt;li&gt;VMX Non-root Mode（非根模式）：虚拟机运行在这个模式下。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在 Non-root 模式内部，依然完整存在 Ring 0 到 Ring 3。 因此，L1 虚拟机里的操作系统运行在它的 Ring 0，应用程序运行在它的 Ring 3。&lt;/p&gt;
+
+
+&lt;h2 id="2-嵌套的真正限制vmcs-阴影化-vmcs-shadowing"&gt;
+ 2. 嵌套的真正限制：VMCS 阴影化 (VMCS Shadowing)
+ &lt;a class="anchor" href="#2-%e5%b5%8c%e5%a5%97%e7%9a%84%e7%9c%9f%e6%ad%a3%e9%99%90%e5%88%b6vmcs-%e9%98%b4%e5%bd%b1%e5%8c%96-vmcs-shadowing" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;当你运行嵌套虚拟机（L2）时，挑战在于：L1 虚拟机也想进入“Root 模式”来控制 L2。但硬件只有一个物理 Root 模式。&lt;/p&gt;</description></item><item><title>gdt, tss and switch_to</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</link><pubDate>Wed, 15 Apr 2026 10:56:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/gdt_tss_and_switch_to/</guid><description>&lt;p&gt;
 
 &lt;a href="https://www.google.com/search?client=firefox-b-d&amp;amp;q=what&amp;#43;is&amp;#43;global&amp;#43;descriptor&amp;#43;table&amp;amp;fbs=ADc_l-Z6XGGbkKmpylZqg2J7ZOuVNvV7jKtLqzLZ63dd2zPtrsojpaijeJRLrp4clUvcwVJFwPc3SunfhAadIHhnTsFBVMAAXIZgDnZp5KTskh6spmEAN_m5c9Zl7QQ9S1AEoyH9D4lVpv_wnngMRGAxLVYtAQ0lv6yE5rdDK6YSHRfe9mjQavptxK4vEoFd-TzuKbzrFaNFsrKlv_gEfcxDRavrClfR-Q&amp;amp;ved=2ahUKEwjE3dvK0e6TAxWMDTQIHTwEA6cQ0NsOegQIAxAB&amp;amp;aep=10&amp;amp;ntc=1&amp;amp;mstk=AUtExfAFlhqj7TECPIPnuH2Rfbk4_jTcsVwZGnrXQ9YZFv9GR5c-KZ_wyVy-DWVHuX9hT4IQ2lzAZg3ShTFHZBZuWY2p-WtAwgIxKnnqhXdlG6H1C_v5ER_elvkoz1CHvQBOsIiPIdh7sSBcOnkTdVD17hjcuyTEHNDbOeTsxX-zwaH2Q4SbZovJhpuhTiIL-5jUSCaAIAB1PbvY_MlAXYULYnVaIjMImScqxYKO1JSWaL5_c9lI6BfOMii-WVzAKw-8AVYj-nKH9TuUj-Sz5tf11SkF1ebQCvnW4nzJggLa6fM6JhXMjSBdmqqJRcbBQRGHmsH2CmZDtW5kGQ&amp;amp;csuir=1&amp;amp;mtid=5uDeaeS5OYu90PEPi7KBIQ&amp;amp;udm=50" target="_blank"&gt;Gemini talk&lt;/a&gt;
 &lt;/p&gt;

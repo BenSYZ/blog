@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux-2.6.24 on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Linux-2.6.24/</link><description>Recent content in Linux-2.6.24 on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 18 Apr 2026 06:51:54 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Linux-2.6.24/rss.xml" rel="self" type="application/rss+xml"/><item><title>what happens before do_IRQ</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</link><pubDate>Sat, 18 Apr 2026 06:51:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;本文主要探究了以下几个问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在 CPU 发现 INT 引脚电平变更，中断当前指令片段的执行后，到调用 &lt;code&gt;do_IRQ&lt;/code&gt; 之间到底发生了什么？&lt;/li&gt;
+&lt;li&gt;do_IRQ 时，被中断的任务，用户栈、内核栈、中断栈之间是如何变更的？&lt;/li&gt;
+&lt;li&gt;中断当前的指令片段，需要保存寄存器，这些寄存器是如何保存和恢复的？&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;本文需要的预备知识：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_mov_and_lea/"&gt;asm 中的 mov/lea&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_arg/"&gt;asm 中函数的传参&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_call_and_stack/"&gt;asm 中函数的调用和栈的变化&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_reg_name/"&gt;x86 中寄存器的名字&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/elements_of_struct_on_stack/"&gt;struct 在栈上的顺序&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/"&gt;AT&amp;amp;T 和 intel 汇编&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;汇编代码的 “man-pages”：
+
+&lt;a href="https://cdrdv2.intel.com/v1/dl/getContent/671200" target="_blank"&gt;Intel® 64 and IA-32 Architectures Software Developer’s Manual&lt;/a&gt;
+，可以查看 x86 的指令定义。&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="caller-of-do_irq-common_interrupt"&gt;
+ caller of &lt;code&gt;do_IRQ&lt;/code&gt;: &lt;code&gt;common_interrupt&lt;/code&gt;
+ &lt;a class="anchor" href="#caller-of-do_irq-common_interrupt" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在 gdb 中 bt 或者目录搜索，我们会发现 do_IRQ 的调用者是汇编的 &lt;code&gt;common_interrupt&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-asm" data-lang="asm"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// linux-2.6.24/arch/x86/kernel/entry_64.S
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;ENTRY&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;common_interrupt&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#75715e"&gt;//...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;interrupt&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;do_IRQ&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#75715e"&gt;//...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;leaveq&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;END&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;common_interrupt&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其中 &lt;code&gt;interrupt&lt;/code&gt; 是一个宏，在调用 &lt;code&gt;do_IRQ&lt;/code&gt; 前需要做一系列保存寄存器的动作，通过一个宏做了封装，我们只保留了最关键的几行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-asm" data-lang="asm"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// linux-2.6.24/arch/x86/kernel/entry_64.S
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;.macro&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;interrupt&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;func&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#75715e"&gt;//...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;SAVE_ARGS&lt;/span&gt; &lt;span style="color:#75715e"&gt;# 保存寄存器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;leaq&lt;/span&gt; -&lt;span style="color:#66d9ef"&gt;ARGOFFSET&lt;/span&gt;(%rsp),%rdi	&lt;span style="color:#75715e"&gt;# arg1 for handler
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#75715e"&gt;//...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;call&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;\&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#a6e22e"&gt;.endm&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="save_args"&gt;
+ SAVE_ARGS
+ &lt;a class="anchor" href="#save_args" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;从宏命名地来看，&lt;code&gt;SAVE_ARGS&lt;/code&gt; 是保存 do_IRQ 需要的参数（&lt;code&gt;struct pt_regs&lt;/code&gt;）也就是，它会在将寄存器保存到栈上&lt;/p&gt;</description></item></channel></rss>

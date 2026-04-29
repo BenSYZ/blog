@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>GPIO on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/GPIO/</link><description>Recent content in GPIO on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 17 Aug 2023 02:17:19 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/GPIO/rss.xml" rel="self" type="application/rss+xml"/><item><title>GPIO 通过光耦转换成带源 IO</title><link>https://bensyz.github.io/blog/blogs/io_with_plc/</link><pubDate>Tue, 11 Jul 2023 09:33:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/io_with_plc/</guid><description>&lt;p&gt;2023-08-17 update: summary 中添加开关状态&lt;/p&gt;
+
+
+&lt;h1 id="intro"&gt;
+ Intro
+ &lt;a class="anchor" href="#intro" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;在阅读之前有一点需要注意的是，我们的输出、输入，和 PLC 的输出、输入不一样，PLC 的输出和输入是带着电源的，我们的不带电源。这点对输入很好理解，但是对于输出，不能理解成我们输出电压，我们的输出只是一个开关。&lt;/p&gt;
+
+
+&lt;h2 id="input"&gt;
+ Input
+ &lt;a class="anchor" href="#input" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src="./figures/input.png" alt="input"&gt;&lt;/p&gt;
+
+
+&lt;h3 id="一些标记"&gt;
+ 一些标记
+ &lt;a class="anchor" href="#%e4%b8%80%e4%ba%9b%e6%a0%87%e8%ae%b0" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;左侧&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OP_IN0&lt;/code&gt;：外部看到的 &lt;code&gt;IN0&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;COMIN1&lt;/code&gt;：外部看到的 IN 口的 &lt;code&gt;COM&lt;/code&gt; 口&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;右侧&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;⏚ ：地 GND&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;GPIO1_C0_Z&lt;/code&gt;：连到上级芯片（主芯片）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;中间&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;PS2805&lt;/code&gt;：光耦，如果 &lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 引脚间有电压差，就会发光，会激发 &lt;code&gt;3&lt;/code&gt; &lt;code&gt;4&lt;/code&gt; 引脚间的光敏二极管，即 &lt;code&gt;3&lt;/code&gt; &lt;code&gt;4&lt;/code&gt; 导通，也就是 &lt;strong&gt;有电压差，开关闭合&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src="./figures/PS2805.png" alt="PS2805"&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="右内侧电路"&gt;
+ 右（内）侧电路
+ &lt;a class="anchor" href="#%e5%8f%b3%e5%86%85%e4%be%a7%e7%94%b5%e8%b7%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;先说简单的：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;工作状态：&lt;code&gt;3&lt;/code&gt; &lt;code&gt;4&lt;/code&gt; 引脚间的光敏二极管导通，&lt;code&gt;GPIO1_C0_Z&lt;/code&gt; 的电压等于 3 引脚的 &lt;code&gt;GND&lt;/code&gt;，低电平&lt;/li&gt;
+&lt;li&gt;停止工作状态：&lt;code&gt;3&lt;/code&gt; &lt;code&gt;4&lt;/code&gt; 引脚间的光敏二极管开路断开，&lt;code&gt;GPIO1_C0_Z&lt;/code&gt; 的电压等于 &lt;code&gt;VCC_1V8_S0&lt;/code&gt;，高电平&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="左外侧电路"&gt;
+ 左（外）侧电路
+ &lt;a class="anchor" href="#%e5%b7%a6%e5%a4%96%e4%be%a7%e7%94%b5%e8%b7%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;COMIN1&lt;/code&gt; 高电平
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OP_IN0&lt;/code&gt; 低电平，&lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 之间&lt;strong&gt;有&lt;/strong&gt;电压差，中间的光耦工作。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;OP_IN0&lt;/code&gt; 高电平，&lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 之间&lt;strong&gt;无&lt;/strong&gt;电压差，中间的光耦不工作。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;COMIN1&lt;/code&gt; 低电平，&lt;code&gt;OP_IN0=1&lt;/code&gt;，&lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 之间有电压差，中间的光耦工作
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OP_IN0&lt;/code&gt; 低电平，&lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 之间&lt;strong&gt;无&lt;/strong&gt;电压差，中间的光耦不工作。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;OP_IN0&lt;/code&gt; 高电平，&lt;code&gt;1&lt;/code&gt; &lt;code&gt;2&lt;/code&gt; 之间&lt;strong&gt;有&lt;/strong&gt;电压差，中间的光耦工作。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="整体电路"&gt;
+ 整体电路
+ &lt;a class="anchor" href="#%e6%95%b4%e4%bd%93%e7%94%b5%e8%b7%af" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;定义：&lt;/p&gt;</description></item></channel></rss>

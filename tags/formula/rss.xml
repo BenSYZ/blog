@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Formula on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/formula/</link><description>Recent content in Formula on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 16:54:56 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/formula/rss.xml" rel="self" type="application/rss+xml"/><item><title>about effective voltage and rms</title><link>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</link><pubDate>Fri, 21 Apr 2023 15:18:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/about_effective_voltage_and_rms/</guid><description>&lt;h2 id="effective-voltage-of-sinusoidal"&gt;
- Effective voltage of sinusoidal
- &lt;a class="anchor" href="#effective-voltage-of-sinusoidal" aria-hidden="true"&gt;#&lt;/a&gt;
-&lt;/h2&gt;
-
-&lt;p&gt;In alternating current, to simplify the calculation, we often use effective voltage or current.&lt;/p&gt;
-&lt;p&gt;Since I haven&amp;rsquo;t touched these knowledge points for a long time. I almost forgot how to get the effective voltage and what&amp;rsquo;s the relation of effective voltage with rms (root mean square). So this is about the derivation of effective voltage.&lt;/p&gt;
-&lt;p&gt;Effective voltage is always used in calculating power or energy during a time. So we start from the expression of power, because voltage and current change with time, we first calculate the energy in time $dt$, then integrate.&lt;/p&gt;</description></item></channel></rss>

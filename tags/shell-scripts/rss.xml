@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shell Scripts on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/shell-scripts/</link><description>Recent content in Shell Scripts on Ben's Blog</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Fri, 18 Jul 2025 16:18:39 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/shell-scripts/rss.xml" rel="self" type="application/rss+xml"/><item><title>file descriptor and fd redirection in bash</title><link>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</link><pubDate>Fri, 18 Jul 2025 16:18:39 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_descriptor_and_fd_redirection_in_shell/</guid><description>&lt;h2 id="文件描述符"&gt;
+ 文件描述符
+ &lt;a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%8f%8f%e8%bf%b0%e7%ac%a6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;文件描述符（file descriptor，简称 fd）在 Linux 中表示文件的句柄（file handle）但它到底是个啥呢？我们知道在 Linux 中，我们可以用 &lt;code&gt;open&lt;/code&gt; 函数打开一个文件，返回的是 &lt;code&gt;int&lt;/code&gt;，所以 fd 就是一个整型数组。我们可以在 &lt;code&gt;/proc/&amp;lt;pid&amp;gt;/fd&lt;/code&gt; 中看到某个进程当前打开的文件。如果是磁盘上的文件，那就是一个 symbolic link 指向那个文件。当然还有其他管道文件。&lt;/p&gt;
+&lt;p&gt;那这个整型变量 fd 到底是什么呢？我们会发现 fd 的来源 &lt;code&gt;open&lt;/code&gt; 其实不是普通的函数，它其实是一个系统调用，是 Linux 内核提供给应用程序的 API。在内核中 fd 这个整型是指该进程（&lt;code&gt;struct task&lt;/code&gt;）打开的文件列表（（&lt;code&gt;struct task -&amp;gt; struct files_struct -&amp;gt; struct file *&lt;/code&gt;））数组的下标。应用程序将来要操作这个文件只需要将这个 &lt;code&gt;int&lt;/code&gt; 丢给操作系统，操作系统就会代替程序去读取写入实际的文件。&lt;/p&gt;
+
+
+&lt;h2 id="标准输入标准输出和错误输出"&gt;
+ 标准输入、标准输出和错误输出
+ &lt;a class="anchor" href="#%e6%a0%87%e5%87%86%e8%be%93%e5%85%a5%e6%a0%87%e5%87%86%e8%be%93%e5%87%ba%e5%92%8c%e9%94%99%e8%af%af%e8%be%93%e5%87%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在 Linux 中有三个较为特殊的文件描述符，它们是&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;标准输入（stdin）：&lt;code&gt;fd=0&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;标准输出（stdout）：&lt;code&gt;fd=1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;标准错误输出（stderr）：&lt;code&gt;fd=2&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们在用 &lt;code&gt;fprintf&lt;/code&gt; 的时候会用到他们，因为对应用程序来说，往屏幕上输出东西，也非它所能做的，也需要操作系统这个代理来实现。因为他们太基础了，所以默认这三个是开给所有的进程的。&lt;/p&gt;
+
+
+&lt;h2 id="bash-中的-fd"&gt;
+ bash 中的 fd
+ &lt;a class="anchor" href="#bash-%e4%b8%ad%e7%9a%84-fd" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;man bash 中 REDIRECTION 节有详细的介绍&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Tips: 在下面的例子中，我们可以用 &lt;code&gt;echo $$&lt;/code&gt; 得到当前进程的 PID，在合适的地方 &lt;code&gt;sleep&lt;/code&gt;，然后外部去访问 &lt;code&gt;/proc/&amp;lt;pid&amp;gt;/fd&lt;/code&gt; 查看当前 &lt;code&gt;fd&lt;/code&gt; 的情况。&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="fd-的表示"&gt;
+ fd 的表示
+ &lt;a class="anchor" href="#fd-%e7%9a%84%e8%a1%a8%e7%a4%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;输入：&lt;code&gt;[fd]&amp;lt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;输出：&lt;code&gt;[fd]&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h3 id="fd-的新建"&gt;
+ fd 的新建
+ &lt;a class="anchor" href="#fd-%e7%9a%84%e6%96%b0%e5%bb%ba" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h4 id="输入"&gt;
+ 输入
+ &lt;a class="anchor" href="#%e8%be%93%e5%85%a5" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;[fd]&amp;lt; input_file&lt;/code&gt;&lt;/p&gt;</description></item><item><title>makeself 和 .run 文件</title><link>https://bensyz.github.io/blog/blogs/makeself_run/</link><pubDate>Mon, 12 Jun 2023 11:05:23 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/makeself_run/</guid><description>&lt;h2 id="什么是-makeself-以及-run-文件是什么"&gt;
+ 什么是 makeself 以及 .run 文件是什么
+ &lt;a class="anchor" href="#%e4%bb%80%e4%b9%88%e6%98%af-makeself-%e4%bb%a5%e5%8f%8a-run-%e6%96%87%e4%bb%b6%e6%98%af%e4%bb%80%e4%b9%88" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;简单来说，makeself 把一些文件打成压缩包，然后把这个压缩包打包成 POSIX sh 脚本。&lt;/p&gt;
+&lt;p&gt;很多巨大 &lt;code&gt;xxx.run&lt;/code&gt; 文件或者 &lt;code&gt;.sh&lt;/code&gt; 就是 &lt;code&gt;makself&lt;/code&gt; 打出来的，它不是简单的一个 shell 脚本，它自包含了压缩包。(当然 Linux 中扩展名无关紧要，只是 .run 通常是)&lt;code&gt;NVIDIA-Linux-xxx.run&lt;/code&gt; 就是用这个打出来的。印象当中 &lt;code&gt;Mathematica&lt;/code&gt; 的 &lt;code&gt;Mathematica_13.2.1_LINUX.sh&lt;/code&gt; 好像也是这个打出来的。&lt;/p&gt;
+
+
+&lt;h3 id="如何使用-makeself"&gt;
+ 如何使用 makeself
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e4%bd%bf%e7%94%a8-makeself" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+
+
+&lt;h2 id="如何打包"&gt;
+ 如何打包：
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e6%89%93%e5%8c%85" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;如下目录结构&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-tree" data-lang="tree"&gt;.
+└── dir
+ ├── file1
+ ├── file2
+ └── install.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;makeself dir test_makeself.run v0.1 ./install.sh
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;就会在当前目录生成 &lt;code&gt;./test_makeself.run&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;更多参数详见 man.&lt;/p&gt;
+
+
+&lt;h2 id="如何查看包"&gt;
+ 如何查看包
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e6%9f%a5%e7%9c%8b%e5%8c%85" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;警告&lt;/strong&gt;：这个脚本是很随意的，所以下面的参数只是通常情况下可能支持的参数。请一定要确保脚本是来自于可信源，否则有可能你只是想查看帮助，实际上执行了恶意程序。&lt;/p&gt;
+
+
+&lt;h3 id="帮助"&gt;
+ 帮助
+ &lt;a class="anchor" href="#%e5%b8%ae%e5%8a%a9" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;pre tabindex="0"&gt;&lt;code&gt;./test_makeself.run --help
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id="查看解包后执行的脚本和参数"&gt;
+ 查看解包后执行的脚本和参数
+ &lt;a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e8%a7%a3%e5%8c%85%e5%90%8e%e6%89%a7%e8%a1%8c%e7%9a%84%e8%84%9a%e6%9c%ac%e5%92%8c%e5%8f%82%e6%95%b0" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ➜ ./test_makeself.run --info
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Identification: v0.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Target directory: dir
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Uncompressed size: 4 KB
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Compression: gzip
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Encryption: n
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Date of packaging: Mon Jun 12 19:23:34 CST 2023
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Built with Makeself version 2.5.0
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Build command was: /usr/bin/makeself \
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &amp;#34;dir&amp;#34; \
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &amp;#34;test_makeself.run&amp;#34; \
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &amp;#34;v0.1&amp;#34; \
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &amp;#34;./install.sh&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Script run after extraction:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ./install.sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dir will be removed after extraction
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="解包"&gt;
+ 解包
+ &lt;a class="anchor" href="#%e8%a7%a3%e5%8c%85" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;./test_makeself.run --noexec --target extract_dir
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;pre tabindex="0"&gt;&lt;code class="language-tree" data-lang="tree"&gt;extract_dir
+├── file1
+├── file2
+└── install.sh
+&lt;/code&gt;&lt;/pre&gt;</description></item><item><title>Shell echo 输出带样式 (style) 的文字</title><link>https://bensyz.github.io/blog/blogs/shell_color/</link><pubDate>Mon, 04 Apr 2022 12:23:29 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/shell_color/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;好久没明白 Shell 的格式化输出，这次看了一些资料，整理了一下。&lt;/p&gt;
+
+
+&lt;h2 id="method--result"&gt;
+ Method &amp;amp; Result
+ &lt;a class="anchor" href="#method--result" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;我们知道 shell 可以用 &lt;code&gt;-e&lt;/code&gt; 来转义 &lt;code&gt;\n&lt;/code&gt; 这些符号。由于样式输出也是特殊的输出，所以要使用样式输出也要打开这个开关。那如何表示样式的符号是什么呢？基本格式是这样&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;\033[ + 样式码 + m + &amp;#34;要打印的字符&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的样式码就是一些数字，比如 &lt;code&gt;1&lt;/code&gt; 代表加粗，&lt;code&gt;32&lt;/code&gt; 代表绿色：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold.png" alt="bold"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="./figures/green.png" alt="green"&gt;&lt;/p&gt;
+
+
+&lt;h3 id="样式的分开"&gt;
+ 样式的分开
+ &lt;a class="anchor" href="#%e6%a0%b7%e5%bc%8f%e7%9a%84%e5%88%86%e5%bc%80" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;由于这个样式是管它之后的所有输出，所以你如果先加粗后加颜色，那么后面半截也会加粗，比如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold&amp;#39;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_mixed.png" alt="bold_and_green_mixed"&gt;&lt;/p&gt;
+&lt;p&gt;所以就像括号一样我们用无样式(样式码0) 来作为右半边的括号。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1mBold\033[0m&amp;#39;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;\033[32mGreen\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_seperated.png" alt="bold_and_green_seperated"&gt;&lt;/p&gt;
+
+
+&lt;h3 id="样式的合并"&gt;
+ 样式的合并
+ &lt;a class="anchor" href="#%e6%a0%b7%e5%bc%8f%e7%9a%84%e5%90%88%e5%b9%b6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;根据上面一节，我们知道如何叠加几个样式，比如加粗又加绿:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1m\033[32mBold and Green\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_together.png" alt="bold_and_green_together"&gt;&lt;/p&gt;
+&lt;p&gt;它有个简略的写法：用分号 &lt;code&gt;;&lt;/code&gt; 分开两个样式码。比如加粗又加绿:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#!/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;echo -e &lt;span style="color:#e6db74"&gt;&amp;#39;\033[1;32mBold and Green\033[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src="./figures/bold_and_green_together_simpler.png" alt="bold_and_green_together_simpler"&gt;&lt;/p&gt;</description></item></channel></rss>

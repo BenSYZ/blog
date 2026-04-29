@@ -29,6 +29,10 @@
 &lt;/li&gt;
 &lt;li&gt;
 
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/elements_of_struct_on_stack/"&gt;struct 在栈上的顺序&lt;/a&gt;
+&lt;/li&gt;
+&lt;li&gt;
+
 &lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/asm_x86_at_t_vs_intel/"&gt;AT&amp;amp;T 和 intel 汇编&lt;/a&gt;
 &lt;/li&gt;
 &lt;li&gt;汇编代码的 “man-pages”：

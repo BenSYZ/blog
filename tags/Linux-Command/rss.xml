@@ -28,4 +28,125 @@ Tot: 100 4224 4213
  &lt;a class="anchor" href="#speed" aria-hidden="true"&gt;#&lt;/a&gt;
 &lt;/h2&gt;
 
-&lt;p&gt;这段打印在&lt;/p&gt;</description></item></channel></rss>
+&lt;p&gt;这段打印在&lt;/p&gt;</description></item><item><title>file、magic number 和 Debian 中 file 的跨大版本更新</title><link>https://bensyz.github.io/blog/blogs/file_magic-number_debian-build-deb/</link><pubDate>Tue, 28 Nov 2023 12:06:47 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/file_magic-number_debian-build-deb/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;故事会，哈哈，可以跳过，简单来说就是 &lt;code&gt;feh&lt;/code&gt; 没有认出一种 &lt;code&gt;bmp&lt;/code&gt; 的格式。&lt;/p&gt;
+&lt;p&gt;我们在 3588 上使用了 RK 提供的 Debian 11 系统。我们使用 &lt;code&gt;eog&lt;/code&gt; 也就是 gnome 带的图形查看软件，但是遇到了一个问题，如果我用 &lt;code&gt;eog&lt;/code&gt; 打开一张图后，又去更新这张图，&lt;code&gt;eog&lt;/code&gt; 是不会自动刷新的，它没有接入 &lt;code&gt;libnotify&lt;/code&gt;。于是我从 &lt;code&gt;eog&lt;/code&gt; 迁移到了 &lt;code&gt;feh&lt;/code&gt;，由于 Debian 11 自带的 &lt;code&gt;feh&lt;/code&gt; 版本过低只有 &lt;code&gt;3.6.3&lt;/code&gt;，这版的 &lt;code&gt;feh&lt;/code&gt; 也一样不支持 &lt;code&gt;libnotify&lt;/code&gt;，于是我就尝试自己编译并打包 &lt;code&gt;feh-3.10&lt;/code&gt;，打包是基于 arch 的 &lt;code&gt;PKGBUILD&lt;/code&gt;，很是折腾，最后还是成功编译。最近遇到了一个问题：一张 &lt;code&gt;bmp&lt;/code&gt; 的图片，&lt;code&gt;feh&lt;/code&gt; 打不开，给我包这个错：&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-log" data-lang="log"&gt;feh WARNING: T002-001.bmp - Does not look like an image (magic bytes missing)
+feh: No loadable images specified.
+See &amp;#39;feh --help&amp;#39; or &amp;#39;man feh&amp;#39; for detailed usage information
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;然后我用 &lt;code&gt;imagemagick&lt;/code&gt; 转了一下，&lt;code&gt;feh&lt;/code&gt; 就能正常打开了。&lt;/p&gt;</description></item><item><title>网络断连分析工具介绍</title><link>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</link><pubDate>Tue, 26 Apr 2022 02:32:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/network_disconnection_analysis_tool/</guid><description>&lt;h1 id="网络断连分析工具介绍"&gt;
+ 网络断连分析工具介绍
+ &lt;a class="anchor" href="#%e7%bd%91%e7%bb%9c%e6%96%ad%e8%bf%9e%e5%88%86%e6%9e%90%e5%b7%a5%e5%85%b7%e4%bb%8b%e7%bb%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h1&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+
+
+&lt;h2 id="抓包工具数据链路层及之上"&gt;
+ 抓包工具（数据链路层及之上）
+ &lt;a class="anchor" href="#%e6%8a%93%e5%8c%85%e5%b7%a5%e5%85%b7%e6%95%b0%e6%8d%ae%e9%93%be%e8%b7%af%e5%b1%82%e5%8f%8a%e4%b9%8b%e4%b8%8a" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="tcpdump"&gt;
+ &lt;code&gt;tcpdump&lt;/code&gt;
+ &lt;a class="anchor" href="#tcpdump" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;网络层：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# tcpdump -i eth0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol start="2"&gt;
+&lt;li&gt;数据链路层&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# tcpdump -e -i eth0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="wireshark"&gt;
+ &lt;code&gt;wireshark&lt;/code&gt;
+ &lt;a class="anchor" href="#wireshark" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;wireshark&lt;/code&gt; 还是更香一点，可以直接抓，抓完还可以看流量图 (statistic-Flow graph)(一应一答的那种)&lt;/p&gt;
+&lt;p&gt;需要注意的是通讯双方的 &lt;code&gt;wireshark&lt;/code&gt; 版本要保持一致，老版本的 sequence number 和新版本的对不上&lt;/p&gt;
+&lt;p&gt;我们这次使用的是 Version 3.6.3，如果没有可以自行 
+
+&lt;a href="https://1.as.dl.wireshark.org/src/wireshark-3.6.3.tar.xz" target="_blank"&gt;下载&lt;/a&gt;
+ 编译，编译方法查看 INSTALL 文件，对于 Ubnutu 来说&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-console" data-lang="console"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# ./tools/debian-setup.sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# mkdir build
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# cmake -DCMAKE_INSTALL_PREFIX ..
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# make -j4
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# make install
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="phy-芯片的查看物理层"&gt;
+ PHY 芯片的查看（物理层）
+ &lt;a class="anchor" href="#phy-%e8%8a%af%e7%89%87%e7%9a%84%e6%9f%a5%e7%9c%8b%e7%89%a9%e7%90%86%e5%b1%82" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;rtl8169 的手册：
+
+&lt;a href="https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf" target="_blank"&gt;https://www.semiee.com/file/EOL2/Realtek-RTL8168-LF.pdf&lt;/a&gt;
+&lt;/p&gt;</description></item><item><title>用 curl 来制作一些简单的网络小工具</title><link>https://bensyz.github.io/blog/blogs/curl_post/</link><pubDate>Sat, 09 Oct 2021 10:37:10 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/curl_post/</guid><description>&lt;h2 id="问题的出现碎碎念"&gt;
+ 问题的出现（碎碎念）
+ &lt;a class="anchor" href="#%e9%97%ae%e9%a2%98%e7%9a%84%e5%87%ba%e7%8e%b0%e7%a2%8e%e7%a2%8e%e5%bf%b5" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="1-校园网登录"&gt;
+ 1. 校园网登录
+ &lt;a class="anchor" href="#1-%e6%a0%a1%e5%9b%ad%e7%bd%91%e7%99%bb%e5%bd%95" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;校园网需要认证后才能登录上网，在使用 Linux 的时候有一点很麻烦，宿舍区必须使用客户端才能登录，不能像教学区那样可以网页登录，不知道是谁告诉我们宿舍区也可以网页登录，网址是:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;http://172.30.255.2/a30.html
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;于是宿舍区使用 Linux 的问题得以解决。但是每次断网都要打开浏览器去连接也不是很方便，我想是否可以使用爬虫来实现登录，找着找着发现可以用 &lt;code&gt;curl&lt;/code&gt; 来实现登录。&lt;/p&gt;
+
+
+&lt;h3 id="2-宿舍电费查询"&gt;
+ 2. 宿舍电费查询
+ &lt;a class="anchor" href="#2-%e5%ae%bf%e8%88%8d%e7%94%b5%e8%b4%b9%e6%9f%a5%e8%af%a2" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;这个小工具的出现的起因是宿舍如果没电了，夏天早上会断电，我的树莓派会被强制断电，对 SD 卡不好于是我想每天做个定时任务爬一下宿舍电费是多少，一开始也是想用 selenium 爬虫做的，但是 selenium 太吃资源，于是我又找着找着想到了 &lt;code&gt;curl&lt;/code&gt;，然后就成了。&lt;/p&gt;
+
+
+&lt;h2 id="curl-简介"&gt;
+ &lt;code&gt;curl&lt;/code&gt; 简介
+ &lt;a class="anchor" href="#curl-%e7%ae%80%e4%bb%8b" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;我们常用 &lt;code&gt;curl&lt;/code&gt;、&lt;code&gt;wget&lt;/code&gt; 在 Linux 上下载东西：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;curl www.baidu.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wget www.baidu.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;而我们知道网络里有的不止是从服务器上下载内容，还有提交内容到服务器上。要怎么提交呢？&lt;/p&gt;
+&lt;p&gt;方法很简单就是使用 &lt;code&gt;-d&lt;/code&gt; 参数，语法如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;curl -d &lt;span style="color:#e6db74"&gt;&amp;#39;variable=value&amp;#39;&lt;/span&gt; URL
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Windows、Linux、Mac 一般都有 &lt;code&gt;curl&lt;/code&gt; 命令，Windows 没有的话可以去这里下 
+
+&lt;a href="https://curl.se/windows" target="_blank"&gt;https://curl.se/windows&lt;/a&gt;
+&lt;/p&gt;
+
+
+&lt;h2 id="如何制作"&gt;
+ 如何制作
+ &lt;a class="anchor" href="#%e5%a6%82%e4%bd%95%e5%88%b6%e4%bd%9c" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;上面说的 &lt;code&gt;curl&lt;/code&gt; 来贴一个 POST表单，可能很难理解，我们借 drcom 来举一个例子，给大家介绍一下如何制作两个使用 &lt;code&gt;curl&lt;/code&gt; 的小工具。&lt;/p&gt;
+
+
+&lt;h3 id="登录-drcom-校园网"&gt;
+ 登录 drcom 校园网
+ &lt;a class="anchor" href="#%e7%99%bb%e5%bd%95-drcom-%e6%a0%a1%e5%9b%ad%e7%bd%91" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;这里再提一下两个登录的网页地址，教学区这个域名默认的网页就是登录界面，但是宿舍区上网自动跳转的界面是让你下载客户端，但是&lt;code&gt;a30.html&lt;/code&gt;是可以和教学区那样实现网页登录的：&lt;/p&gt;</description></item></channel></rss>
