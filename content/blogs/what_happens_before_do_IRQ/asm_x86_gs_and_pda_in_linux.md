@@ -11,7 +11,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "linux gs and pda"
-tags: [ "Linux", "asm" ]
+tags: [ "Linux kernel", "asm" ]
 ---
 
 换栈的时候

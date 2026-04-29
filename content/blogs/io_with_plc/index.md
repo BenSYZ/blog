@@ -1,5 +1,5 @@
 ---
-title: "io_with_plc"
+title: "GPIO 通过光耦转换成带源 IO"
 date: 2023-07-11T09:33:47+08:00
 lastMod: 2023-08-17T02:17:19+08:00
 code: true
@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "io_with_plc"
-tags: ["io_with_plc", "kenexs"]
+tags: ["GPIO"]
 ---
 
 2023-08-17 update: summary 中添加开关状态

@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "what is .run file"
-tags: ["makeself", "run", "sh"]
+tags: ["shell scripts"]
 ---
 
 ## 什么是 makeself 以及 .run 文件是什么

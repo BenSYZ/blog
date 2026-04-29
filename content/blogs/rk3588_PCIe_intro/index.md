@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "rk3588_pcie_intro"
-tags: ["rk3588", "PCIe", "net", "osi", "dts", "Notes"]
+tags: ["rk3588", "PCIe", "network", "dts"]
 ---
 
 

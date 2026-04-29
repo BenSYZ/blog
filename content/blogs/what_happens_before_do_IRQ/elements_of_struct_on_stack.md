@@ -11,7 +11,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "arg mem address in stack"
-tags: [ "Linux kernel", "C-Lang", "memory" ]
+tags: [ "Linux kernel", "C-lang", "memory" ]
 ---
 
 

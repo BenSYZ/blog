@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "非特权进程向特权进程发消息的控制"
-tags: ["polkit", "Linux", "permission", "learns", "kenexs"]
+tags: ["Linux"]
 ---
 
 # polkit

@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "对 7zr 输出结果 Speed，Usage，R/U 和 Rating 的结果解析"
-tags: ["7zr", "benchmark", "Linux Command"]
+tags: ["7zr", "benchmark", "Linux command"]
 ---
 
 

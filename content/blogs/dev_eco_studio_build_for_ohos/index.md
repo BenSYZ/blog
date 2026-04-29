@@ -11,7 +11,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "dev eco studio build for ohos"
-tags: ["DevEco Studio", "ohos"]
+tags: ["ohos"]
 ---
 
 ## Introduction

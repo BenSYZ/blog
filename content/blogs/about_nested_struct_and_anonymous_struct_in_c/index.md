@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "c_struct"
-tags: ["program", "c", "syntax"]
+tags: ["C-lang"]
 ---
 
 看书的时候没明白一个 macro 的用法，搜了一下，发现这个[问题](https://stackoverflow.com/questions/58346036/c-c-macro-parameter-containing-dot-member-access-operator)，发现看不懂他写的结构体的问题。自己尝试写了几个例子发现了 anonymous struct，觉得用法很奇怪，又搜到了这个[问题](https://stackoverflow.com/questions/38457109/c-how-to-access-different-types-of-anonymous-or-unnamed-nested-structs/38457240)，一下把我能想到的关于结构体的情况都写出来了

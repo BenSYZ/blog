@@ -11,7 +11,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "文件描述符和 bash 中文件描述符号的重定向，以及 bash 中的各种箭头：<, <<, <<<, >, >>, <(), >()"
-tags: ["file descriptor", "Linux", "shell", "bash"]
+tags: ["file descriptor", "Linux", "shell scripts", "bash"]
 ---
 
 

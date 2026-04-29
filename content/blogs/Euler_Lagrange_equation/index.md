@@ -11,7 +11,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "Euler–Lagrange equation"
-tags: ["physics", "Euler-Lagrange equation", "classical mechanics"]
+tags: ["physics", "classical mechanics"]
 ---
 
 ## 最速降线

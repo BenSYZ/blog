@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "使用 rsa 非对称密钥来实现 ssh 免密登录"
-tags: ["rsa","ssh","newbie"]
+tags: ["ssh"]
 ---
 
 

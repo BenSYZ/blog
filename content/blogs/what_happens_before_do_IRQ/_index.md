@@ -12,7 +12,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "本文以 x86 64 为例，分析了在 Linux 2.6.24 中 do_IRQ 前的汇编代码"
-tags: [ "Linux", "asm", "IRQ", "x86-64", "interrupt" ]
+tags: [ "Linux kernel", "asm", "IRQ", "x86-64", "interrupt", "Linux-2.6.24" ]
 ---
 
 ## Introduction

@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "通过 echo -e 和特定样式前缀，来实现格式化输出"
-tags: ["shell", "beauty", "Linux"]
+tags: ["shell scripts", "Linux"]
 ---
 
 ## Introduction

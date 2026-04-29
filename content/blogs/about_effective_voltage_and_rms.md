@@ -8,7 +8,7 @@ katex: true
 draft: false
 author: "Ben"
 description: "about effective voltage and rms"
-tags: ["physics", "formula"]
+tags: ["physics"]
 ---
 
 ## Effective voltage of sinusoidal

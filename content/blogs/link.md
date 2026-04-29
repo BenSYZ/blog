@@ -6,7 +6,7 @@ author: "Ben"
 description: "硬连接和软连接"
 mermaid: true
 code: true
-tags: ['link', 'hard link', 'symbolic link']
+tags: ["Linux", "filesystem"]
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

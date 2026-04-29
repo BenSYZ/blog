@@ -11,7 +11,7 @@ author: "Ben, Gemini"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "gdt and tss"
-tags: [ "Linux", "Linux task", "asm" ]
+tags: [ "Linux kernel", "asm" ]
 ---
 
 [Gemini talk](https://www.google.com/search?client=firefox-b-d&q=what+is+global+descriptor+table&fbs=ADc_l-Z6XGGbkKmpylZqg2J7ZOuVNvV7jKtLqzLZ63dd2zPtrsojpaijeJRLrp4clUvcwVJFwPc3SunfhAadIHhnTsFBVMAAXIZgDnZp5KTskh6spmEAN_m5c9Zl7QQ9S1AEoyH9D4lVpv_wnngMRGAxLVYtAQ0lv6yE5rdDK6YSHRfe9mjQavptxK4vEoFd-TzuKbzrFaNFsrKlv_gEfcxDRavrClfR-Q&ved=2ahUKEwjE3dvK0e6TAxWMDTQIHTwEA6cQ0NsOegQIAxAB&aep=10&ntc=1&mstk=AUtExfAFlhqj7TECPIPnuH2Rfbk4_jTcsVwZGnrXQ9YZFv9GR5c-KZ_wyVy-DWVHuX9hT4IQ2lzAZg3ShTFHZBZuWY2p-WtAwgIxKnnqhXdlG6H1C_v5ER_elvkoz1CHvQBOsIiPIdh7sSBcOnkTdVD17hjcuyTEHNDbOeTsxX-zwaH2Q4SbZovJhpuhTiIL-5jUSCaAIAB1PbvY_MlAXYULYnVaIjMImScqxYKO1JSWaL5_c9lI6BfOMii-WVzAKw-8AVYj-nKH9TuUj-Sz5tf11SkF1ebQCvnW4nzJggLa6fM6JhXMjSBdmqqJRcbBQRGHmsH2CmZDtW5kGQ&csuir=1&mtid=5uDeaeS5OYu90PEPi7KBIQ&udm=50)

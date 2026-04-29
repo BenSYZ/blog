@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "看内核源码关于任务初始化的时候看到一个很奇怪的写法：`struct task_struct init_task = INIT_TASK(init_task);` ..."
-tags: ["Linux kernel", "C-Lang", "struct"]
+tags: ["Linux kernel", "C-lang", "struct"]
 ---
 
 

@@ -7,7 +7,7 @@ mermaid: false
 draft: false
 author: "Ben"
 description: "USB3.0 conflicts WiFi 5G"
-tags: ['raspberrypi', 'WiFi', 'wpa_supplicant']
+tags: ['raspberrypi', 'network']
 ---
 
 我原先发于 [CSDN](https://blog.csdn.net/BenSYZ)

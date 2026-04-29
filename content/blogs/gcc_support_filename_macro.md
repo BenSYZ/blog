@@ -10,7 +10,7 @@ author: "Ben"
 geometry: margin=2cm
 CJKmainfont: "Noto Sans CJK SC"
 description: "gcc_support_filename_macro"
-tags: ["gcc", "macro", "c"]
+tags: ["gcc", "C-lang"]
 ---
 
 ## 2023-06-06 update:
