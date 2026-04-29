@@ -2,3 +2,4 @@
 !/themes/my-hugo-theme
 /resources
 /docs/*
+/.hugo_build.lock
