@@ -4,6 +4,7 @@ theme = "my-hugo-theme"
 disablePathToLower = true
 publishDir = "docs"
 locale = "zh-CN"
+baseURL = "https://www.bensyz.com"
 
 [sitemap]
 changefreq = "daily"
