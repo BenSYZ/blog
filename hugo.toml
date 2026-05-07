@@ -3,7 +3,7 @@ theme = "my-hugo-theme"
 #theme: hugo-theme-nostyleplease
 disablePathToLower = true
 publishDir = "docs"
-languageCode = "en-us"
+locale = "zh-CN"
 
 [sitemap]
 changefreq = "daily"
