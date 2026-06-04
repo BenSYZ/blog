@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux Kernel Design on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Linux-kernel-design/</link><description>Recent content in Linux Kernel Design on Ben's Blog</description><generator>Hugo</generator><language>zh-CN</language><lastBuildDate>Thu, 30 Apr 2026 15:13:43 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Linux-kernel-design/rss.xml" rel="self" type="application/rss+xml"/><item><title>中断的数据结构和架构设计</title><link>https://bensyz.github.io/blog/blogs/data_structure_and_architecture_design_in_Linux_interrupt/</link><pubDate>Thu, 30 Apr 2026 15:13:43 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/data_structure_and_architecture_design_in_Linux_interrupt/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;
+
+&lt;a href="https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/"&gt;上一篇文章&lt;/a&gt;
+我们着重介绍了 &lt;code&gt;do_IRQ&lt;/code&gt; 前的调用栈，简单介绍了 &lt;code&gt;IRQ0xXY_interrupt&lt;/code&gt; 是如何注册到全局中断表的。但还有很多问题没有解决：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;irq = __get_cpu_var(vector_irq)[vector];&lt;/code&gt;，vector 转 irq 的数据结构是怎么构造的？&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;request_irq&lt;/code&gt; 是如何申请 irq 的？&lt;/li&gt;
+&lt;li&gt;irq 和 vector 的关系是怎么够构造的？&lt;/li&gt;
+&lt;li&gt;从外设发出中断到我们通过 request_irq 注册的函数，期间涉及的数据结构有哪些？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这篇文章主要介绍了，注册中断时涉及的数据结构，它们的构造、存放位置，主要包括 &lt;code&gt;idt_descr&lt;/code&gt;(&lt;code&gt;idt_table&lt;/code&gt;)，&lt;code&gt;vector_irq&lt;/code&gt; 和 &lt;code&gt;irq_desc&lt;/code&gt;。&lt;/p&gt;
+
+
+&lt;h2 id="request_irq"&gt;
+ &lt;code&gt;request_irq&lt;/code&gt;
+ &lt;a class="anchor" href="#request_irq" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+
+
+&lt;h3 id="错误的想法"&gt;
+ 错误的想法
+ &lt;a class="anchor" href="#%e9%94%99%e8%af%af%e7%9a%84%e6%83%b3%e6%b3%95" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h3&gt;
+
+&lt;p&gt;首先我们来看一下 &lt;code&gt;request_irq&lt;/code&gt; 是如何申请 irq 的。我们知道在 &lt;code&gt;do_IRQ&lt;/code&gt; 时，我们会用 &lt;code&gt;irq = __get_cpu_var(vector_irq)[vector];&lt;/code&gt; 拿到 vector 对应的 irq，然后拿着这个 irq 去执行注册的中断函数。那么很简单直接的设计想法就是：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;request_irq&lt;/code&gt; 时去更新 PER CPU DATA 区（&lt;code&gt;vector&lt;/code&gt; 转 &lt;code&gt;irq&lt;/code&gt;）和 APIC ？&lt;/p&gt;
+&lt;p&gt;驱动端这里改了绑定，设备硬件端也要改。或者说，在驱动注册时，硬件这边的改动也要注册。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;驱动将特定的 IRQ 绑定到 vector
+&lt;ul&gt;
+&lt;li&gt;更新 vector 和 IRQ 的绑定关系，更新 Per CPU 内存区&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;设备将特定的 IRQ 绑定到这个 vector
+&lt;ul&gt;
+&lt;li&gt;更新 APIC&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这样，设备 IRQ 给到 APIC 之后，APIC 会给正确的 vector 到&lt;/p&gt;</description></item></channel></rss>

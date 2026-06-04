@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>页表 on Ben's Blog</title><link>https://bensyz.github.io/blog/blogs/page_table/</link><description>Recent content in 页表 on Ben's Blog</description><generator>Hugo</generator><language>zh-CN</language><lastBuildDate>Wed, 03 Jun 2026 13:48:45 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/blogs/page_table/rss.xml" rel="self" type="application/rss+xml"/><item><title>rk3576 32bit memory single ddr phy</title><link>https://bensyz.github.io/blog/blogs/page_table/rk3576_32bit_memory_single_ddr_phy/</link><pubDate>Wed, 03 Jun 2026 13:48:45 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/page_table/rk3576_32bit_memory_single_ddr_phy/</guid><description>&lt;p&gt;
+
+&lt;a href="https://share.google/aimode/SqgYmAfkDqhM4dy5V" target="_blank"&gt;https://share.google/aimode/SqgYmAfkDqhM4dy5V&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;瑞芯微 RK3576 的 DDR 内存总位宽虽然是 32位（Dual Channels × 16bits），但它最高能支持到 16GB 的内存容量，这主要是由其内存控制器的物理寻址设计、片选（Rank）支持以及当前市场上的内存颗粒密度共同决定的。 [1]
+很多人容易将“32位内存总位宽”与“32位 CPU 寻址”混淆，以下是导致 RK3576 支持 16GB 内存的核心原因：&lt;/p&gt;
+
+
+&lt;h2 id="1-内存数据位宽--cpu-物理寻址位宽"&gt;
+ 1. 内存数据位宽 $\neq$ CPU 物理寻址位宽
+ &lt;a class="anchor" href="#1-%e5%86%85%e5%ad%98%e6%95%b0%e6%8d%ae%e4%bd%8d%e5%ae%bd--cpu-%e7%89%a9%e7%90%86%e5%af%bb%e5%9d%80%e4%bd%8d%e5%ae%bd" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;数据位宽（32位）：指的是内存控制器在一个时钟周期内，能够传输的数据量（32个比特位）。这决定的是内存的带宽速度（即传输快慢），而不是容量。 [1, 2]&lt;/li&gt;
+&lt;li&gt;物理寻址位宽（36位+）：RK3576 的 CPU 核心基于 64位架构（Cortex-A72 + Cortex-A53）。虽然它是中端芯片，但其内部的物理寻址线（Address Lines）通常在 36位或以上。36位寻址线理论上可以支持高达 64GB 的物理空间寻址（$2^{36}$ 字节），因此内部架构绝对不会被 4GB（32位寻址）所限制。 [3, 4]&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="2-rk3576-内存控制器dmc的硬件硬限制"&gt;
+ 2. RK3576 内存控制器（DMC）的硬件硬限制
+ &lt;a class="anchor" href="#2-rk3576-%e5%86%85%e5%ad%98%e6%8e%a7%e5%88%b6%e5%99%a8dmc%e7%9a%84%e7%a1%ac%e4%bb%b6%e7%a1%ac%e9%99%90%e5%88%b6" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;根据
+
+&lt;a href="https://www.rock-chips.com/uploads/pdf/2024.3.18/192/RK3576%20Brief%20Datasheet%20V1.2-20240311.pdf" target="_blank"&gt;瑞芯微官方芯片手册（Datasheet）&lt;/a&gt;
+对内存控制器的底层定义，其寻址空间在设计阶段就被锁死在 16GB： [1]&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;通道设计：双通道（Dual Channels），每个通道分配 16位数据位宽，组合成 32位。&lt;/li&gt;
+&lt;li&gt;片选支持：每个通道最多支持 2个 Ranks（Chip Select）。&lt;/li&gt;
+&lt;li&gt;寻址上限：官方明确指出 “Up to 16GB addressing space totally”（总计最高 16GB 寻址空间）。这意味着芯片内部的内存控制单元，最多只能分出足够的行、列、Bank 选通信号来管理 16GB 的物理内存颗粒。 [1]&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="3-当前-dram-内存颗粒密度的匹配"&gt;
+ 3. 当前 DRAM 内存颗粒密度的匹配
+ &lt;a class="anchor" href="#3-%e5%bd%93%e5%89%8d-dram-%e5%86%85%e5%ad%98%e9%a2%97%e7%b2%92%e5%af%86%e5%ba%a6%e7%9a%84%e5%8c%b9%e9%85%8d" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在商业量产中，最大内存容量受到 LPDDR4X/LPDDR5 颗粒容量的制约。
+以常见的 LPDDR4X / LPDDR5 单颗 4GB（32Gb 单晶圆密度的双芯片封装）颗粒为例：&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,217 @@
+<!doctype html><html><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>中断的数据结构和架构设计</title><script>!function(){$("pre > code").each(function(){var s,n=$(this).parent().attr("class");n==null||n===""?$(this).addClass("hljs"):(s={js:"javascript"},s[n]&&(n=s[n]),$(this).addClass(n))})}</script><link rel=stylesheet href=/blog/css/hljs/snazzy.css><link rel=stylesheet href=/blog/css/hljs/line-numbers.min.css><script src=/blog/js/hljs/highlight.min.js></script><script src=/blog/js/hljs/highlightjs-line-numbers.min.js></script><script>hljs.highlightAll()</script><script>hljs.initLineNumbersOnLoad()</script><link rel=stylesheet href=/blog/css/code.css><link rel=stylesheet href=/blog/css/style.css><link rel=stylesheet href=/blog/css/footer.css><link rel=stylesheet href=/blog/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/blog/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/blog/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/blog/js/favicon.js></script><link rel=stylesheet href=/blog/css/head_index.css><script src=/blog/js/mermaid.min.js></script><script>mermaid.initialize({startOnLoad:!0})</script></head><body><div class=container><div class=header><h1>中断的数据结构和架构设计</h1><div>2026-04-30</div><hr></div><div class=middle><div id=TitleWithToc><div id=TitleOfToc>中断的数据结构和架构设计</div><nav id=TableOfContents><ol><li><a href=#introduction>Introduction</a></li><li><a href=#request_irq><code>request_irq</code></a><ol><li><a href=#错误的想法>错误的想法</a></li><li><a href=#linux-的设计>Linux 的设计</a></li></ol></li><li><a href=#注册的数据结构>注册的数据结构</a><ol><li><a href=#idt_descridt_table在全局内存中制作-idt-table在-idtr-中记录-idt-table-的地址><code>idt_descr</code>/<code>idt_table</code>：在全局内存中，制作 idt table；在 idtr 中记录 idt table 的地址</a></li><li><a href=#vector_irq在-per-cpu-data-的内存中制作-vector--irq-的映射><code>vector_irq</code>：在 per CPU data 的内存中，制作 vector → irq 的映射</a></li><li><a href=#irq_desc在全局内存中制作-apic-上的-irq-line-的抽象><code>irq_desc</code>：在全局内存中，制作 APIC 上的 irq line 的抽象</a><ol><li><a href=#handle_irq><code>handle_irq</code></a><ol><li><a href=#handle_fasteoi_irqlevel-trigger>handle_fasteoi_irq(level trigger)</a></li><li><a href=#handle_edge_irqedge-trigger>handle_edge_irq(edge trigger)</a></li></ol></li><li><a href=#action><code>action</code></a></li></ol></li><li><a href=#summary>summary</a></li><li><a href=#qa>Q&amp;A</a><ol><li><a href=#为什么-idt_descr-和-irq_desc-是全局的但是-vector_irq-不是>为什么 <code>idt_descr</code> 和 <code>irq_desc</code> 是全局的，但是 vector_irq 不是</a></li></ol></li></ol></li></ol></nav></div><div id=content><h2 id=introduction>Introduction
+<a class=anchor href=#introduction aria-hidden=true>#</a></h2><p><a href=/blog/blogs/what_happens_before_do_IRQ/>上一篇文章</a>
+我们着重介绍了 <code>do_IRQ</code> 前的调用栈，简单介绍了 <code>IRQ0xXY_interrupt</code> 是如何注册到全局中断表的。但还有很多问题没有解决：</p><ul><li><code>irq = __get_cpu_var(vector_irq)[vector];</code>，vector 转 irq 的数据结构是怎么构造的？</li><li><code>request_irq</code> 是如何申请 irq 的？</li><li>irq 和 vector 的关系是怎么够构造的？</li><li>从外设发出中断到我们通过 request_irq 注册的函数，期间涉及的数据结构有哪些？</li></ul><p>这篇文章主要介绍了，注册中断时涉及的数据结构，它们的构造、存放位置，主要包括 <code>idt_descr</code>(<code>idt_table</code>)，<code>vector_irq</code> 和 <code>irq_desc</code>。</p><h2 id=request_irq><code>request_irq</code>
+<a class=anchor href=#request_irq aria-hidden=true>#</a></h2><h3 id=错误的想法>错误的想法
+<a class=anchor href=#%e9%94%99%e8%af%af%e7%9a%84%e6%83%b3%e6%b3%95 aria-hidden=true>#</a></h3><p>首先我们来看一下 <code>request_irq</code> 是如何申请 irq 的。我们知道在 <code>do_IRQ</code> 时，我们会用 <code>irq = __get_cpu_var(vector_irq)[vector];</code> 拿到 vector 对应的 irq，然后拿着这个 irq 去执行注册的中断函数。那么很简单直接的设计想法就是：</p><p><code>request_irq</code> 时去更新 PER CPU DATA 区（<code>vector</code> 转 <code>irq</code>）和 APIC ？</p><p>驱动端这里改了绑定，设备硬件端也要改。或者说，在驱动注册时，硬件这边的改动也要注册。</p><ul><li>驱动将特定的 IRQ 绑定到 vector<ul><li>更新 vector 和 IRQ 的绑定关系，更新 Per CPU 内存区</li></ul></li><li>设备将特定的 IRQ 绑定到这个 vector<ul><li>更新 APIC</li></ul></li></ul><p>这样，设备 IRQ 给到 APIC 之后，APIC 会给正确的 vector 到</p><div class=mermaid>graph LR
+A[device] -- IRQ --> B[APIC]
+B -- vector --> C[CPU]
+C -- vector --> D[Linux kernel]
+D -- IRQ --> E[driver]</div><p>设备不能随便绑 IRQ 到某一个 vector 上，不然驱动那边不知道需要把驱动这边的 IRQ 绑到哪个 vector 上。</p><p>中断来时，内核将 vector 转成 IRQ，然后调用这个 IRQ 对应的回调函数，也就是驱动注册的函数。</p><h3 id=linux-的设计>Linux 的设计
+<a class=anchor href=#linux-%e7%9a%84%e8%ae%be%e8%ae%a1 aria-hidden=true>#</a></h3><p>模块化设计，外设驱动只管外设，外设到外设驱动需要中断？中断是由中断设备（APIC）提供的，那就新增一个中断驱动（irq）。由中断驱动提供中断设备的细节。外设驱动不需要配置中断设备的东西。</p><p>分层设计：</p><table><thead><tr><th>层</th><th>硬件</th><th>软件</th></tr></thead><tbody><tr><td>1</td><td>APIC 设备</td><td>irq 驱动</td></tr><tr><td>1→2</td><td>APIC 对外提供固定的 pin</td><td>irq 对外提供 irq_desc 结构，用于外设注册</td></tr><tr><td>2</td><td>外设</td><td>外设驱动往 irq_desc 注册</td></tr></tbody></table><p>中断来时，irq 驱动将 vector 转成 IRQ，然后调用这个 IRQ 对应的回调函数。我们可以将外设驱动注册到这个回调函数上，但考虑到共享中断，以及该中断设备仍然需要一些自己的操作（例如 level trigger 的 eoi），所以，内核的这个回调函数不是外设驱动的回调，而是 APIC 设备驱动（irq）自己的回调函数。具体来说就是 <code>irq_desc->handle_irq</code> 对应 irq 的回调，针对 APIC 设备的，和外设驱动无关。irq 的这个 <code>handle_irq</code> 回调，会去调用驱动注册的回调函数，位于 <code>irq_desc->action</code> 链表上的 <code>handler</code>。</p><p><a href=./gpio_and_interrupt.md>GPIO 和中断</a></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// include/asm-x86/hw_irq_64.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define IRQ0_VECTOR		(FIRST_EXTERNAL_VECTOR + 0x10)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/i8259_64.c
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>DEFINE_PER_CPU</span>(<span style=color:#66d9ef>vector_irq_t</span>, vector_irq) <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>	[<span style=color:#ae81ff>0</span> ... IRQ0_VECTOR <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>] <span style=color:#f92672>=</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>,
+</span></span><span style=display:flex><span>	[IRQ0_VECTOR] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>,
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>};
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// include/linux/irq.h
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> irq_desc {
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>	<span style=color:#66d9ef>irq_flow_handler_t</span>	handle_irq;
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>	<span style=color:#66d9ef>struct</span> irqaction	<span style=color:#f92672>*</span>action;	<span style=color:#75715e>/* IRQ action list */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>};
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// kernel/irq/handle.c
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> irq_desc irq_desc[NR_IRQS] __cacheline_aligned_in_smp <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>	[<span style=color:#ae81ff>0</span> ... NR_IRQS<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>] <span style=color:#f92672>=</span> { }
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><p>我们可以清楚地看到，这里有两层数据结构：</p><ol><li>vector 转 irq，</li><li>下一层的设计不是 irq 直接对函数指针，而是 irq 对 <code>struct irq_desc</code>，简单来说，它就是回调函数的集合</li></ol><p><strong>request_irq 是绑定 irq 和函数指针，而不是绑定 irq 和 vector</strong>。绑定关系是放在 <code>irq_desc</code> 中</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>do_IRQ</span>(...);
+</span></span><span style=display:flex><span>    vector <span style=color:#f92672>=</span> <span style=color:#f92672>~</span>regs<span style=color:#f92672>-&gt;</span>orig_rax;
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * vector → irq 早写好的，不是在 request_irq 时写的
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    irq <span style=color:#f92672>=</span> <span style=color:#a6e22e>__get_cpu_var</span>(vector_irq)[vector];
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>generic_handle_irq</span>(irq);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>         * 这里的 desc 描述的是 IRQ line， one irq_desc per irq
+</span></span></span><span style=display:flex><span><span style=color:#75715e>         * 存着这个 irq 对应的所有回调函数，位于 irqaction 中
+</span></span></span><span style=display:flex><span><span style=color:#75715e>         */</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>struct</span> irq_desc <span style=color:#f92672>*</span>desc <span style=color:#f92672>=</span> irq_desc <span style=color:#f92672>+</span> irq;
+</span></span><span style=display:flex><span>        desc<span style=color:#f92672>-&gt;</span><span style=color:#a6e22e>handle_irq</span>(irq, desc); <span style=color:#75715e>// handle_edge_irq
+</span></span></span><span style=display:flex><span>            <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>             * 这里的 irqaction 才是 request_irq 注册上去的链表
+</span></span></span><span style=display:flex><span><span style=color:#75715e>             */</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>struct</span> irqaction <span style=color:#f92672>*</span>action <span style=color:#f92672>=</span> desc<span style=color:#f92672>-&gt;</span>action;
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>handle_IRQ_event</span>(irq, action);
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>do</span> {
+</span></span><span style=display:flex><span>                    ret <span style=color:#f92672>=</span> action<span style=color:#f92672>-&gt;</span><span style=color:#a6e22e>handler</span>(irq, action<span style=color:#f92672>-&gt;</span>dev_id);
+</span></span><span style=display:flex><span>                    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>                    action <span style=color:#f92672>=</span> action<span style=color:#f92672>-&gt;</span>next;
+</span></span><span style=display:flex><span>                } <span style=color:#66d9ef>while</span> (action);
+</span></span></code></pre></div><h2 id=注册的数据结构>注册的数据结构
+<a class=anchor href=#%e6%b3%a8%e5%86%8c%e7%9a%84%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84 aria-hidden=true>#</a></h2><p>这里涉及的数据结构很多：</p><ul><li>上篇文章介绍的 <code>idt_table</code> 和 <code>idt_descr</code></li><li><code>irq = __get_cpu_var(vector_irq)[vector];</code></li><li><code>struct irq_desc *desc = irq_desc + irq;</code></li></ul><h3 id=idt_descridt_table在全局内存中制作-idt-table在-idtr-中记录-idt-table-的地址><code>idt_descr</code>/<code>idt_table</code>：在全局内存中，制作 idt table；在 idtr 中记录 idt table 的地址
+<a class=anchor href=#idt_descridt_table%e5%9c%a8%e5%85%a8%e5%b1%80%e5%86%85%e5%ad%98%e4%b8%ad%e5%88%b6%e4%bd%9c-idt-table%e5%9c%a8-idtr-%e4%b8%ad%e8%ae%b0%e5%bd%95-idt-table-%e7%9a%84%e5%9c%b0%e5%9d%80 aria-hidden=true>#</a></h3><ol><li>CPU 跳转位置由 load_idt 通过 ldit 指令配置 idtr，给出 Linux kernel 的处理函数表地址</li><li>Linux 处理函数表的更新由 <code>set_intr_gate</code> 负责</li></ol><p>正常情况下，大部分的中断函数的入口是 <code>IRQ0xXY_interrupt</code>，该函数用于将 vector 压入栈，但部分 vector 的处理是特殊的，需要覆盖部分。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/setup64.c 
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> desc_ptr idt_descr <span style=color:#f92672>=</span> { <span style=color:#ae81ff>256</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>16</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) idt_table };
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>start_kernel</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>trap_init</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>set_intr_gate</span>(<span style=color:#ae81ff>0</span>,<span style=color:#f92672>&amp;</span>divide_error);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>_set_gate</span>(<span style=color:#f92672>&amp;</span>idt_table[nr], GATE_INTERRUPT, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) func, <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>memcpy</span>(...); <span style=color:#75715e>//
+</span></span></span><span style=display:flex><span>    cpu_init
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span><span style=display:flex><span>          <span style=color:#66d9ef>asm</span> <span style=color:#a6e22e>volatile</span>(<span style=color:#e6db74>&#34;lidt ...&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>init_IRQ</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>set_intr_gate</span>();
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// for vector: FIRST_EXTERNAL_VECTOR, END, i, 0 to external_number
+</span></span></span><span style=display:flex><span>      <span style=color:#a6e22e>_set_gate</span>(<span style=color:#f92672>&amp;</span>idt_table[nr], GATE_INTERRUPT, (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span>) interrupt[i], <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>);
+</span></span></code></pre></div><p>这里在 <code>trap_init</code> 后，<code>idt_descr</code> 地址就已经存到 idtr 中了，对于外部的 <code>interrupt</code> 直接填到后续的地址就是了，不需要再 <code>lidt</code>。</p><p>多核直接拿来用：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>start_secondary</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>cpu_init</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span></code></pre></div><p>关于 start_secondary，详见
+<a href=./smp/_index.md>smp</a></p><h3 id=vector_irq在-per-cpu-data-的内存中制作-vector--irq-的映射><code>vector_irq</code>：在 per CPU data 的内存中，制作 vector → irq 的映射
+<a class=anchor href=#vector_irq%e5%9c%a8-per-cpu-data-%e7%9a%84%e5%86%85%e5%ad%98%e4%b8%ad%e5%88%b6%e4%bd%9c-vector--irq-%e7%9a%84%e6%98%a0%e5%b0%84 aria-hidden=true>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// init/main.c
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>start_kernel</span>();
+</span></span><span style=display:flex><span> <span style=color:#a6e22e>rest_init</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>kernel_init</span>();
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// arch/x86/kernel/smpboot_64.c, TODO:单核呢？
+</span></span></span><span style=display:flex><span>    <span style=color:#a6e22e>smp_prepare_cpus</span>(max_cpus);
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// arch/x86/kernel/io_apic_64.c
+</span></span></span><span style=display:flex><span>      <span style=color:#a6e22e>setup_IO_APIC</span>();
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>setup_IO_APIC_irqs</span>();
+</span></span><span style=display:flex><span>          <span style=color:#66d9ef>for</span> (apic <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; apic <span style=color:#f92672>&lt;</span> nr_ioapics; apic<span style=color:#f92672>++</span>)
+</span></span><span style=display:flex><span>          <span style=color:#66d9ef>for</span> (pin <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; pin <span style=color:#f92672>&lt;</span> nr_ioapic_registers[apic]; pin<span style=color:#f92672>++</span>)
+</span></span><span style=display:flex><span>            idx <span style=color:#f92672>=</span> <span style=color:#a6e22e>find_irq_entry</span>(apic,pin,mp_INT); <span style=color:#75715e>// 遍历 mp_irq_entries, mp_irqs, Multi-Process 来自 ACPI
+</span></span></span><span style=display:flex><span>            irq <span style=color:#f92672>=</span> <span style=color:#a6e22e>pin_2_irq</span>(idx, apic, pin); <span style=color:#75715e>// 根据 mp_irqs 拿
+</span></span></span><span style=display:flex><span>            <span style=color:#a6e22e>add_pin_to_irq</span>(irq, apic, pin);
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>setup_IO_APIC_irq</span>(apic, pin, irq, <span style=color:#a6e22e>irq_trigger</span>(idx), <span style=color:#a6e22e>irq_polarity</span>(idx));
+</span></span><span style=display:flex><span>              <span style=color:#a6e22e>assign_irq_vector</span>(irq, mask);
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>__assign_irq_vector</span>(irq, mask);
+</span></span><span style=display:flex><span>                  <span style=color:#a6e22e>per_cpu</span>(vector_irq, new_cpu)[vector] <span style=color:#f92672>=</span> irq; <span style=color:#75715e>// 更新了 per cpu 区域
+</span></span></span><span style=display:flex><span>                  cfg <span style=color:#f92672>=</span> <span style=color:#f92672>&amp;</span>irq_cfg[irq];
+</span></span><span style=display:flex><span>                  cfg<span style=color:#f92672>-&gt;</span>vector <span style=color:#f92672>=</span> vector;
+</span></span><span style=display:flex><span>                  cfg<span style=color:#f92672>-&gt;</span>domain <span style=color:#f92672>=</span> domain;
+</span></span></code></pre></div><p><code>irq_cfg</code> 是对于 APIC 状态的描述，用于 start_secondary (cpu_up 会调用它)时，获取 vector 和 irq 的映射关系。避免从其他 CPU 获取或者从 APIC 获取。</p><ul><li><code>vector_irq</code> 是以 vector 为 index 的，快速寻找</li><li><code>irq_cfg</code> 是以 irq 为 index 的，这样可以使得不同的 irq 对应相同编号的 vector</li></ul><pre tabindex=0><code>  IRQ 100 RTE: { vector=0x41, dest=CPU0|CPU1 }   → 只发给 CPU0 或 CPU1
+  IRQ 200 RTE: { vector=0x41, dest=CPU2|CPU3 }   → 只发给 CPU2 或 CPU3
+</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>struct</span> irq_cfg irq_cfg[NR_IRQS] __read_mostly <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>	[<span style=color:#ae81ff>0</span>]  <span style=color:#f92672>=</span> { .domain <span style=color:#f92672>=</span> CPU_MASK_ALL, .vector <span style=color:#f92672>=</span> IRQ0_VECTOR,  },
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/smpboot_64.c
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>start_secondary</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>cpu_init</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>__setup_vector_irq</span>(<span style=color:#a6e22e>smp_processor_id</span>());
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> (irq <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; irq <span style=color:#f92672>&lt;</span> NR_IRQS; <span style=color:#f92672>++</span>irq) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span><span style=color:#a6e22e>cpu_isset</span>(cpu, irq_cfg[irq].domain)) <span style=color:#75715e>// 这个 irq 不需要绑到我这个 core 上
+</span></span></span><span style=display:flex><span>            <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>        vector <span style=color:#f92672>=</span> irq_cfg[irq].vector; <span style=color:#75715e>// internal CPU vector/irq
+</span></span></span><span style=display:flex><span>        <span style=color:#a6e22e>per_cpu</span>(vector_irq, cpu)[vector] <span style=color:#f92672>=</span> irq;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><ul><li>关于 start_secondary，详见
+<a href=./smp/_index.md>smp</a></li><li>关于 per_cpu 详见
+<a href=./cpu_var.md>cpu var</a></li></ul><h3 id=irq_desc在全局内存中制作-apic-上的-irq-line-的抽象><code>irq_desc</code>：在全局内存中，制作 APIC 上的 irq line 的抽象
+<a class=anchor href=#irq_desc%e5%9c%a8%e5%85%a8%e5%b1%80%e5%86%85%e5%ad%98%e4%b8%ad%e5%88%b6%e4%bd%9c-apic-%e4%b8%8a%e7%9a%84-irq-line-%e7%9a%84%e6%8a%bd%e8%b1%a1 aria-hidden=true>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>struct</span> irq_desc irq_desc[NR_IRQS] __cacheline_aligned_in_smp <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>	[<span style=color:#ae81ff>0</span> ... NR_IRQS<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>] <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>		.status <span style=color:#f92672>=</span> IRQ_DISABLED,
+</span></span><span style=display:flex><span>		.chip <span style=color:#f92672>=</span> <span style=color:#f92672>&amp;</span>no_irq_chip,
+</span></span><span style=display:flex><span>		.handle_irq <span style=color:#f92672>=</span> handle_bad_irq,
+</span></span><span style=display:flex><span>		.depth <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>,
+</span></span><span style=display:flex><span>		.lock <span style=color:#f92672>=</span> <span style=color:#a6e22e>__SPIN_LOCK_UNLOCKED</span>(irq_desc<span style=color:#f92672>-&gt;</span>lock),
+</span></span><span style=display:flex><span><span style=color:#75715e>#ifdef CONFIG_SMP
+</span></span></span><span style=display:flex><span>		.affinity <span style=color:#f92672>=</span> CPU_MASK_ALL
+</span></span><span style=display:flex><span><span style=color:#75715e>#endif
+</span></span></span><span style=display:flex><span>		<span style=color:#75715e>// .action;	/* IRQ action list */
+</span></span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>};
+</span></span></code></pre></div><p>包含两个内容，</p><ul><li>对 handle_irq 的更新：该 irq line 真正的唯一的回调函数，多和 irq 本身相关</li><li>对 action 的更新：驱动注册到该 irq_line 的回调函数，和挂在 irq 上的设备相关</li></ul><p>更新驱动通过 request_irq 注册的中断处理函数</p><h4 id=handle_irq><code>handle_irq</code>
+<a class=anchor href=#handle_irq aria-hidden=true>#</a></h4><p>对电平信号有不同的处理</p><p><a href=./flip-flop.md>锁存器和触发器</a></p><p>我们可以将 APIC 的电平触发类比成 SR 锁存器，在于状态的维持与显式清除：</p><ul><li>对于 SR 锁存器，S 置位后，Q 会持续输出，K 置位后，Q 才会回归 0。</li><li>对于 APIC 的电平触发，中断来时，中断保持，Linux 回馈 eoi 时，中断终止。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// 上游查看上一节
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/io_apic_64.c
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>setup_IO_APIC_irq</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>assign_irq_vector</span>(irq, mask); <span style=color:#75715e>// irq → vector
+</span></span></span><span style=display:flex><span>  <span style=color:#a6e22e>ioapic_register_intr</span>(irq, trigger);
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/io_apic_64.c
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>ioapic_register_intr</span>(<span style=color:#66d9ef>int</span> irq, <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> trigger)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (trigger) {
+</span></span><span style=display:flex><span>		irq_desc[irq].status <span style=color:#f92672>|=</span> IRQ_LEVEL;
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>set_irq_chip_and_handler_name</span>(irq, <span style=color:#f92672>&amp;</span>ioapic_chip,
+</span></span><span style=display:flex><span>					      handle_fasteoi_irq, <span style=color:#e6db74>&#34;fasteoi&#34;</span>);
+</span></span><span style=display:flex><span>	} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>		irq_desc[irq].status <span style=color:#f92672>&amp;=</span> <span style=color:#f92672>~</span>IRQ_LEVEL;
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>set_irq_chip_and_handler_name</span>(irq, <span style=color:#f92672>&amp;</span>ioapic_chip,
+</span></span><span style=display:flex><span>					      handle_edge_irq, <span style=color:#e6db74>&#34;edge&#34;</span>);
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// kernel/irq/chip.c
+</span></span></span><span style=display:flex><span><span style=color:#66d9ef>void</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>set_irq_chip_and_handler_name</span>(<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span> irq, <span style=color:#66d9ef>struct</span> irq_chip <span style=color:#f92672>*</span>chip,
+</span></span><span style=display:flex><span>			      <span style=color:#66d9ef>irq_flow_handler_t</span> handle, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>name)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>set_irq_chip</span>(irq, chip);
+</span></span><span style=display:flex><span>        desc <span style=color:#f92672>=</span> irq_desc <span style=color:#f92672>+</span> irq;
+</span></span><span style=display:flex><span>        desc<span style=color:#f92672>-&gt;</span>chip <span style=color:#f92672>=</span> chip;
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>__set_irq_handler</span>(irq, handle, <span style=color:#ae81ff>0</span>, name);
+</span></span><span style=display:flex><span>        desc <span style=color:#f92672>=</span> irq_desc <span style=color:#f92672>+</span> irq;
+</span></span><span style=display:flex><span>        desc<span style=color:#f92672>-&gt;</span>handle_irq <span style=color:#f92672>=</span> handle;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h5 id=handle_fasteoi_irqlevel-trigger>handle_fasteoi_irq(level trigger)
+<a class=anchor href=#handle_fasteoi_irqlevel-trigger aria-hidden=true>#</a></h5><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>handle_fasteoi_irq</span>(irq, desc);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>spin_lock</span>(<span style=color:#f92672>&amp;</span>desc<span style=color:#f92672>-&gt;</span>lock);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>unlikely</span>(desc<span style=color:#f92672>-&gt;</span>status <span style=color:#f92672>&amp;</span> IRQ_INPROGRESS))
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>goto</span> out;
+</span></span><span style=display:flex><span>  desc<span style=color:#f92672>-&gt;</span>status <span style=color:#f92672>|=</span> IRQ_INPROGRESS;
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>spin_unlock</span>(<span style=color:#f92672>&amp;</span>desc<span style=color:#f92672>-&gt;</span>lock);
+</span></span><span style=display:flex><span>  action_ret <span style=color:#f92672>=</span> <span style=color:#a6e22e>handle_IRQ_event</span>(irq, action);
+</span></span><span style=display:flex><span>out:
+</span></span><span style=display:flex><span>  desc<span style=color:#f92672>-&gt;</span>chip<span style=color:#f92672>-&gt;</span><span style=color:#a6e22e>eoi</span>(irq); <span style=color:#75715e>// ack_apic_level,
+</span></span></span><span style=display:flex><span>    <span style=color:#a6e22e>irq_complete_move</span>(irq);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>send_IPI_mask</span>(cleanup_mask, IRQ_MOVE_CLEANUP_VECTOR);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ack_APIC_irq</span>();
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>apic_write</span>(APIC_EOI, <span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>        <span style=color:#f92672>*</span>((<span style=color:#66d9ef>volatile</span> <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span> <span style=color:#f92672>*</span>)(APIC_BASE<span style=color:#f92672>+</span>reg)) <span style=color:#f92672>=</span> v;
+</span></span></code></pre></div><p>这里没有关于屏蔽中断的操作，电平触发那不是会一直来中断，从而会一直调用 <code>handle_fasteoi_irq</code>？事实上，APIC 有两个：</p><ul><li>IOAPIC(IO APIC) 外设 APIC，作用：<ul><li>外设的电平触发给到 LAPIC 只会是一个</li><li>多核间中断均衡</li></ul></li><li>LAPIC(Local APIC)<ul><li>per_cpu</li></ul></li></ul><pre tabindex=0><code>IO-APIC  pin asserted (high)
+    │
+    ├─ Remote IRR == 0 → 发一条消息给Local APIC，并置 Remote IRR = 1
+    │
+    │   ... 外设对 IO-APIC 的电平一直保持 high ...
+    │   ... IO-APIC 不再给 L-APIC 发任何消息 ...
+    │
+    ├─ IO-APIC 收到 EOI → Remote IRR = 0
+    │
+    └─ pin 还是 high? → 再来一轮
+</code></pre><p>也就是所谓的电平触发在 Local APIC 这里还是 spark trigger，并非是持续性地 assert interrupt line，不然 CPU 也不能执行下去了。</p><h5 id=handle_edge_irqedge-trigger>handle_edge_irq(edge trigger)
+<a class=anchor href=#handle_edge_irqedge-trigger aria-hidden=true>#</a></h5><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>handle_edge_irq</span>(irq, desc);
+</span></span><span style=display:flex><span>  action_ret <span style=color:#f92672>=</span> <span style=color:#a6e22e>handle_IRQ_event</span>(irq, action);
+</span></span></code></pre></div><h4 id=action><code>action</code>
+<a class=anchor href=#action aria-hidden=true>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>request_irq</span>(<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span> irq, <span style=color:#66d9ef>irq_handler_t</span> handler,
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> irqflags, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>devname, <span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>dev_id)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>	retval <span style=color:#f92672>=</span> <span style=color:#a6e22e>setup_irq</span>(irq, action);
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>setup_irq</span>(<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span> irq, <span style=color:#66d9ef>struct</span> irqaction <span style=color:#f92672>*</span>new){
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=color:#75715e>/* add new interrupt at end of irq queue */</span>
+</span></span><span style=display:flex><span>		p <span style=color:#f92672>=</span> <span style=color:#f92672>&amp;</span>desc<span style=color:#f92672>-&gt;</span>action;
+</span></span><span style=display:flex><span>		old <span style=color:#f92672>=</span> <span style=color:#f92672>*</span>p;
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>do</span> {
+</span></span><span style=display:flex><span>			p <span style=color:#f92672>=</span> <span style=color:#f92672>&amp;</span>old<span style=color:#f92672>-&gt;</span>next;
+</span></span><span style=display:flex><span>			old <span style=color:#f92672>=</span> <span style=color:#f92672>*</span>p;
+</span></span><span style=display:flex><span>		} <span style=color:#66d9ef>while</span> (old);
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>可以看到 <code>request_irq</code> 只是将 irq_handler_t 挂到早就已经做好的 <code>irq_desc</code></p><h3 id=summary>summary
+<a class=anchor href=#summary aria-hidden=true>#</a></h3><ol><li>中断来时，去全局区（<code>idt_descr</code>(<code>idt_table</code>)）将 vector 压入栈</li><li>do_IRQ，去 Per CPU 区（<code>vector_irq</code>）将 vector 转成 irq</li><li>do_IRQ，去全局区（<code>irq_desc</code>）找到 irq 对应的 action</li></ol><h3 id=qa>Q&amp;A
+<a class=anchor href=#qa aria-hidden=true>#</a></h3><h4 id=为什么-idt_descr-和-irq_desc-是全局的但是-vector_irq-不是>为什么 <code>idt_descr</code> 和 <code>irq_desc</code> 是全局的，但是 vector_irq 不是
+<a class=anchor href=#%e4%b8%ba%e4%bb%80%e4%b9%88-idt_descr-%e5%92%8c-irq_desc-%e6%98%af%e5%85%a8%e5%b1%80%e7%9a%84%e4%bd%86%e6%98%af-vector_irq-%e4%b8%8d%e6%98%af aria-hidden=true>#</a></h4><ul><li><code>idt_descr</code> 全局大概是因为有很多内部的 vector 例如除以 0 错误，<code>IRQ0xXY_interrupt</code> 都是通用的，没必要重建</li><li>然后在 vector_irq 这里分流，不同的核，对于同样的 vector 会对应不同的 irq<ul><li><code>vector_irq</code> 是以 vector 为 index 的，快速寻找</li><li><code>irq_cfg</code> 是以 irq 为 index 的，这样可以使得不同的 irq 相同编号的 vector</li></ul></li><li><code>irq_desc</code> 是全局的，所有的核共同编号 irq number 取决于 APIC 不是 CPU。一个 irq 对应一个功能（可以有多个，对应多个 irq_action，但所有核都是多个）。irq_action 所在的 irq_desc 是根据 irq</li></ul></div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/blog/avatar.jpg></div><ul><li><a href=/blog/about>About Me</a></li><li><a href=/blog/donate>Donate Me</a></li><li><a href=/blog/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div></div><div class=footer><div id=tags><a href=https://bensyz.github.io/blog/tags><i class="fas fa-tags"></i></a>
+Keywords:<ul><li><a href=https://bensyz.github.io/blog/tags/Linux-kernel>Linux kernel</a></li><li><a href=https://bensyz.github.io/blog/tags/interrupt>interrupt</a></li><li><a href=https://bensyz.github.io/blog/tags/Linux-kernel-design>Linux kernel design</a></li></ul></div><footer><hr><div><a href=/blog/>Ben's Blog</a></div><div>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div><div><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/blog/icons/public_safety_icon.png>
+浙公网安备 33028102001039 号
+</a><span style="margin:0 10px"></span>
+<a target=_blank href=https://beian.miit.gov.cn/>浙ICP备2021032097号-1</a></div></footer></div></div></body></html>
