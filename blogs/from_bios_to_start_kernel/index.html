@@ -1,0 +1,1142 @@
+<!doctype html><html><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><title>从 BIOS 到 start_kernel</title><script>!function(){$("pre > code").each(function(){var s,n=$(this).parent().attr("class");n==null||n===""?$(this).addClass("hljs"):(s={js:"javascript"},s[n]&&(n=s[n]),$(this).addClass(n))})}</script><link rel=stylesheet href=/blog/css/hljs/snazzy.css><link rel=stylesheet href=/blog/css/hljs/line-numbers.min.css><script src=/blog/js/hljs/highlight.min.js></script><script src=/blog/js/hljs/highlightjs-line-numbers.min.js></script><script>hljs.highlightAll()</script><script>hljs.initLineNumbersOnLoad()</script><link rel=stylesheet href=/blog/css/code.css><link rel=stylesheet href=/blog/css/style.css><link rel=stylesheet href=/blog/css/footer.css><link rel=stylesheet href=/blog/css/font-awesome.min.css integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin=anonymous><link rel=icon id=light-scheme-icon href=/blog/favicons/favicon_B_Light.ico type=image/x-icon><link rel=icon id=dark-scheme-icon href=/blog/favicons/favicon_B_Dark.ico type=image/x-icon><script src=/blog/js/favicon.js></script><link rel=stylesheet href=/blog/css/head_index.css></head><body><div class=container><div class=header><h1>从 BIOS 到 start_kernel</h1><div>2026-11-03</div><div>本文最后修改于 2026-11-03</div><hr></div><div class=middle><div id=TitleWithToc><div id=TitleOfToc>从 BIOS 到 start_kernel</div><nav id=TableOfContents><ol><li><a href=#introduction>Introduction</a></li><li><a href=#notations>Notations</a></li><li><a href=#tldr>TL;DR;</a></li><li><a href=#the-big-picture-of-bzimage>The Big Picture of <code>bzImage</code></a></li><li><a href=#bios>BIOS</a></li><li><a href=#grub-legacy><code>grub-legacy</code></a><ol><li><a href=#load_image><code>load_image()</code></a></li><li><a href=#big_linux_boot><code>big_linux_boot</code></a></li></ol></li><li><a href=#bzimage><code>bzImage</code></a><ol><li><a href=#setupbin><code>setup.bin</code></a><ol><li><a href=#setupbin-的结构><code>setup.bin</code> 的结构</a><ol><li><a href=#entry-point-of-setupelf>entry point of setup.elf</a></li></ol></li><li><a href=#和-bootloader-的接口>和 Bootloader 的接口</a></li><li><a href=#bootsect_start-offset0><code>bootsect_start</code> @offset=0</a></li><li><a href=#_start-offset512><code>_start</code> @offset=512</a></li></ol></li><li><a href=#vmlinuxwbin><code>vmlinux.w.bin</code></a><ol><li><a href=#bootcompressedhead_64s><code>boot/compressed/head_64.S</code></a><ol><li><a href=#stack-and-heap>stack and heap</a></li><li><a href=#startup_32-和临时页表><code>startup_32</code> 和临时页表</a></li><li><a href=#startup_64><code>startup_64</code></a></li><li><a href=#relocated><code>relocated</code></a></li></ol></li><li><a href=#bootcompressedmisc_64c><code>boot/compressed/misc_64.c</code></a><ol><li><a href=#decompress_kernel-和-vidmem-显示><code>decompress_kernel</code> 和 <code>vidmem</code> 显示</a></li></ol></li></ol></li><li><a href=#vmlinuxbin><code>vmlinux.bin</code></a><ol><li><a href=#kernelhead_64s-和正式页表><code>kernel/head_64.S</code> 和正式页表</a><ol><li><a href=#预填页表>预填页表</a><ol><li><a href=#pgt2580-vs-pgt511510一致映射段和内核代码段><code>PGT.258.0</code> vs <code>PGT.511.510</code>：一致映射段和内核代码段</a></li><li><a href=#pgt00va--pa><code>PGT.0.0</code>：<code>va = pa</code></a></li></ol></li><li><a href=#startup_64-和-ident_complete修复页表><code>startup_64</code> 和 <code>ident_complete</code>：修复页表</a></li><li><a href=#secondary_startup_64-跳转到高位-va><code>secondary_startup_64</code>: 跳转到高位 va</a></li></ol></li><li><a href=#x86_64_start_kernel><code>x86_64_start_kernel</code></a><ol><li><a href=#清除-va--pa-的映射>清除 va = pa 的映射</a></li></ol></li></ol></li></ol></li></ol></nav></div><div id=content><h2 id=introduction>Introduction
+<a class=anchor href=#introduction aria-hidden=true>#</a></h2><p>在探究
+<a href=../smp/_index.md>多核启动</a>
+的过程中，我们知道了第二个 CPU 的 Per CPU Data 都是由第一个 CPU 准备好，甚至于启动的汇编代码 trampoline 都是由第一个 CPU 准备的。那第一个 CPU (Bootstrap Process, BSP)呢？它是怎么启动的？从函数调用栈来看，第一个 CPU 的启动位置是 <code>x86_64_start_kernel</code>，那它之前又是谁？本文主要探究的便是 BSP CPU 在 <code>x86_64_start_kernel</code> 之前的代码。</p><h2 id=notations>Notations
+<a class=anchor href=#notations aria-hidden=true>#</a></h2><table><thead><tr><th>notation</th><th>what</th><th>where</th></tr></thead><tbody><tr><td>vmlinux</td><td>Linux 的 elf 文件</td><td>vmlinux</td></tr><tr><td>vmlinux.bin</td><td>vmlinux 去除 elf 包裹</td><td>arch/x86/boot/compressed/vmlinux.bin</td></tr><tr><td>vmlinux.bin.gz</td><td>vmlinux.bin 的 gz 压缩</td><td>arch/x86/boot/compressed/vmlinux.bin.gz</td></tr><tr><td>vmlinux.w</td><td>vmlinux.bin.gz + 解压代码</td><td>arch/x86/boot/compressed/vmlinux</td></tr><tr><td>vmlinux.w.bin</td><td>vmlinux.w 去除 elf 包裹</td><td>arch/x86/boot/vmlinux.bin</td></tr><tr><td>bzImage</td><td>vmlinux.w.bin + setup.bin</td><td>arch/x86/boot/bzImage; /boot/vmlinuz-linux</td></tr></tbody></table><ul><li>setup.bin 是 Linux 自身的引导程序</li></ul><h2 id=tldr>TL;DR;
+<a class=anchor href=#tldr aria-hidden=true>#</a></h2><ul><li>在上电<ul><li>内存和 ROM 会被连接导通，将该地址的内存初始化成 ROM 中烧写好的代码</li><li>CPU 会将 instructor pointer 设置为 <code>0xfff0</code>，然后开始执行</li></ul></li><li>ROM (<code>0xfff0</code>)<ul><li>ROM 读取硬盘的第一个扇区（MBR）中的数据到 <code>0x7c00</code>，这正是 GRUB <code>stage1</code> 的 MBR 代码</li><li>跳转到 <code>0x7c00</code> (<code>stage1/stage1.S</code>: <code>_start</code>)</li></ul></li><li>GRUB <code>stage1</code> (<code>0x7c00</code>)<ul><li>将 <code>stage2</code> 搬到了 <code>0x8200</code></li><li>并跳转到 <code>0x8200</code>(<code>stage2/asm.S</code>: <code>_start</code>)</li></ul></li><li>GRUB <code>stage2</code> (<code>0x8200</code>)<ul><li><code>stage2</code> 会去读取 <code>grub.cfg</code>，并显示在屏幕上，供用户修改</li><li>读取 <code>bzImage</code> 的参数信息，将 <code>bzImage</code> 搬到指定位置的内存<ul><li><code>vmlinux.w.bin</code>: <code>0x100000</code></li><li><code>setup.bin</code>: <code>0x90000</code></li></ul></li><li>配置 Linux 启动参数，并修改 Linux 中参数段的指针</li><li><code>big_linux_boot</code> 跳转到 <code>bzImage</code> 指定的位置 <code>0x90200</code> (<code>arch/x86/boot/header.S</code>: <code>_start</code>，0x200 跳过了 MBR code)</li></ul></li><li><code>bzImage</code> 的 <code>boot/vmlinux</code> (被 grub 拆分到了两处)<ul><li>把自己搬运到高位</li><li>解压 <code>vmlinux</code> 到特定位置 <code>0x200000</code></li><li>跳转到 <code>0x200000</code> (<code>arch/x86/kernel/head_64.S</code>: <code>startup_64</code>)</li></ul></li><li><code>bzImage</code> 的 <code>kernel/vmlinux</code> (<code>0x200000</code>)<ul><li>启用两张页表</li><li><code>secondary_startup_64</code>，从低地址跳到高地址。</li><li><code>x86_64_start_kernel</code></li><li><code>start_kernel</code></li></ul></li></ul><h2 id=the-big-picture-of-bzimage>The Big Picture of <code>bzImage</code>
+<a class=anchor href=#the-big-picture-of-bzimage aria-hidden=true>#</a></h2><pre tabindex=0><code>bzImage
+ ├── setup.bin
+ │    ├── boot/header.S
+ │    │    ├── ...
+ │    │    ├── (setup_sectors - 1)
+ │    │    ├── ...
+ │    │    ├── (sizeof vmlinux.w.bin)
+ │    │    ├── ...
+ │    │    ├── (root_dev_minor)
+ │    │    ├── (root_dev_major)
+ │    │    └── ...
+ │    └── ...
+ └── vmlinux.w.bin
+    ├── boot/compressed/head_64.S
+    ├── vmlinux.bin.gz
+    └── boot/compressed/misc_64.c (gzip decompress code)
+</code></pre><ul><li><code>setup_sectors - 1</code> 的 1 是 MBR</li></ul><h2 id=bios>BIOS
+<a class=anchor href=#bios aria-hidden=true>#</a></h2><p>BIOS 会将磁盘的 MBR 复制到 0x7c00 位置，然后跳转执行。</p><h2 id=grub-legacy><code>grub-legacy</code>
+<a class=anchor href=#grub-legacy aria-hidden=true>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// stage2
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>run_script</span>()
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>root_func</span>()
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>kernel_func</span>()
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>load_image</span>()
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>initrd_func</span>()
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>savedefault_func</span>()
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>boot_func</span>()
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>big_linux_boot</span>()
+</span></span></code></pre></div><h3 id=load_image><code>load_image()</code>
+<a class=anchor href=#load_image aria-hidden=true>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// bzImage
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define LINUX_BZIMAGE_ADDR		RAW_ADDR (0x100000)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// CMD Line
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define LINUX_CL_OFFSET			0x9000
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define LINUX_CL_END_OFFSET		0x90FF
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define MULTIBOOT_SEARCH		8192
+</span></span></span><span style=display:flex><span>  <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>char</span> buffer[MULTIBOOT_SEARCH];
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_open</span> (kernel);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_read</span> (buffer, MULTIBOOT_SEARCH)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e>// buffer 判断启动设备
+</span></span></span><span style=display:flex><span>  <span style=color:#75715e>// case: boot_type is Linux
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  data_len <span style=color:#f92672>=</span> setup_sects <span style=color:#f92672>&lt;&lt;</span> <span style=color:#ae81ff>9</span>;
+</span></span><span style=display:flex><span>  <span style=color:#75715e>//filemax 是在 grub_read 时由文件系统给出，是当前文件大小，这里是 bzImage 的大小
+</span></span></span><span style=display:flex><span>  text_len <span style=color:#f92672>=</span> filemax <span style=color:#f92672>-</span> data_len <span style=color:#f92672>-</span> SECTOR_SIZE;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  linux_data_tmp_addr <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) LINUX_BZIMAGE_ADDR <span style=color:#f92672>+</span> text_len;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e>/* 拷贝 setup */</span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_memmove</span> (linux_data_tmp_addr, buffer, MULTIBOOT_SEARCH);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_read</span> (linux_data_tmp_addr <span style=color:#f92672>+</span> MULTIBOOT_SEARCH,
+</span></span><span style=display:flex><span>             data_len <span style=color:#f92672>+</span> SECTOR_SIZE <span style=color:#f92672>-</span> MULTIBOOT_SEARCH);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e>/* 内核启动参数拷贝，特别处理了 mem= 参数  */</span>
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>src <span style=color:#f92672>=</span> <span style=color:#a6e22e>skip_to</span> (<span style=color:#ae81ff>0</span>, arg);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>dest <span style=color:#f92672>=</span> linux_data_tmp_addr <span style=color:#f92672>+</span> LINUX_CL_OFFSET;
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>while</span> (dest <span style=color:#f92672>&lt;</span> linux_data_tmp_addr <span style=color:#f92672>+</span> LINUX_CL_END_OFFSET <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>*</span>src)
+</span></span><span style=display:flex><span>    <span style=color:#f92672>*</span>(dest<span style=color:#f92672>++</span>) <span style=color:#f92672>=</span> <span style=color:#f92672>*</span>(src<span style=color:#f92672>++</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e>/* 拷贝 bzImage */</span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_seek</span> (data_len <span style=color:#f92672>+</span> SECTOR_SIZE);
+</span></span><span style=display:flex><span>  cur_addr <span style=color:#f92672>=</span> (<span style=color:#66d9ef>int</span>) linux_data_tmp_addr <span style=color:#f92672>+</span> LINUX_SETUP_MOVE_SIZE;
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>grub_read</span> ((<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) LINUX_BZIMAGE_ADDR, text_len);
+</span></span></code></pre></div><ul><li><code>data_len</code>： setup_size - mbr_size</li><li><code>text_len</code>： 除 setup 以外的所有</li></ul><p>buffer 就是 <code>bzImage</code> 前的 8192 字节（<code>MULTIBOOT_SEARCH</code>），直接读出来的，放在随便一个地方的(grub 的栈内存上)，这里才是拷入真正的位置 <code>linux_data_tmp_addr</code>。由于 buffer 只有 8192 个字节（16个 sector）所以这里做的先把开头的 8192 个字节移入（<code>grub_memmove</code>），再把剩下的文件 read （<code>grub_read</code>）出来。这里 read 的是 setup。</p><hr><p>所以前面空出来的 <code>text_len</code> 用于放 kernel，也就是说，bzImage 中：</p><pre tabindex=0><code>+---------------+
+| \0            |
++---------------+ ← 0x3af077 (linux_data_tmp_addr+LINUX_CL_END_OFFSET)(0x3a5f78+0x90FF)
+| cmdline       |
++---------------+ ← 0x3aef78 (linux_data_tmp_addr+LINUX_CL_OFFSET)(0x3a5f78+0x9000)
+
++---------------+ ← 0x3a8978 (linux_data_tmp_addr+setup_size)
+| setup.bin     |
++---------------+ ← 0x3a5f78 linux_data_tmp_addr (LINUX_BZIMAGE_ADDR + text_len)
+| vmlinux.w.bin |
++---------------+ ← 0x100000 LINUX_BZIMAGE_ADDR
+
+* setup.bin 中的部分字段被 build 改了，并且 padding 了
+* cmdline 实际会比 LINUX_CL_END_OFFSET 小，\0 也会更前，这里表示的是 cmdline 最长的情况
+</code></pre><h3 id=big_linux_boot><code>big_linux_boot</code>
+<a class=anchor href=#big_linux_boot aria-hidden=true>#</a></h3><p>接下来，我们要将 real part 移动到 <code>0x90000</code></p><blockquote><p>内核启动协议的强制要求：根据 Linux 的 x86 启动协议，对于 2.01 及更早版本的协议，或者 zImage 格式的内核，实模式代码必须加载到 0x90000 处。即使对于稍新的 2.00/2.01 协议，允许加载到别处，内核代码也会在内部将自己重定位到 0x90000。这是内核与引导程序之间一份“古老的契约”。</p><p>抛开历史设计，从纯粹的 x86 实模式技术角度看，0x90000 几乎是当时唯一可行的选择。</p><p>在 16 位实模式下，CPU 的寻址能力被限制在 1MB 以内，而这 1MB 空间的布局非常拥挤且“危险”：</p><ul><li>低端内存 (0x00000 - 0x7FFFF)：被中断向量表、BIOS 数据区、以及 DOS 等程序占用，无法保证有连续的大块空间。</li><li>高端内存 (0xA0000 - 0xFFFFF)：被显存 (0xA0000) 和 BIOS ROM (0xF0000) 占据，完全不可用。</li><li>0x80000 到 0x9FFFF 的 128KB 区域：在早期的 PC 上，0x90000 附近是唯一一块可以保证未被系统占用、且足以容纳整个 64KB 数据段的连续内存区域。</li></ul><p><a href=https://chat.deepseek.com/a/chat/s/0c021a83-ebda-47a0-a22d-52df9bf53311 target=_blank>https://chat.deepseek.com/a/chat/s/0c021a83-ebda-47a0-a22d-52df9bf53311</a></p></blockquote><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#a6e22e>init_bios_info</span> (<span style=color:#66d9ef>void</span>)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>   *  Get information from BIOS on installed RAM.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>   */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  mbi.mem_lower <span style=color:#f92672>=</span> <span style=color:#a6e22e>get_memsize</span> (<span style=color:#ae81ff>0</span>); <span style=color:#75715e>// 639 KiB
+</span></span></span><span style=display:flex><span>  mbi.mem_upper <span style=color:#f92672>=</span> <span style=color:#a6e22e>get_memsize</span> (<span style=color:#ae81ff>1</span>); <span style=color:#75715e>// 2095996 KiB
+</span></span></span><span style=display:flex><span>  ...
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define LINUX_SETUP_MOVE_SIZE		0x9100
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define LINUX_OLD_REAL_MODE_ADDR	RAW_ADDR (0x90000)
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>load_image</span>(){
+</span></span><span style=display:flex><span>	  <span style=color:#75715e>/* Put the real mode part at as a high location as possible.  */</span>
+</span></span><span style=display:flex><span>	  linux_data_real_addr
+</span></span><span style=display:flex><span>	    <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) ((mbi.mem_lower <span style=color:#f92672>&lt;&lt;</span> <span style=color:#ae81ff>10</span>) <span style=color:#f92672>-</span> LINUX_SETUP_MOVE_SIZE);
+</span></span><span style=display:flex><span>	  <span style=color:#75715e>/* But it must not exceed the traditional area.  */</span>
+</span></span><span style=display:flex><span>	  <span style=color:#66d9ef>if</span> (linux_data_real_addr <span style=color:#f92672>&gt;</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) LINUX_OLD_REAL_MODE_ADDR)
+</span></span><span style=display:flex><span>	    linux_data_real_addr <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) LINUX_OLD_REAL_MODE_ADDR;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><ul><li><code>mbi.mem_lower</code>:
+<a href=/blog/blogs/from_bios_to_start_kernel/conventional_memory/>conventional memory</a></li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>big_linux_boot</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>EXT_C</span>(<span style=color:#66d9ef>linux_data_real_addr</span>), %ebx
+</span></span><span style=display:flex><span>	
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* copy the real mode part */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>EXT_C</span>(<span style=color:#66d9ef>linux_data_tmp_addr</span>), %esi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%ebx, %edi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$LINUX_SETUP_MOVE_SIZE</span>, %ecx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cld</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>rep</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movsb</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* change %ebx to the segment address */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>shrl</span>	<span style=color:#66d9ef>$4</span>, %ebx                                                <span style=color:#75715e>// 0x90000 &gt;&gt; 4 = 0x9000
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%ebx, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addl</span>	<span style=color:#66d9ef>$0x20</span>, %eax                                             <span style=color:#75715e>// 启动段后 0x20 &lt;&lt; 4 = 512
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, <span style=color:#66d9ef>linux_setup_seg</span>                                   <span style=color:#75715e>// 0x9020
+</span></span></span><span style=display:flex><span>			                                                        <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* XXX new stack pointer in safe area for calling functions */</span>  <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$0x4000</span>, %esp                                           <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>call</span>	<span style=color:#66d9ef>EXT_C</span>(<span style=color:#66d9ef>stop_floppy</span>)                                      <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>                                                                    <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* final setup for linux boot */</span>                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>                                                                    <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>call</span>	<span style=color:#66d9ef>EXT_C</span>(<span style=color:#66d9ef>prot_to_real</span>)                                     <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.code16</span>                                                         <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>                                                                    <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* final setup for linux boot */</span>                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>cli</span>                                                             <span style=color:#75715e>//  | 这里需要手动设置地址断点，否则会跳过
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	%bx, %ss                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	<span style=color:#66d9ef>$LINUX_SETUP_STACK</span>, %sp                                 <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	                                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	%bx, %ds                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	%bx, %es                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	%bx, %fs                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movw</span>	%bx, %gs                                                <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>                                                                    <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* jump to start */</span>                                             <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* ljmp */</span>                                                      <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.byte</span>	<span style=color:#ae81ff>0xea</span>                                                    <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.word</span>	<span style=color:#ae81ff>0</span>                                                       <span style=color:#75715e>//  |
+</span></span></span><span style=display:flex><span>linux_setup_seg:	                                                <span style=color:#75715e>// &lt;-
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.word</span>	<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.code32</span>
+</span></span></code></pre></div><blockquote><p>rep movsb: A fast hardware loop that copies bytes from %esi to %edi, decrementing %ecx until it hits 0. This moves the Linux setup code into its final home.</p></blockquote><p><code>0xea</code> 是 ljmp 的 opcode。</p><blockquote><p>Because the assembler (like GNU as) can sometimes miscalculate the target address or syntax for a far jump across different segments, early bootloader developers wrote the raw bytes manually to guarantee the correct instruction structure.</p></blockquote><p>而 <code>linux_setup_seg</code> 在上面被改了，gdb 最终给出的结果是 ljmp 到该地址</p><pre tabindex=0><code>ljmp   $0x9020,$0x0
+# 0x9020 &lt;&lt; 16 + 0x0 = 0x90200
+</code></pre><p>拷贝后的内存布局</p><pre tabindex=0><code>+---------------+
+| \0            |
++---------------+ ← 0x3af077 (linux_data_tmp_addr+LINUX_CL_END_OFFSET)(0x3a5f78+0x90FF)
+| cmdline       |
++---------------+ ← 0x3aef78 (linux_data_tmp_addr+LINUX_CL_OFFSET)(0x3a5f78+0x9000)
+
++---------------+ ← 0x3a8978 (linux_data_tmp_addr+setup_size)
+| setup.bin     |
++---------------+ ← 0x3a5f78 linux_data_tmp_addr (LINUX_BZIMAGE_ADDR + text_len)
+| vmlinux.w.bin |
++---------------+ ← 0x100000 LINUX_BZIMAGE_ADDR
+
+* 拷贝 real part 到低位：
+
++---------------+ ← 0x099100 (LINUX_OLD_REAL_MODE_ADDR + LINUX_SETUP_MOVE_SIZE)(0x090000 + 0x9100)
+| \0            |
++---------------+ ← 0x0990ff (LINUX_OLD_REAL_MODE_ADDR + LINUX_CL_END_OFFSET)(0x090000 + 0x90FF)
+| cmdline       |
++---------------+
+| ???????       |
++---------------+ ← 0x092a00 (LINUX_OLD_REAL_MODE_ADDR + setup_size)
+| setup.bin     |
++---------------+ ← 0x090000 LINUX_OLD_REAL_MODE_ADDR
+
+* LINUX_SETUP_MOVE_SIZE = LINUX_CL_END_OFFSET + 1
+
+* real part 的 cmdline 的起始位置是 0x090000+0x9000
+</code></pre><p>最终 <code>jmp</code> 的位置是 <code>0x90200</code> 跳过了 <code>bzImage</code> 开头的 MBR 那 512 字节</p><h2 id=bzimage><code>bzImage</code>
+<a class=anchor href=#bzimage aria-hidden=true>#</a></h2><p>The Big Picture</p><pre tabindex=0><code>bzImage
+ ├── setup.bin
+ │    ├── boot/header.S
+ │    │    ├── ...
+ │    │    ├── (setup_sectors - 1)
+ │    │    ├── ...
+ │    │    ├── (sizeof vmlinux.w.bin)
+ │    │    ├── ...
+ │    │    ├── (root_dev_minor)
+ │    │    ├── (root_dev_major)
+ │    │    └── ...
+ │    └── ...
+ └── vmlinux.w.bin
+    ├── boot/compressed/head_64.S
+    ├── vmlinux.bin.gz
+    └── boot/compressed/misc_64.c (gzip decompress code)
+</code></pre><ul><li><code>setup_sectors - 1</code> 1 是 MBR</li></ul><p>通过 <code>.bzImage.cmd</code> 我们可以知道，<code>bzImage</code> 是由 <code>arch/x86/boot/tools/build.c</code> 构造的</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>usage</span>(<span style=color:#66d9ef>void</span>)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>die</span>(<span style=color:#e6db74>&#34;Usage: build [-b] setup system [rootdev] [&gt; image]&#34;</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><ul><li>setup 就是 <code>setup.bin</code></li><li>system 就是 <code>vmlinux.w.bin</code></li></ul><p><code>bzImage</code> 开头的 MBR 是落在了 <code>setup.bin</code> 中。</p><h3 id=setupbin><code>setup.bin</code>
+<a class=anchor href=#setupbin aria-hidden=true>#</a></h3><p>前面我们说了很多次 MBR，都说要跳过，在跳过 512 字节、继续启动流程之前，我们先</p><ol><li>看看 setup.bin 是如何构造的</li><li>看看这 512 字节到底是什么</li></ol><h4 id=setupbin-的结构><code>setup.bin</code> 的结构
+<a class=anchor href=#setupbin-%e7%9a%84%e7%bb%93%e6%9e%84 aria-hidden=true>#</a></h4><p>通过 <code>Makefile</code> 我们可以看到 <code>setup.bin</code> 是如何构造的：</p><pre tabindex=0><code># setup.o
+setup-y		+= a20.o apm.o cmdline.o copy.o cpu.o cpucheck.o edd.o
+setup-y		+= header.o main.o mca.o memory.o pm.o pmjump.o
+setup-y		+= printf.o string.o tty.o video.o version.o voyager.o
+...
+targets		+= $(setup-y)
+
+# setup.elf
+LDFLAGS_setup.elf	:= -T
+$(obj)/setup.elf: $(src)/setup.ld $(SETUP_OBJS) FORCE
+	$(call if_changed,ld)
+
+# setup.bin
+OBJCOPYFLAGS_setup.bin	:= -O binary
+$(obj)/setup.bin: $(obj)/setup.elf FORCE
+	$(call if_changed,objcopy)
+</code></pre><p><code>setup.elf</code> 会依照 <code>setup.ld</code> 中的内存分布来放对应的符号。</p><pre tabindex=0><code class=language-ld data-lang=ld># setup.ld
+ENTRY(_start)
+SECTIONS
+{
+	. = 0;
+	.bstext		: { *(.bstext) }
+	.bsdata		: { *(.bsdata) }
+
+	. = 497;
+	.header		: { *(.header) }
+	.inittext	: { *(.inittext) }
+	.initdata	: { *(.initdata) }
+	.text		: { *(.text*) }
+
+	. = ALIGN(16);
+	.rodata		: { *(.rodata*) }
+    ...
+}
+</code></pre><p>我们会看到 <code>.bstext</code> 和 <code>.bsdata</code> 正是 <code>header.S</code> 中的各个 section</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// grep -F .section arch/x86/boot/header.S
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.bstext&#34;</span>, <span style=color:#e6db74>&#34;ax&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.bsdata&#34;</span>, <span style=color:#e6db74>&#34;a&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.header&#34;</span>, <span style=color:#e6db74>&#34;a&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.inittext&#34;</span>, <span style=color:#e6db74>&#34;ax&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.initdata&#34;</span>, <span style=color:#e6db74>&#34;a&#34;</span>
+</span></span></code></pre></div><p><code>readelf</code> 也可以印证链接的结果</p><pre tabindex=0><code>readelf -a setup.elf
+
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .bstext           PROGBITS        00000000 001000 00002d 00  AX  0   0  1
+  [ 2] .bsdata           PROGBITS        0000002d 00102d 000090 00   A  0   0  1
+  [ 3] .header           PROGBITS        000001f1 0011f1 000057 00   A  0   0  1
+  [ 4] .inittext         PROGBITS        00000248 001248 0000c2 00  AX  0   0  1
+  [ 5] .initdata         PROGBITS        0000030a 00130a 00001e 00   A  0   0  1
+  [ 6] .text             PROGBITS        00000328 001328 0025ff 00  AX  0   0  4
+</code></pre><blockquote><p>第一个 section 的 .bstext 的 Addr 是 0，但 off 是 0x1000，Addr 和 Off 有什么区别？Off 是在 ELF 中的偏移，也就是说，真正的 .bstext 不是在 elf 的开头，elf 有头，头长位 0x1000。我们通过 xxd 读取，就会发现：elf 的 0x1000 处的 bytes 正是 bin 的开头位置，也就是 bin 去掉了 elf 的包裹格式，就是纯的裸代码。
+by LLM</p></blockquote><h5 id=entry-point-of-setupelf>entry point of setup.elf
+<a class=anchor href=#entry-point-of-setupelf aria-hidden=true>#</a></h5><p>在 <code>setup.ld</code> 中有一个 <code>ENTRY(_start)</code>，指定了这个 elf 的入口函数地址，而这个 <code>_start</code> 正是 <code>header.S</code> 中的 <code>_start</code>，这个<code>_start</code> 在哪里？</p><p>对照 section 表，我们可以看到 0x200 的 address 对应的是在 .header 中，</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span>	<span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.header&#34;</span>, <span style=color:#e6db74>&#34;a&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.globl</span>	<span style=color:#66d9ef>hdr</span>
+</span></span><span style=display:flex><span>hdr:
+</span></span><span style=display:flex><span>setup_sects:	<span style=color:#a6e22e>.byte</span> <span style=color:#66d9ef>SETUPSECTS</span>
+</span></span><span style=display:flex><span>root_flags:	<span style=color:#a6e22e>.word</span> <span style=color:#66d9ef>ROOT_RDONLY</span>
+</span></span><span style=display:flex><span>syssize:	<span style=color:#a6e22e>.long</span> <span style=color:#66d9ef>SYSSIZE</span>
+</span></span><span style=display:flex><span>ram_size:	<span style=color:#a6e22e>.word</span> <span style=color:#66d9ef>RAMDISK</span>
+</span></span><span style=display:flex><span>vid_mode:	<span style=color:#a6e22e>.word</span> <span style=color:#66d9ef>SVGA_MODE</span>
+</span></span><span style=display:flex><span>root_dev:	<span style=color:#a6e22e>.word</span> <span style=color:#66d9ef>ROOT_DEV</span>
+</span></span><span style=display:flex><span>boot_flag:	<span style=color:#a6e22e>.word</span> <span style=color:#ae81ff>0xAA55</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e># offset 512, entry point
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.globl</span>	<span style=color:#66d9ef>_start</span>
+</span></span><span style=display:flex><span>_start:
+</span></span><span style=display:flex><span>		<span style=color:#75715e># Explicitly enter this as bytes, or the assembler
+</span></span></span><span style=display:flex><span>		<span style=color:#75715e># tries to generate a 3-byte jump here, which causes
+</span></span></span><span style=display:flex><span>		<span style=color:#75715e># everything else to push off to the wrong offset.
+</span></span></span><span style=display:flex><span>		<span style=color:#a6e22e>.byte</span>	<span style=color:#ae81ff>0xeb</span>		<span style=color:#75715e># short (2-byte) jump
+</span></span></span><span style=display:flex><span>		<span style=color:#a6e22e>.byte</span>	<span style=color:#66d9ef>start_of_setup-1f</span>
+</span></span></code></pre></div><p>.header section 是在 header.S 中，由于这段代码是 <code>.code16</code>，<code>.word</code> 对应的是 16bits，而 <code>.long</code> 始终都是 32bit，所以，.start 相较于 .header section 的偏移是 15 (1+2+4+2*4) bytes。</p><p>而在 <code>setup.ld</code> 中，我们是将 .header 放到了 setup 开头 <code>497</code> bytes 的偏移位置</p><p>所以 <code>.start</code> 的偏移是 512 bytes 正是 0x200，也正是 MBR 后的第一个sector。</p><p>我们可以通过 <code>readelf -a setup.elf</code> 得到验证：</p><pre tabindex=0><code>Entry point address:               0x200
+</code></pre><p>另外，这里我们也能看到很多被 <code>arch/x86/boot/tools/build.c</code> 填入的字段。</p><h4 id=和-bootloader-的接口>和 Bootloader 的接口
+<a class=anchor href=#%e5%92%8c-bootloader-%e7%9a%84%e6%8e%a5%e5%8f%a3 aria-hidden=true>#</a></h4><p>除此之外我们还能看到很多和 Bootloader 的接口，譬如 <code>ramdisk_image</code> 记录了 <code>initrd</code> 被 bootloader 加载的位置，这些字段会被 bootloader 修改，从而后续内核可以从正确的位置读取，</p><ul><li>写，grub 的 <code>load_image</code>：<code>lh->cmd_line_ptr = linux_data_real_addr + LINUX_CL_OFFSET;</code></li><li>读，<code>_start</code>：<code>memcpy(&amp;boot_params.hdr, &amp;hdr, sizeof hdr);</code></li></ul><p>这些接口被定义在 <code>Documentation/i386/boot.txt</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span>code32_start:				<span style=color:#75715e># here loaders can put a different
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># start address for 32-bit code.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#ifndef __BIG_KERNEL__
+</span></span></span><span style=display:flex><span>		<span style=color:#a6e22e>.long</span>	<span style=color:#ae81ff>0x1000</span>		<span style=color:#75715e>#   0x1000 = default for zImage
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#else
+</span></span></span><span style=display:flex><span>		<span style=color:#a6e22e>.long</span>	<span style=color:#ae81ff>0x100000</span>	<span style=color:#75715e># 0x100000 = default for big kernel
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#endif
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>ramdisk_image:	<span style=color:#a6e22e>.long</span>	<span style=color:#ae81ff>0</span>		<span style=color:#75715e># address of loaded ramdisk image
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># Here the loader puts the 32-bit
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># address where it loaded the image.
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># This only will be read by the kernel.
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>ramdisk_size:	<span style=color:#a6e22e>.long</span>	<span style=color:#ae81ff>0</span>		<span style=color:#75715e># its size in bytes
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>cmd_line_ptr:	<span style=color:#a6e22e>.long</span>	<span style=color:#ae81ff>0</span>		<span style=color:#75715e># (Header version 0x0202 or later)
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># If nonzero, a 32-bit pointer
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># to the kernel command line.
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># The command line should be
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># located between the start of
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># setup and the end of low
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># memory (0xa0000), or it may
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># get overwritten before it
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># gets read.  If this field is
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># used, there is no longer
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># anything magical about the
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># 0x90000 segment; the setup
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># can be located anywhere in
+</span></span></span><span style=display:flex><span>					<span style=color:#75715e># low memory 0x10000 or higher.
+</span></span></span></code></pre></div><h4 id=bootsect_start-offset0><code>bootsect_start</code> @offset=0
+<a class=anchor href=#bootsect_start-offset0 aria-hidden=true>#</a></h4><p>代码很清晰明了，主要就是将以下的 <code>bugger_off_msg</code> 显示出来，然后等待用户输入，重启。我们可以直接用 <code>qemu-system-x86_64 bzImage</code> 直接来验证一下。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span>bugger_off_msg:
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.ascii</span>	<span style=color:#e6db74>&#34;Direct booting from floppy is no longer supported.\r\n&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.ascii</span>	<span style=color:#e6db74>&#34;Please use a boot loader program instead.\r\n&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.ascii</span>	<span style=color:#e6db74>&#34;\n&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.ascii</span>	<span style=color:#e6db74>&#34;Remove disk and press any key to reboot . . .\r\n&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.byte</span>	<span style=color:#ae81ff>0</span>
+</span></span></code></pre></div><h4 id=_start-offset512><code>_start</code> @offset=512
+<a class=anchor href=#_start-offset512 aria-hidden=true>#</a></h4><p>这里是 <code>bzImage</code> 真正的入口，正是在 GRUB 的 <code>big_linux_boot</code> 中跳转的位置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// arch/x86/boot/header.S
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>_start</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>start_of_setup</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>main</span>(); <span style=color:#75715e>// arch/x86/boot/main.c
+</span></span></span><span style=display:flex><span>      <span style=color:#a6e22e>copy_boot_params</span>();
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>memcpy</span>(<span style=color:#f92672>&amp;</span>boot_params.hdr, <span style=color:#f92672>&amp;</span>hdr, <span style=color:#66d9ef>sizeof</span> hdr); <span style=color:#75715e>// &amp;hdr 是 header.S 中被 bootloader 修改过的 hdr 记录了各种信息所在
+</span></span></span><span style=display:flex><span>      <span style=color:#a6e22e>validate_cpu</span>(); <span style=color:#75715e>// arch/x86/boot/cpu.c
+</span></span></span><span style=display:flex><span>      <span style=color:#a6e22e>go_to_protected_mode</span>(); <span style=color:#75715e>// arch/x86/boot/pm.c
+</span></span></span><span style=display:flex><span>        <span style=color:#a6e22e>protected_mode_jump</span>(boot_params.hdr.code32_start, (u32)<span style=color:#f92672>&amp;</span>boot_params <span style=color:#f92672>+</span> (<span style=color:#a6e22e>ds</span>() <span style=color:#f92672>&lt;&lt;</span> <span style=color:#ae81ff>4</span>));
+</span></span></code></pre></div><pre tabindex=0><code>(gdb) p/x boot_params.hdr.code32_start
+$9 = 0x100000
+</code></pre><pre tabindex=0><code>protected_mode_jump
+	movl	%edx, %esi		# Pointer to boot_params table
+	movl	%eax, 2f		# Patch ljmpl instruction
+
+    // ...
+
+	# Jump to the 32-bit entrypoint
+	.byte	0x66, 0xea		# ljmpl opcode
+2:	.long	0			# offset
+	.word	__BOOT_CS		# segment
+
+	.size	protected_mode_jump, .-protected_mode_jump
+</code></pre><p>在做了一系列的准备工作之后，准备好启动参数 <code>boot_params</code>(存于 <code>%esi</code>，这个 <code>%esi</code> 最终会被 <code>vmlinux.bin</code> 拷贝到 <code>%edi</code>，作为 <code>x86_64_start_kernel</code> 的 <code>real_mode_data</code> 参数)。然后 <code>setup.bin</code> 便跳转到了 <code>0x100000</code>，这是 <code>vmlinux.w.bin</code> 的第 0 个字节，是由 grub 加载的。</p><p>回顾一下，目前大致有用的内存如下</p><pre tabindex=0><code>+---------------+ ← 0x3a8978 (linux_data_tmp_addr+setup_size)
+| setup.bin     |
++---------------+ ← 0x3a5f78 linux_data_tmp_addr (LINUX_BZIMAGE_ADDR + text_len)
+| vmlinux.w.bin |
++---------------+ ← 0x100000 LINUX_BZIMAGE_ADDR
+
++---------------+ ← 0x099100 (LINUX_OLD_REAL_MODE_ADDR + LINUX_SETUP_MOVE_SIZE)(0x090000 + 0x9100)
+| \0            |
++---------------+ ← 0x0990ff (LINUX_OLD_REAL_MODE_ADDR + LINUX_CL_END_OFFSET)(0x090000 + 0x90FF)
+| cmdline       |
++---------------+ ← 0x0990ff (LINUX_OLD_REAL_MODE_ADDR + LINUX_CL_END_OFFSET)(0x090000 + 0x90FF)
+</code></pre><p><code>cmdline</code> 的位置由 <code>boot_params</code> 记录</p><pre tabindex=0><code>(gdb) p/x ((struct boot_params *) $esi)-&gt;hdr-&gt;cmd_line_ptr
+$18 = 0x99000
+(gdb) x/s ((struct boot_params *) $esi)-&gt;hdr-&gt;cmd_line_ptr
+0x99000:        &#34;root=/dev/sda2 ro console=ttyS0 nokaslr&#34;
+</code></pre><h3 id=vmlinuxwbin><code>vmlinux.w.bin</code>
+<a class=anchor href=#vmlinuxwbin aria-hidden=true>#</a></h3><p><code>vmlinux.w.bin</code> 主要做的就是解压。</p><h4 id=bootcompressedhead_64s><code>boot/compressed/head_64.S</code>
+<a class=anchor href=#bootcompressedhead_64s aria-hidden=true>#</a></h4><h5 id=stack-and-heap>stack and heap
+<a class=anchor href=#stack-and-heap aria-hidden=true>#</a></h5><p>stack 高往低，heap 低往高</p><p>在 <code>head_64.S</code> 的最末尾有一个初始化为 0 的 4K 的 user_stack。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// compressed/head_64.S
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.text&#34;</span>
+</span></span><span style=display:flex><span>relocated:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup the stack */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>user_stack_end</span>(%rip), %rsp
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>call</span>	<span style=color:#66d9ef>decompress_kernel</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>user_stack:
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span> <span style=color:#ae81ff>4096</span>,<span style=color:#ae81ff>4</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>user_stack_end:
+</span></span><span style=display:flex><span><span style=color:#75715e>// end of section .text
+</span></span></span></code></pre></div><p>而从链接脚本中我们可以看到在整个文件的末尾有 6*4K 的页表预留区域和堆区，他们都只是预留，并未初始化。</p><ul><li>1 页 PGD</li><li>1 页 PUD</li><li>4 页 PMD</li></ul><pre tabindex=0><code class=language-lds data-lang=lds>// compressed/vmlinux_64.lds
+SECTIONS
+{
+
+	. = 0;
+	.text :  { /* ... */ }
+	.rodata :{ /* ... */ }
+	.data :	 { /* ... */ }
+	.bss : {
+		_bss = . ;
+		*(.bss)
+		*(.bss.*)
+		*(COMMON)
+		. = ALIGN(8);
+		_end = . ;
+		. = ALIGN(4096);
+		pgtable = . ;
+		. = . + 4096 * 6;
+		_heap = .;
+	}
+}
+</code></pre><p>注意 heap 是从低往高，所以后面海量内存的都可以算作堆区</p><p>在 <code>compressed/misc_64.c</code>（解压代码） 中 <code>malloc</code> 就非常简单</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span>asmlinkage <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>decompress_kernel</span>(<span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>rmode, <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> heap,
+</span></span><span style=display:flex><span>	uch <span style=color:#f92672>*</span>input_data, <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> input_len, uch <span style=color:#f92672>*</span>output)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	free_mem_ptr     <span style=color:#f92672>=</span> heap;	<span style=color:#75715e>/* Heap  */</span>
+</span></span><span style=display:flex><span>	free_mem_end_ptr <span style=color:#f92672>=</span> heap <span style=color:#f92672>+</span> HEAP_SIZE;
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>malloc</span>(<span style=color:#66d9ef>int</span> size)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>p;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (size <span style=color:#f92672>&lt;</span><span style=color:#ae81ff>0</span>) <span style=color:#a6e22e>error</span>(<span style=color:#e6db74>&#34;Malloc error&#34;</span>);
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (free_mem_ptr <span style=color:#f92672>&lt;=</span> <span style=color:#ae81ff>0</span>) <span style=color:#a6e22e>error</span>(<span style=color:#e6db74>&#34;Memory error&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	free_mem_ptr <span style=color:#f92672>=</span> (free_mem_ptr <span style=color:#f92672>+</span> <span style=color:#ae81ff>3</span>) <span style=color:#f92672>&amp;</span> <span style=color:#f92672>~</span><span style=color:#ae81ff>3</span>;	<span style=color:#75715e>/* Align */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	p <span style=color:#f92672>=</span> (<span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>)free_mem_ptr;
+</span></span><span style=display:flex><span>	free_mem_ptr <span style=color:#f92672>+=</span> size;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (free_mem_ptr <span style=color:#f92672>&gt;=</span> free_mem_end_ptr)
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>error</span>(<span style=color:#e6db74>&#34;Out of memory&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> p;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h5 id=startup_32-和临时页表><code>startup_32</code> 和临时页表
+<a class=anchor href=#startup_32-%e5%92%8c%e4%b8%b4%e6%97%b6%e9%a1%b5%e8%a1%a8 aria-hidden=true>#</a></h5><p>主要做了：</p><ul><li>建立内核的直接映射的页表（管理开头的 4GiB 内存）。此时的页表是 va = pa。</li><li>启用 Long mode</li></ul><p>注意这里 CPU 给出的就已经是 va 了，只是 va = pa，所以看起来没什么两样，看起来还在 pa 中执行。</p><p>va = pa + 0xffffffff80000000 的映射要等 <code>vmlinux.bin</code> 的 <code>kernel/head_64.S</code> 中再建立</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// arch/x86/boot/compressed/head_64.S
+</span></span></span><span style=display:flex><span>startup_32:
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>call</span> <span style=color:#66d9ef>verify_cpu</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Prepare for entering 64 bit mode
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Load new GDT with the 64bit segments using 32bit descriptor */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>gdt</span>(%ebp), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, <span style=color:#66d9ef>gdt</span><span style=color:#960050;background-color:#1e0010>+</span><span style=color:#ae81ff>2</span>(%ebp)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>lgdt</span>	<span style=color:#66d9ef>gdt</span>(%ebp)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Enable PAE mode */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>xorl</span>	%eax, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>orl</span>	<span style=color:#66d9ef>$</span>(<span style=color:#ae81ff>1</span> <span style=color:#960050;background-color:#1e0010>&lt;&lt;</span> <span style=color:#ae81ff>5</span>), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, %cr4
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>  * Build early 4G boot pagetable
+</span></span></span><span style=display:flex><span><span style=color:#75715e>  */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Initialize Page tables to 0*/</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>pgtable</span>(%ebx), %edi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>xorl</span>	%eax, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$</span>((<span style=color:#ae81ff>4096</span>*<span style=color:#ae81ff>6</span>)<span style=color:#960050;background-color:#1e0010>/</span><span style=color:#ae81ff>4</span>), %ecx             <span style=color:#75715e>// stosl 每次写 4 字节
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>rep</span>	<span style=color:#a6e22e>stosl</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Build Level 4 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>pgtable</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0</span>(%ebx), %edi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#ae81ff>0x1007</span> (%edi), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, <span style=color:#ae81ff>0</span>(%edi)                   <span style=color:#75715e>// 写入 Level 4 的第一个表项
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * %eax = %edi + 0x1007
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *      = pgtable + 0x1000 + 0x7
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * pgtable + 0x1000 是下一级表 Level 3 的基址。
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 0x1000=4K
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 低 12 位 0x007 是页表项标志：
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 0 = P   Present
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 1 = RW  Read/Write
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 2 = US  User/Supervisor，这里置 1 表示 User
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Build Level 3 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>pgtable</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0x1000</span>(%ebx), %edi    <span style=color:#75715e>// %edi 指向 Level 3 表，地址为 pgtable + 0x1000。
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#ae81ff>0x1007</span>(%edi), %eax              <span style=color:#75715e>// Level 2 的基址
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$4</span>, %ecx
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>	<span style=color:#a6e22e>movl</span>	%eax, <span style=color:#ae81ff>0x00</span>(%edi)                <span style=color:#75715e>// 写到 Level 3 的表项
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addl</span>	<span style=color:#66d9ef>$0x00001000</span>, %eax               <span style=color:#75715e>// Level 2 的下一张表的地址(写到 Level 3 的表项)
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addl</span>	<span style=color:#66d9ef>$8</span>, %edi                        <span style=color:#75715e>// Level 3 中的下一个表项
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>decl</span>	%ecx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jnz</span>	<span style=color:#ae81ff>1</span><span style=color:#66d9ef>b</span>                                  <span style=color:#75715e>// 写了 4 项 (%ecx)
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Build Level 2 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>pgtable</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0x2000</span>(%ebx), %edi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$0x00000183</span>, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$2048</span>, %ecx
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>	<span style=color:#a6e22e>movl</span>	%eax, <span style=color:#ae81ff>0</span>(%edi)                   <span style=color:#75715e>// 写到 Level 2 的表项
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addl</span>	<span style=color:#66d9ef>$0x00200000</span>, %eax               <span style=color:#75715e>// 0~2M, 2M~4M,... 的物理地址(写到 Level 2 的表项)
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addl</span>	<span style=color:#66d9ef>$8</span>, %edi                        <span style=color:#75715e>// Level 2 中的下一个表项
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>decl</span>	%ecx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jnz</span>	<span style=color:#ae81ff>1</span><span style=color:#66d9ef>b</span>                                  <span style=color:#75715e>// 写了 2048 项 (%ecx)
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 0x183 = 0x100 | 0x80 | 0x3
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 0 = P   Present
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 1 = RW  Read/Write
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 7 = PS  Page Size，置 1 表示 2MB 大页
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * bit 8 = G   Global
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 虚拟地址 0x00000000 -&gt; 物理地址 0x00000000
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 虚拟地址 0x00200000 -&gt; 物理地址 0x00200000
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 虚拟地址 0xFFE00000 -&gt; 物理地址 0xFFE00000
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 2048 = 4(KiB/page)/8(B/address) * 4(page)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *      = 512(address/page)*4(page)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     *      = 2048(address)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Enable the boot page tables */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>pgtable</span>(%ebx), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, %cr3
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * PGD[0] -&gt; PUD
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * PUD[0..3] -&gt; 4 张 PMD
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * PMD0[0..512] PMD1[0..512] PMD2[0..512] PMD3[0..512] 2048 地址，每个地址对应 2MB 大页项 -&gt; 恒等映射 0~4GB
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Enable Long mode in EFER (Extended Feature Enable Register) */</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup for the jump to 64bit mode
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * When the jump is performend we will be in long mode but
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * in 32bit compatibility mode with EFER.LME = 1, CS.L = 0, CS.D = 1
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * (and in turn EFER.LMA = 1).	To jump into 64bit mode we use
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * the new gdt/idt that has __KERNEL_CS with CS.L = 1.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We place all of the values on our mini stack so lret can
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * used to perform that far jump.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushl</span>	<span style=color:#66d9ef>$__KERNEL_CS</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leal</span>	<span style=color:#66d9ef>startup_64</span>(%ebp), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushl</span>	%eax
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Enter paged protected Mode, activating Long Mode */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>$0x80000001</span>, %eax <span style=color:#75715e>/* Enable Paging and Protected mode */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%eax, %cr0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Jump from 32bit compatibility mode into 64bit mode. */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>lret</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>no_longmode:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* This isn&#39;t an x86-64 CPU so hang */</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>hlt</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jmp</span>     <span style=color:#ae81ff>1</span><span style=color:#66d9ef>b</span>
+</span></span></code></pre></div><h5 id=startup_64><code>startup_64</code>
+<a class=anchor href=#startup_64 aria-hidden=true>#</a></h5><p>主要做拷贝 <code>vmlinux.w.bin</code> 到高位，然后解压。</p><p>由于后续的启动，需要将 <code>vmlinux.bin</code> 解压到 <code>0x200000</code> 的位置，而这里 <code>vmlinux.w.bin</code> 已经占用了这部分的空间，所以需要先将 <code>vmlinux.w.bin</code> 复制到后半段</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// arch/x86/boot/compressed/head_64.S
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* Be careful here startup_64 needs to be at a predictable
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * address so I can export it in an ELF header.  Bootloaders
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * should look at the ELF header to find this address, as
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * it may change in the future.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.code64</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.org</span> <span style=color:#ae81ff>0x200</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>startup_64</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup data segments. */</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Compute the decompressed kernel start address.  It is where
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * we were loaded at aligned to a 2M boundary. %rbp contains the
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * decompressed kernel start address.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * If it is a relocatable kernel then decompress and run the kernel
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * from load address aligned to 2MB addr, otherwise decompress and
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * run the kernel from CONFIG_PHYSICAL_START
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Start with the delta to where the kernel will run at. */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>$CONFIG_PHYSICAL_START</span>, %rbp <span style=color:#75715e># $CONFIG_PHYSICAL_START=0x200000
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rbp, %rbx
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Replace the compressed data size with the uncompressed size */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>input_len</span>(%rip), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>subq</span>	%rax, %rbx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>output_len</span>(%rip), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rax, %rbx
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* input_len: This is a label pointing to the address where the 4-byte size is stored.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * input_len(%rip): This fetches the 4-byte content stored at that address using PC-relative addressing.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * $rbx = CONFIG_PHYSICAL_START - $input_len + $output_len
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *      = CONFIG_PHYSICAL_START + (解压后大小) - （解压前大小）
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * $rbx 存的是拷贝压缩的 vmlinux 到的目标地址
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 所以这里的意思是：
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 拷贝完成之后，压缩包放在解压区的末尾。虽然解压时可能会覆盖原始的压缩包，
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 但那部分大概是已经被解压完成的了。最差的情况是完全没压缩，那么就是从原始位置拷
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 贝出来，拷回原始位置。但是又因为我们有 bss，所以最差的情况还是会有 bss 那么大的
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 偏移。栈位于 .text 的末尾
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Add 8 bytes for every 32K input block */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* Add 32K + 18 bytes of extra slack and align on a 4K boundary */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>//...
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* 微调 $rbx
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Gemini: 用于 gzip 算法的硬性要求（滑动窗口缓冲区）
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * https://share.google/aimode/ZNuxp67UMyrvOCwb4
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Copy the compressed kernel to the end of our buffer
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * where decompression in place becomes safe.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_end</span>(%rip), %r8
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* $r8 存的是 _end 段的代码地址
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * lea 对于 rip 是取相对大小，使得目标寄存器存的就是 _end 代码所在的实际地址
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_end</span>(%rbx), %r9
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* $r9 存的是 _end 的值 + rbx
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * lea 对于 rbx 是取绝对大小（文件中的 offset）
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>$_end</span> <span style=color:#75715e>/* - $startup_32 */</span>, %rcx
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>	<span style=color:#a6e22e>subq</span>	<span style=color:#66d9ef>$8</span>, %r8
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>subq</span>	<span style=color:#66d9ef>$8</span>, %r9
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#ae81ff>0</span>(%r8), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rax, <span style=color:#ae81ff>0</span>(%r9)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>subq</span>	<span style=color:#66d9ef>$8</span>, %rcx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jnz</span>	<span style=color:#ae81ff>1</span><span style=color:#66d9ef>b</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// rcx: vmlinux 的大小+bss，用于计数
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>// r8: vmlinux 的大小+bss 的末尾
+</span></span></span><span style=display:flex><span>    <span style=color:#75715e>// r9: 拷贝目标区域的末尾
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Jump to the relocated address.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * rbx 是新区的压缩 vmlinux 的起始位置，起始位置往后 relocated，那就是新区的 relocated
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>relocated</span>(%rbx), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jmp</span>	*%rax
+</span></span></code></pre></div><blockquote><p>jnz tag: Jump tag to when last result is None-Zero</p></blockquote><p>一大段代码，最终影响的是内存中的数据，我们来看一下解压前的内存布局</p><pre tabindex=0><code>_end = 0x2aa7e8
+$rbx = 0x56a000 # rbx 存的是拷贝压缩的 vmlinux 到的目标地址
+</code></pre><pre tabindex=0><code>拷贝前
+$r8 = 0x3aa7e8 # 存的是 _end 段的代码地址
+$r9 = 0x8147e8 # 存的是 _end 的值 + rbx 即拷贝后的结尾地址
+
+拷贝后
+$r8 = 0x100000
+$r9 = 0x56a000
+</code></pre><p>拷贝后的内存</p><pre tabindex=0><code>$rbx = CONFIG_PHYSICAL_START + (output_len - input_len) + extra bytes for gz
+$r9 = $rbx + _end
+$r8 = CONFIG_PHYSICAL_START + _end
+
++----------------+ ← 0x8147e8 (CONFIG_PHYSICAL_START + (output_len - input_len) + extra bytes for gz + _end)
+| bss            |
++----------------+
+| unpack-code    |
++----------------+
+| vmlinux.bin.gz |
++----------------+
+| startup_64     |
++----------------+
+| startup_32     |
++----------------+ ← 0x56a000 (CONFIG_PHYSICAL_START + (output_len - input_len) + extra bytes for gz)
+
++----------------+ ← 0x3aa7e8 (LINUX_BZIMAGE_ADDR + _end)
+| bss            |
++----------------+ ← 0x3a5f78 (LINUX_BZIMAGE_ADDR + vmlinux_size)
+| unpack-code    |
++----------------+
+| vmlinux.bin.gz |
++----------------+
+| startup_64     |
++----------------+
+| startup_32     |
++----------------+ ← 0x100000 (LINUX_BZIMAGE_ADDR)
+
+由 grub 拷贝下来的：cmdline
+
++----------------+ ← 0x099100 (LINUX_OLD_REAL_MODE_ADDR + LINUX_SETUP_MOVE_SIZE)(0x090000 + 0x9100)
+| \0             |
++----------------+ ← 0x0990ff (LINUX_OLD_REAL_MODE_ADDR + LINUX_CL_END_OFFSET)(0x090000 + 0x90FF)
+| cmdline        |
++----------------+ ← 0x099000
+</code></pre><h5 id=relocated><code>relocated</code>
+<a class=anchor href=#relocated aria-hidden=true>#</a></h5><p>上一节，我们拷贝了 <code>vmlinux.w.bin</code> 到高位，最后跳转到高位的 relocated 处，relocated 做什么：</p><ol><li>准备解压环境，由于解压代码是 C，涉及函数调用，内存分配等，不能直接用 jmp 等。所以需要创建堆栈</li><li><code>decompress_kernel</code> <code>vmlinux.bin.gz</code> to <code>CONFIG_PHYSICAL_START</code> (0x200000)</li><li><code>jmp</code> to <code>CONFIG_PHYSICAL_START</code> (0x200000)，从 <code>vmlinux.bin</code> 的第一个字节开始执行</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#a6e22e>.section</span> <span style=color:#e6db74>&#34;.text&#34;</span>
+</span></span><span style=display:flex><span>relocated:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Clear BSS
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 我们上面拷贝了 bss 区，但是实际上 src 中并没有初始化的 bss 区，所以需要先初始化
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup the stack */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>user_stack_end</span>(%rip), %rsp
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* zero EFLAGS after setting rsp */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Do the decompression, and jump to the new kernel..
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushq</span>	%rsi			<span style=color:#75715e># Save the real mode argument
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rsi, %rdi		<span style=color:#75715e># real mode address
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_heap</span>(%rip), %rsi	<span style=color:#75715e># _heap
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>input_data</span>(%rip), %rdx  <span style=color:#75715e># input_data
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	<span style=color:#66d9ef>input_len</span>(%rip), %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rax, %rcx		<span style=color:#75715e># input_len
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rbp, %r8		<span style=color:#75715e># output
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>call</span>	<span style=color:#66d9ef>decompress_kernel</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>popq</span>	%rsi
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * Jump to the decompressed kernel.
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jmp</span>	*%rbp <span style=color:#75715e># 0x200000
+</span></span></span></code></pre></div><p>relocated 中准备的参数列表：</p><ol><li><code>rdi</code>: <code>boot_params</code>（<code>real_mode_data</code>）</li><li><code>rsi</code>: _heap 区</li><li><code>rdx</code>: input_data 的内存位置</li><li><code>rcx</code>: input_len 的内存位置</li><li><code>r8</code>: 解压位置，也就是 0x200000</li></ol><h4 id=bootcompressedmisc_64c><code>boot/compressed/misc_64.c</code>
+<a class=anchor href=#bootcompressedmisc_64c aria-hidden=true>#</a></h4><h5 id=decompress_kernel-和-vidmem-显示><code>decompress_kernel</code> 和 <code>vidmem</code> 显示
+<a class=anchor href=#decompress_kernel-%e5%92%8c-vidmem-%e6%98%be%e7%a4%ba aria-hidden=true>#</a></h5><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span>asmlinkage <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>decompress_kernel</span>(<span style=color:#66d9ef>void</span> <span style=color:#f92672>*</span>rmode, <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> heap,
+</span></span><span style=display:flex><span>	uch <span style=color:#f92672>*</span>input_data, <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> input_len, uch <span style=color:#f92672>*</span>output)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	real_mode <span style=color:#f92672>=</span> rmode;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (RM_SCREEN_INFO.orig_video_mode <span style=color:#f92672>==</span> <span style=color:#ae81ff>7</span>) {
+</span></span><span style=display:flex><span>		vidmem <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) <span style=color:#ae81ff>0xb0000</span>;
+</span></span><span style=display:flex><span>		vidport <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x3b4</span>;
+</span></span><span style=display:flex><span>	} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>		vidmem <span style=color:#f92672>=</span> (<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>) <span style=color:#ae81ff>0xb8000</span>;
+</span></span><span style=display:flex><span>		vidport <span style=color:#f92672>=</span> <span style=color:#ae81ff>0x3d4</span>;
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	free_mem_ptr     <span style=color:#f92672>=</span> heap;	<span style=color:#75715e>/* Heap  */</span>
+</span></span><span style=display:flex><span>	free_mem_end_ptr <span style=color:#f92672>=</span> heap <span style=color:#f92672>+</span> HEAP_SIZE;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>real_mode 用于 <code>putstr</code> 获取光标位置，</p><ol><li>在合适的时机 scroll</li><li>更新闪烁的光标位置</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>putstr</span>(<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>s)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>int</span> x,y,pos;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>char</span> c;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	x <span style=color:#f92672>=</span> RM_SCREEN_INFO.orig_x;
+</span></span><span style=display:flex><span>	y <span style=color:#f92672>=</span> RM_SCREEN_INFO.orig_y;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>while</span> ( ( c <span style=color:#f92672>=</span> <span style=color:#f92672>*</span>s<span style=color:#f92672>++</span> ) <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#39;\0&#39;</span> ) {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> ( c <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;\n&#39;</span> ) {
+</span></span><span style=display:flex><span>			x <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>if</span> ( <span style=color:#f92672>++</span>y <span style=color:#f92672>&gt;=</span> lines ) {
+</span></span><span style=display:flex><span>				<span style=color:#a6e22e>scroll</span>();
+</span></span><span style=display:flex><span>				y<span style=color:#f92672>--</span>;
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>		} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>			vidmem [ ( x <span style=color:#f92672>+</span> cols <span style=color:#f92672>*</span> y ) <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span> ] <span style=color:#f92672>=</span> c; 
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>if</span> ( <span style=color:#f92672>++</span>x <span style=color:#f92672>&gt;=</span> cols ) {
+</span></span><span style=display:flex><span>				x <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>				<span style=color:#66d9ef>if</span> ( <span style=color:#f92672>++</span>y <span style=color:#f92672>&gt;=</span> lines ) {
+</span></span><span style=display:flex><span>					<span style=color:#a6e22e>scroll</span>();
+</span></span><span style=display:flex><span>					y<span style=color:#f92672>--</span>;
+</span></span><span style=display:flex><span>				}
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	RM_SCREEN_INFO.orig_x <span style=color:#f92672>=</span> x;
+</span></span><span style=display:flex><span>	RM_SCREEN_INFO.orig_y <span style=color:#f92672>=</span> y;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	pos <span style=color:#f92672>=</span> (x <span style=color:#f92672>+</span> cols <span style=color:#f92672>*</span> y) <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span>;	<span style=color:#75715e>/* Update cursor position */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>outb_p</span>(<span style=color:#ae81ff>14</span>, vidport);
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>outb_p</span>(<span style=color:#ae81ff>0xff</span> <span style=color:#f92672>&amp;</span> (pos <span style=color:#f92672>&gt;&gt;</span> <span style=color:#ae81ff>9</span>), vidport<span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>);
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>outb_p</span>(<span style=color:#ae81ff>15</span>, vidport);
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>outb_p</span>(<span style=color:#ae81ff>0xff</span> <span style=color:#f92672>&amp;</span> (pos <span style=color:#f92672>&gt;&gt;</span> <span style=color:#ae81ff>1</span>), vidport<span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><a href=/blog/blogs/from_bios_to_start_kernel/display_character/>字符显示</a></p><p>在 <code>putstr</code> 时修改 vidmem 可以改变 VNC server 屏幕上的显示</p><p><img src=./figures/vidmem_B_to_A.png alt=vidmem_B_to_A></p><h3 id=vmlinuxbin><code>vmlinux.bin</code>
+<a class=anchor href=#vmlinuxbin aria-hidden=true>#</a></h3><p>我们从 <code>vmlinux.w.bin</code> 的 <code>relocated</code>（<code>compressed/head_64.S</code>）跳转到了 <code>vmlinux.bin</code> 的第一个字节 <code>0x200000</code>。</p><h4 id=kernelhead_64s-和正式页表><code>kernel/head_64.S</code> 和正式页表
+<a class=anchor href=#kernelhead_64s-%e5%92%8c%e6%ad%a3%e5%bc%8f%e9%a1%b5%e8%a1%a8 aria-hidden=true>#</a></h4><p>汇编部分主要做了：</p><ol><li>准备好全新的页表</li><li>修复页表项目</li><li>准备从 <code>va=pa</code> 的页表转成 <code>va=pa+0xffffffff80000000</code></li><li>跳转到 <code>initial_code</code> ( BSP 是 <code>x86_64_start_kernel</code>，AP 是 <code>start_secondary</code>，详见
+<a href=../smp/_index.md>Linux 中多 CPU 的启动</a>
+) 的 C 代码</li></ol><h5 id=预填页表>预填页表
+<a class=anchor href=#%e9%a2%84%e5%a1%ab%e9%a1%b5%e8%a1%a8 aria-hidden=true>#</a></h5><p>我们在
+<a href=/blog/blogs/page_table/>页表</a>
+一文中介绍了 VA 和 PA 的转换关系。这里我们来实际看看初始化过程中页表和构造。我们现在看的是旧版的内核，此时采用的还是 4 级页表，并没有 <code>P4D</code>，但原理都是一样的。</p><p>先放一个 64 位的地址：</p><pre tabindex=0><code>                        pgd                  pmd                  (offset)
+                    -----------           -----------           ---------------
+1111 1111 1111 1111 1111 1111 1111 1111 1000 0000 0010 0000 0000 0000 0000 0000
+-------------------            -----------           -----------
+   reserve                        pud                   (pte)
+                                                     --------------------------
+                                                        offset for 2MiB page
+</code></pre><p>我们来仔细看看在 <code>kernel/head_64.S</code> 中的页表究竟是怎么样的：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span><span style=color:#75715e>// include/asm-x86/page_64.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define __START_KERNEL_map	_AC(0xffffffff80000000, UL)
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// include/asm-x86/pgtable_64.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_PRESENT	0x001
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_RW	0x002
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_PWT	0x008
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_PCD	0x010
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_ACCESSED	0x020
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _PAGE_DIRTY	0x040
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define _KERNPG_TABLE	(_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | _PAGE_DIRTY)
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * PMD_SHIFT determines the size of the area a middle-level
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * page table can map
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define PMD_SHIFT	21
+</span></span></span><span style=display:flex><span><span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * pte 的数字每 + 1 就涨 4 KiB 那么多，
+</span></span></span><span style=display:flex><span><span style=color:#75715e> * 从按字节编址的角度考虑，不管最后 12位的 offset 的含义。PMD 每增长一个 1 就代表有那么多个 bytes 被映射。同理 PMD 也是
+</span></span></span><span style=display:flex><span><span style=color:#75715e> */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define PMD_SIZE	(_AC(1,UL) &lt;&lt; PMD_SHIFT)
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define __PAGE_KERNEL_EXEC \
+</span></span></span><span style=display:flex><span>	<span style=color:#960050;background-color:#1e0010>(</span><span style=color:#a6e22e>_PAGE_PRESENT</span> <span style=color:#960050;background-color:#1e0010>|</span> <span style=color:#66d9ef>_PAGE_RW</span> <span style=color:#960050;background-color:#1e0010>|</span> <span style=color:#66d9ef>_PAGE_DIRTY</span> <span style=color:#960050;background-color:#1e0010>|</span> <span style=color:#66d9ef>_PAGE_ACCESSED</span>)
+</span></span><span style=display:flex><span><span style=color:#75715e>#define __PAGE_KERNEL_LARGE_EXEC \
+</span></span></span><span style=display:flex><span>	<span style=color:#960050;background-color:#1e0010>(</span><span style=color:#a6e22e>__PAGE_KERNEL_EXEC</span> <span style=color:#960050;background-color:#1e0010>|</span> <span style=color:#66d9ef>_PAGE_PSE</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// arch/x86/kernel/head_64.S
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>.balign</span> <span style=color:#66d9ef>PAGE_SIZE</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define NEXT_PAGE(name) \
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.balign</span>	<span style=color:#66d9ef>PAGE_SIZE</span><span style=color:#75715e>; \
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>ENTRY</span>(<span style=color:#66d9ef>name</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>/* Automate the creation of 1 to 1 mapping pmd entries */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define PMDS(START, PERM, COUNT)		\
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>i</span> <span style=color:#960050;background-color:#1e0010>=</span> <span style=color:#ae81ff>0</span> <span style=color:#75715e>;					\
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.rept</span> (<span style=color:#66d9ef>COUNT</span>) <span style=color:#75715e>;				\
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	(<span style=color:#66d9ef>START</span>) <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#66d9ef>i</span> <span style=color:#960050;background-color:#1e0010>&lt;&lt;</span> <span style=color:#ae81ff>21</span>) <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#66d9ef>PERM</span>) <span style=color:#75715e>;	\
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>i</span> <span style=color:#960050;background-color:#1e0010>=</span> <span style=color:#66d9ef>i</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>1</span> <span style=color:#75715e>;				\
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.endr</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * This default setting generates an ident mapping at address 0x100000
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * and a mapping for the kernel that precisely maps virtual address
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 0xffffffff80000000 to physical address 0x000000. (always using
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 2Mbyte large pages provided by PAE mode)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>init_level4_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level3_ident_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_KERNPG_TABLE</span>  <span style=color:#75715e>// Entry       0:     8 bytes
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>257</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>                                                <span style=color:#75715e>// Entry   1-257: 257*8 bytes
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level3_ident_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_KERNPG_TABLE</span>  <span style=color:#75715e>// Entry     258:     8 bytes
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>252</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>                                                <span style=color:#75715e>// Entry 259-510: 252*8 bytes
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* (2^48-(2*1024*1024*1024))/(2^39) = 511 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level3_kernel_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_PAGE_TABLE</span>   <span style=color:#75715e>// Entry 511: 8 bytes
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level3_ident_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level2_ident_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_KERNPG_TABLE</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>511</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level3_kernel_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>510</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* (2^48-(2*1024*1024*1024)-((2^39)*511))/(2^30) = 510 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level2_kernel_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_KERNPG_TABLE</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level2_fixmap_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_PAGE_TABLE</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * PGD.511.510: level2_kernel_pgt
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * PGD.511.511: level2_fixmap_pgt
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level2_fixmap_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>506</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>level1_fixmap_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_PAGE_TABLE</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* 8MB reserved for vsyscalls + a 2MB hole = 4 + 1 entries */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>5</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level1_fixmap_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	<span style=color:#ae81ff>512</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level2_ident_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Since I easily can, map the first 1G.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Don&#39;t set NX because code runs from these pages.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>PMDS</span>(<span style=color:#ae81ff>0x0000000000000000</span>, <span style=color:#66d9ef>__PAGE_KERNEL_LARGE_EXEC</span>, <span style=color:#66d9ef>PTRS_PER_PMD</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level2_kernel_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* 40MB kernel mapping. The kernel code cannot be bigger than that.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	   When you change this change KERNEL_TEXT_SIZE in page.h too. */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* (2^48-(2*1024*1024*1024)-((2^39)*511)-((2^30)*510)) = 0 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>PMDS</span>(<span style=color:#ae81ff>0x0000000000000000</span>, <span style=color:#66d9ef>__PAGE_KERNEL_LARGE_EXEC</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>_PAGE_GLOBAL</span>, <span style=color:#66d9ef>KERNEL_TEXT_SIZE</span><span style=color:#960050;background-color:#1e0010>/</span><span style=color:#66d9ef>PMD_SIZE</span>)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Module mapping starts here */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>	(<span style=color:#66d9ef>PTRS_PER_PMD</span> - (<span style=color:#66d9ef>KERNEL_TEXT_SIZE</span><span style=color:#960050;background-color:#1e0010>/</span><span style=color:#66d9ef>PMD_SIZE</span>)),<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>NEXT_PAGE</span>(<span style=color:#66d9ef>level2_spare_pgt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.fill</span>   <span style=color:#ae81ff>512</span>,<span style=color:#ae81ff>8</span>,<span style=color:#ae81ff>0</span>
+</span></span></code></pre></div><blockquote><p><code>.quad</code>: 64bit
+<code>.fill repeat , size , value</code></p></blockquote><p>很多很乱。</p><p>我们先看页表放在哪里，这里有一个 <code>NEXT_PAGE</code> align 到 PAGE_SIZE，而之前都没有，也就是说，<code>kernel/head_64.S</code> 前面的所有的汇编都在第 0 个 page 上，页表放在了第 1 个 PAGE 上，通过如下命令页能看到 <code>init_level4_pgt</code> 在 <code>0xffffffff80201000</code> 正是 <code>__START_KERNEL_map=0xffffffff80000000</code> 后的第一个页</p><pre tabindex=0><code>readelf -s vmlinux |grep -v 0000000000000000 |sort --key=2
+33288: ffffffff80201000     0 NOTYPE  GLOBAL DEFAULT    1 init_level4_pgt
+</code></pre><p>接下来，我们来拆分开来看各级页表内容：</p><p><img src=./figures/init_page_table.drawio.png alt=init_page_table.drawio.png></p><p>我们主要关注两张表 <code>level2_ident_pgt</code> 和 <code>level2_kernel_pgt</code>，这两张表的内容大差不差，记录的都是 kernel_text 的 PA。区别在 VA，也就是如何从 PGD 一步一步走到这两张表的，从图中我们可以看到有两段 VA 用了 <code>level2_ident_pgt</code>：<code>PGT.0.0</code> 和 <code>PGT.258.0</code> 一段 VA 用了 <code>level2_kernel_pgt</code>：<code>PGT.511.510</code></p><p>这三段 VA 分别代表哪些地址段呢？结合这个 64 位的地址</p><pre tabindex=0><code>                        pgd                  pmd                  (offset)
+                    -----------           -----------           ---------------
+1111 1111 1111 1111 1111 1111 1111 1111 1000 0000 0010 0000 0000 0000 0000 0000
+-------------------            -----------           -----------
+   reserve                        pud                   (pte)
+                                                     --------------------------
+                                                        offset for 2MiB page
+</code></pre><p>我们可以得到：</p><pre tabindex=0><code>VA = (PGD&lt;&lt;39) + (PUD&lt;&lt;30) + (PMD&lt;&lt;21) + (PTE&lt;&lt;12) + offset
+</code></pre><blockquote><p>为了保证未来扩展的兼容性，硬件和操作系统要求虚拟地址必须满足符号位扩展（Sign Extension）。也就是说，虚拟地址的最高有效位（例如第 47 位）是什么值，那么所有更高的保留位（第 48 到 63 位）就必须全部复制为相同的值。</p></blockquote><pre tabindex=0><code>PGT.0.0:     (  0&lt;&lt;39) + (  0&lt;&lt;30) = 0x0                =&gt; 0x0
+PGT.258.0:   (258&lt;&lt;39) + (  0&lt;&lt;30) = 0x0000810000000000 =&gt; 0xffff810000000000
+PGT.511.510: (511&lt;&lt;39) + (510&lt;&lt;30) = 0x0000ffff80000000 =&gt; 0xffffffff80000000
+</code></pre><ul><li><code>PGT.0.0</code>：<code>va = pa</code> 段，用于启动阶段还没跳转至高位地址前</li><li><code>PGT.258.0</code>：一致映射段，<code>va = PAGE_OFFSET + pa</code></li><li><code>PGT.511.510</code>：内核代码段，<code>va = __START_KERNEL_map + pa</code></li></ul><h6 id=pgt2580-vs-pgt511510一致映射段和内核代码段><code>PGT.258.0</code> vs <code>PGT.511.510</code>：一致映射段和内核代码段
+<a class=anchor href=#pgt2580-vs-pgt511510%e4%b8%80%e8%87%b4%e6%98%a0%e5%b0%84%e6%ae%b5%e5%92%8c%e5%86%85%e6%a0%b8%e4%bb%a3%e7%a0%81%e6%ae%b5 aria-hidden=true>#</a></h6><p>从设计上，一致映射段用于数据修改等等，是全部物理内存的映射（目前只有 2GiB (<code>1&lt;&lt;(30-9)B</code>，在 <code>init_memory_mapping</code> 时会更新 <code>level4_ident_pgt</code>)，内核代码段只映射了内核代码。</p><p>为什么不直接在一致映射段执行内核代码呢？by LLM：</p><ul><li>kaslr(Kernel Address Space Layout Randomization)：这样可以将内核代码解压到任意位置，但是 va 保持不变，一致映射区做不到</li><li>在编译 64 位内核时，GCC 默认使用 <code>-mcmodel=kernel</code> 编译选项。该模型要求：所有内核代码及符号的虚拟地址必须存放在虚拟地址空间最高端的 2 GB 范围内。<ul><li>这样可以让编译器生成更高效、体积更小的机器指令（例如使用带有 32 位有符号偏移量的符号相对寻址，无需每次都用 64 位的绝对地址）。</li></ul></li></ul><p>而后续正式使用时，也有这样一层转换</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> <span style=color:#a6e22e>__phys_addr</span>(<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>long</span> x)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> (x <span style=color:#f92672>&gt;=</span> __START_KERNEL_map)
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> x <span style=color:#f92672>-</span> __START_KERNEL_map <span style=color:#f92672>+</span> phys_base;
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> x <span style=color:#f92672>-</span> PAGE_OFFSET;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h6 id=pgt00va--pa><code>PGT.0.0</code>：<code>va = pa</code>
+<a class=anchor href=#pgt00va--pa aria-hidden=true>#</a></h6><p>和 <code>boot/compressed/head_64.S</code> 中一样，我们通过 <code>PGT.0.0</code>，维持了 <code>va = pa</code>，这样，切换到新页表时，可以让 pc 仍然以为是在 pa 的 space 中执行。</p><p>这样，通过页表，我们就实现了两个 va 对应同一个 pa：</p><ul><li>内核真正需要跑的 va 的高位地址</li><li>和 va 始终等于 pa 的低位地址</li></ul><p>这样就可以安全地从 pa 切换到到 va 了：</p><ol><li>填完页表</li><li>写入 cr3</li><li>在 cr0 中启用 PGE，此时安全切到了 va，但因为 va 通过 MMU 得到的地址和 pa 完全一致，所以 CPU 完全无感，以为自己还跑在 pa 中。</li><li>切换到高位 va</li><li>删除低位过渡 va 的页表</li></ol><h5 id=startup_64-和-ident_complete修复页表><code>startup_64</code> 和 <code>ident_complete</code>：修复页表
+<a class=anchor href=#startup_64-%e5%92%8c-ident_complete%e4%bf%ae%e5%a4%8d%e9%a1%b5%e8%a1%a8 aria-hidden=true>#</a></h5><p>在写入 cr3 前我们还需要先修复页表，因为我们加载的位置不一定是预填页表中的 <code>0x0 + 0x200000</code> (<code>__START_KERNEL_map</code>)，我们需要借助 <code>leaq _text(%rip)</code> 算出真正的 pa，然后写入 <code>phys_base</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span>startup_64:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * At this point the CPU runs in 64bit mode CS.L = 1 CS.D = 1,
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * and someone has loaded an identity mapped page table
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * for us.  These identity mapped page tables map all of the
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * kernel pages and possibly all of memory.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * %esi holds a physical pointer to real_mode_data.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We come here either directly from a 64bit bootloader, or from
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * arch/x86_64/boot/compressed/head.S.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We only come here initially at boot nothing else comes here.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Since we may be loaded at an address different from what we were
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * compiled to run at we first fixup the physical addresses in our page
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * tables and then reload them.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Compute the delta between the address I am compiled to run at and the
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * address I am actually running at.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_text</span>(%rip), %rbp
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>subq</span>	<span style=color:#66d9ef>$_text</span> - <span style=color:#66d9ef>__START_KERNEL_map</span>, %rbp
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Is the address not 2M aligned? */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rbp, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>andl</span>	<span style=color:#66d9ef>$</span><span style=color:#960050;background-color:#1e0010>~</span><span style=color:#66d9ef>LARGE_PAGE_MASK</span>, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>testl</span>	%eax, %eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jnz</span>	<span style=color:#66d9ef>bad_address</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Is the address too large? */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_text</span>(%rip), %rdx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>$PGDIR_SIZE</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cmpq</span>	%rax, %rdx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jae</span>	<span style=color:#66d9ef>bad_address</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Fixup the physical addresses in the page table
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>init_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0</span>(%rip)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>init_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>258</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>init_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>511</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>level3_ident_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0</span>(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>level3_kernel_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>510</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>level3_kernel_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>511</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>level2_fixmap_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>506</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Add an Identity mapping if I am above 1G */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>_text</span>(%rip), %rdi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>andq</span>	<span style=color:#66d9ef>$LARGE_PAGE_MASK</span>, %rdi
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rdi, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>shrq</span>	<span style=color:#66d9ef>$PUD_SHIFT</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>andq</span>	<span style=color:#66d9ef>$</span>(<span style=color:#66d9ef>PTRS_PER_PUD</span> - <span style=color:#ae81ff>1</span>), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jz</span>	<span style=color:#66d9ef>ident_complete</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	(<span style=color:#66d9ef>level2_spare_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#66d9ef>_KERNPG_TABLE</span>)(%rbp), %rdx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>level3_ident_pgt</span>(%rip), %rbx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rdx, <span style=color:#ae81ff>0</span>(%rbx, %rax, <span style=color:#ae81ff>8</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rdi, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>shrq</span>	<span style=color:#66d9ef>$PMD_SHIFT</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>andq</span>	<span style=color:#66d9ef>$</span>(<span style=color:#66d9ef>PTRS_PER_PMD</span> - <span style=color:#ae81ff>1</span>), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>__PAGE_KERNEL_LARGE_EXEC</span>(%rdi), %rdx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>level2_spare_pgt</span>(%rip), %rbx
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rdx, <span style=color:#ae81ff>0</span>(%rbx, %rax, <span style=color:#ae81ff>8</span>)
+</span></span><span style=display:flex><span>ident_complete:
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Fixup the kernel text+data virtual addresses
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#66d9ef>level2_kernel_pgt</span>(%rip), %rdi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>leaq</span>	<span style=color:#ae81ff>4096</span>(%rdi), %r8
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* See if it is a valid page table entry */</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>	<span style=color:#a6e22e>testq</span>	<span style=color:#66d9ef>$1</span>, <span style=color:#ae81ff>0</span>(%rdi)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jz</span>	<span style=color:#ae81ff>2</span><span style=color:#66d9ef>f</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#ae81ff>0</span>(%rdi)
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Go to the next page */</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>2:</span>	<span style=color:#a6e22e>addq</span>	<span style=color:#66d9ef>$8</span>, %rdi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cmp</span>	%r8, %rdi
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jne</span>	<span style=color:#ae81ff>1</span><span style=color:#66d9ef>b</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Fixup phys_base */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>phys_base</span>(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#ifdef CONFIG_SMP
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>trampoline_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0</span>(%rip)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>trampoline_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>511</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span><span style=color:#75715e>#endif
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#ifdef CONFIG_ACPI_SLEEP
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>wakeup_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> <span style=color:#ae81ff>0</span>(%rip)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	%rbp, <span style=color:#66d9ef>wakeup_level4_pgt</span> <span style=color:#960050;background-color:#1e0010>+</span> (<span style=color:#ae81ff>511</span>*<span style=color:#ae81ff>8</span>)(%rip)
+</span></span><span style=display:flex><span><span style=color:#75715e>#endif
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Due to ENTRY(), sometimes the empty space gets filled with
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * zeros. Better take a jmp than relying on empty space being
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * filled with 0x90 (nop)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jmp</span> <span style=color:#66d9ef>secondary_startup_64</span>
+</span></span></code></pre></div><h5 id=secondary_startup_64-跳转到高位-va><code>secondary_startup_64</code>: 跳转到高位 va
+<a class=anchor href=#secondary_startup_64-%e8%b7%b3%e8%bd%ac%e5%88%b0%e9%ab%98%e4%bd%8d-va aria-hidden=true>#</a></h5><p>主要是配置了 <code>cr4</code> <code>cr3</code> <code>cr0</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-asm data-lang=asm><span style=display:flex><span>secondary_startup_64:
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * At this point the CPU runs in 64bit mode CS.L = 1 CS.D = 1,
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * and someone has loaded a mapped page table.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * %esi holds a physical pointer to real_mode_data.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We come here either from startup_64 (using physical addresses)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * or from trampoline.S (using virtual addresses).
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Using virtual addresses from trampoline.S removes the need
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * to have any identity mapped pages in the kernel page table
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * after the boot processor executes this code.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Enable PAE mode and PGE */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>xorq</span>	%rax, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>btsq</span>	<span style=color:#66d9ef>$5</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>btsq</span>	<span style=color:#66d9ef>$7</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rax, %cr4
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup early boot stage 4 level pagetables. */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>$</span>(<span style=color:#66d9ef>init_level4_pgt</span> - <span style=color:#66d9ef>__START_KERNEL_map</span>), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addq</span>	<span style=color:#66d9ef>phys_base</span>(%rip), %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rax, %cr3
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 此时页表中有两个 map:
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * The Identity Map (Low VA):
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *      Virtual addresses 0x0000000000XXXXXX map directly to Physical addresses 0x0000000000XXXXXX.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * The Kernel High Map (High VA):
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *      Virtual addresses 0xffffffff80XXXXXX also map to Physical addresses 0x0000000000XXXXXX.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 *
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * 这个时候看起来代码还在 pa，但其实 mmu 已经生效了，实际的地址已经是 va 了
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * https://gemini.google.com/app/ef8a1a938d732438
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* 这里正式跳转到 va 地址 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Ensure I am executing from virtual addresses */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>$1f</span>, %rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>jmp</span>	*%rax
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>1:</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Check if nx is implemented */</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup EFER (Extended Feature Enable Register) */</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup cr0 */</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_PM				1		/* protected mode */
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_MP				(1&lt;&lt;1)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_ET				(1&lt;&lt;4)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_NE				(1&lt;&lt;5)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_WP				(1&lt;&lt;16)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_AM				(1&lt;&lt;18)
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define CR0_PAGING 			(1&lt;&lt;31)
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> <span style=color:#66d9ef>$CR0_PM</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_MP</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_ET</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_NE</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_WP</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_AM</span><span style=color:#960050;background-color:#1e0010>|</span><span style=color:#66d9ef>CR0_PAGING</span>,%eax
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Make changes effective */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	%rax, %cr0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Setup a boot time stack */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span> <span style=color:#66d9ef>init_rsp</span>(%rip),%rsp
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* zero EFLAGS after setting rsp */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushq</span> <span style=color:#66d9ef>$0</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>popfq</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We must switch to a new descriptor in kernel space for the GDT
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * because soon the kernel won&#39;t have access anymore to the userspace
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * addresses where we&#39;re currently running on. We have to do that here
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * because in 32bit we couldn&#39;t load a 64bit linear address.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>lgdt</span>	<span style=color:#66d9ef>cpu_gdt_descr</span>(%rip)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* set up data segments. actually 0 would do too */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> <span style=color:#66d9ef>$__KERNEL_DS</span>,%eax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> %eax,%ds
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> %eax,%ss
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> %eax,%es
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * We don&#39;t really need to load %fs or %gs, but load them anyway
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * to kill any stale realmode selectors.  This allows execution
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * under VT hardware.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> %eax,%fs
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span> %eax,%gs
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* 
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Setup up a dummy PDA. this is just for some early bootup code
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * that does in_interrupt() 
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span> 
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* esi is pointer to real mode structure with interesting info.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	   pass it to C */</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/*
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 这里的 %esi 是 setup.bin 里做的 boot_params
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 将作为 x86_64_start_kernel 的 real_mode_data 参数
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movl</span>	%esi, %edi
+</span></span><span style=display:flex><span>	
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Finally jump to run C code and to be on real kernel address
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * Since we are running on identity-mapped space we have to jump
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * to the full 64bit address, this is only possible as indirect
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * jump.  In addition we need to ensure %cs is set so we make this
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 * a far return.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>	 */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>movq</span>	<span style=color:#66d9ef>initial_code</span>(%rip),%rax
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushq</span>	<span style=color:#66d9ef>$0</span>		<span style=color:#75715e># fake return address to stop unwinder
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushq</span>	<span style=color:#66d9ef>$__KERNEL_CS</span>	<span style=color:#75715e># set correct cs
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>pushq</span>	%rax		<span style=color:#75715e># target address in negative space
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>lretq</span>
+</span></span><span style=display:flex><span>initial_code:
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>.quad</span>	<span style=color:#66d9ef>x86_64_start_kernel</span>
+</span></span></code></pre></div><blockquote><ul><li><p>CR4 (Control Register 4): Manages CPU features. It enables architectural extensions such as Physical Address Extension (PAE), Virtual Machine Extensions (VMX), Supervisor Mode Execution Prevention (SMEP), and Page-Level Cache Disable (PCD).</p></li><li><p>CR3 (Page Directory Base Register): Manages memory translation. It holds the physical address of the root paging structure (e.g., PML4, PML5), allowing the CPU to translate virtual addresses to physical RAM. The operating system updates CR3 during process switching.</p></li></ul><p><a href=https://wiki.osdev.org/Paging target=_blank>https://wiki.osdev.org/Paging</a></p></blockquote><h4 id=x86_64_start_kernel><code>x86_64_start_kernel</code>
+<a class=anchor href=#x86_64_start_kernel aria-hidden=true>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>void</span> __init <span style=color:#a6e22e>x86_64_start_kernel</span>(<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span> real_mode_data)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>int</span> i;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* clear bss before set_intr_gate with early_idt_handler */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>clear_bss</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>/* Make NULL pointers segfault */</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>zap_identity_mappings</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> (i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> IDT_ENTRIES; i<span style=color:#f92672>++</span>)
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>set_intr_gate</span>(i, early_idt_handler);
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>load_idt</span>((<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>struct</span> desc_ptr <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>idt_descr);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>early_printk</span>(<span style=color:#e6db74>&#34;Kernel alive</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span> 	<span style=color:#66d9ef>for</span> (i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; i <span style=color:#f92672>&lt;</span> NR_CPUS; i<span style=color:#f92672>++</span>)
+</span></span><span style=display:flex><span> 		<span style=color:#a6e22e>cpu_pda</span>(i) <span style=color:#f92672>=</span> <span style=color:#f92672>&amp;</span>boot_cpu_pda[i];
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pda_init</span>(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>copy_bootdata</span>(<span style=color:#a6e22e>__va</span>(real_mode_data));
+</span></span><span style=display:flex><span><span style=color:#75715e>#ifdef CONFIG_SMP
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>cpu_set</span>(<span style=color:#ae81ff>0</span>, cpu_online_map);
+</span></span><span style=display:flex><span><span style=color:#75715e>#endif
+</span></span></span><span style=display:flex><span>	<span style=color:#a6e22e>start_kernel</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>real_mode_data 是由 <code>setup.bin</code> 制作的 <code>boot_params</code></p><h5 id=清除-va--pa-的映射>清除 va = pa 的映射
+<a class=anchor href=#%e6%b8%85%e9%99%a4-va--pa-%e7%9a%84%e6%98%a0%e5%b0%84 aria-hidden=true>#</a></h5><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#75715e>// include/asm-x86/pgtable_64.h
+</span></span></span><span style=display:flex><span><span style=color:#75715e>#define pgd_offset_k(address) (init_level4_pgt + pgd_index(address))
+</span></span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>x86_64_start_kernel</span>()<span style=color:#f92672>:</span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>zap_identity_mappings</span>(<span style=color:#66d9ef>void</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>pgd_t</span> <span style=color:#f92672>*</span>pgd <span style=color:#f92672>=</span> <span style=color:#a6e22e>pgd_offset_k</span>(<span style=color:#ae81ff>0UL</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>pgd_clear</span>(pgd);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>set_pgd</span>(pgd, <span style=color:#a6e22e>__pgd</span>(<span style=color:#ae81ff>0</span>));
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>__flush_tlb</span>();
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>write_cr3</span>(<span style=color:#a6e22e>read_cr3</span>());
+</span></span></code></pre></div></div><div id=Rsidebar><div id=Avatar><img alt=avatar src=/blog/avatar.jpg></div><ul><li><a href=/blog/about>About Me</a></li><li><a href=/blog/donate>Donate Me</a></li><li><a href=/blog/>Ben's Blog</a></li></ul>除非注明，本博客所有文章皆为原创。<br>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div></div><div class=footer><div id=tags><a href=https://bensyz.github.io/blog/tags><i class="fas fa-tags"></i></a>
+Keywords:<ul><li><a href=https://bensyz.github.io/blog/tags/Linux-2.6.24>Linux-2.6.24</a></li><li><a href=https://bensyz.github.io/blog/tags/boot>boot</a></li></ul></div><footer><hr><div><a href=/blog/>Ben's Blog</a></div><div>本作品采用<a rel=license href=http://creativecommons.org/licenses/by-nc-sa/4.0/>知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</div><div><a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33028102001039"><img alt=public_safety_record src=/blog/icons/public_safety_icon.png>
+浙公网安备 33028102001039 号
+</a><span style="margin:0 10px"></span>
+<a target=_blank href=https://beian.miit.gov.cn/>浙ICP备2021032097号-1</a></div></footer></div></div></body></html>

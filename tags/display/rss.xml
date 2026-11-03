@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Display on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/display/</link><description>Recent content in Display on Ben's Blog</description><generator>Hugo</generator><language>zh-CN</language><lastBuildDate>Wed, 28 Oct 2026 17:01:01 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/display/rss.xml" rel="self" type="application/rss+xml"/><item><title>display character</title><link>https://bensyz.github.io/blog/blogs/from_bios_to_start_kernel/display_character/</link><pubDate>Wed, 28 Oct 2026 17:01:01 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/from_bios_to_start_kernel/display_character/</guid><description>&lt;p&gt;简单来说&lt;/p&gt;
+
+
+&lt;h2 id="int-0x10"&gt;
+ int 0x10
+ &lt;a class="anchor" href="#int-0x10" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;当前代码写字符的 ASCII 码到到 xxx 寄存器&lt;/li&gt;
+&lt;li&gt;当前代码触发 0x10 软中断&lt;/li&gt;
+&lt;li&gt;BIOS 的中断程序执行一大堆指令将 ASCII 的对应的字符图形显示到显卡上&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="vidmem"&gt;
+ vidmem
+ &lt;a class="anchor" href="#vidmem" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;当前代码写字符的 ASCII 码到某块固定地址的内存区域&lt;/li&gt;
+&lt;li&gt;显卡芯片轮询这块内存区域，将 ASCII 码转成字符图形&lt;/li&gt;
+&lt;/ol&gt;
+
+
+&lt;h2 id="out_p"&gt;
+ out_p
+ &lt;a class="anchor" href="#out_p" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;显卡芯片控制光标&lt;/p&gt;
+
+
+&lt;h2 id="framebuffer"&gt;
+ framebuffer
+ &lt;a class="anchor" href="#framebuffer" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;framebuffer 的内存区域和 vidmem 一样，也是另一块内存区。但是不是固定的，由显卡驱动将内存地址发给显卡。所谓的发是走 pcie 等的映射区域。&lt;/p&gt;
+&lt;p&gt;但此时发送的像素了，由当前代码确定某字符的字形是什么样的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;decompress_kernel 的 outb_p 用的是 int 0x10 吗&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;不是。decompress_kernel 中的 outb_p 使用的绝对不是 int 0x10。&lt;/p&gt;
+&lt;p&gt;它们属于计算机底层两个完全不同的层级和概念：&lt;/p&gt;
+&lt;p&gt;• outb_p 是硬件端口 I/O 指令： 它本质上是 x86 汇编中的 out 指令（通常后面带一个显式延迟，如 jmp 1f; 1: 或读写空闲端口 outb %al, $0x80）。它用于直接向 CPU 的 I/O 总线端口发送 8 位数据，直接与硬件外设（如老式串口、定时器或显卡寄存器）通信。
+• int 0x10 是 BIOS 中断调用： 它是实模式（Real Mode）下的软件中断，是由计算机 BIOS 固件提供的显卡服务接口。它内部封装了一系列的逻辑（包括读写各种寄存器、端口甚至内存），供操作系统引导早期或 DOS 程序调用来显示字符、改变分辨率等。&lt;/p&gt;</description></item></channel></rss>

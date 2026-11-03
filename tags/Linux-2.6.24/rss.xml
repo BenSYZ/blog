@@ -1,4 +1,152 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux-2.6.24 on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Linux-2.6.24/</link><description>Recent content in Linux-2.6.24 on Ben's Blog</description><generator>Hugo</generator><language>zh-CN</language><lastBuildDate>Sat, 18 Apr 2026 06:51:54 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Linux-2.6.24/rss.xml" rel="self" type="application/rss+xml"/><item><title>what happens before do_IRQ</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</link><pubDate>Sat, 18 Apr 2026 06:51:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</guid><description>&lt;h2 id="introduction"&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux-2.6.24 on Ben's Blog</title><link>https://bensyz.github.io/blog/tags/Linux-2.6.24/</link><description>Recent content in Linux-2.6.24 on Ben's Blog</description><generator>Hugo</generator><language>zh-CN</language><lastBuildDate>Tue, 03 Nov 2026 11:02:49 +0800</lastBuildDate><atom:link href="https://bensyz.github.io/blog/tags/Linux-2.6.24/rss.xml" rel="self" type="application/rss+xml"/><item><title>从 BIOS 到 start_kernel</title><link>https://bensyz.github.io/blog/blogs/from_bios_to_start_kernel/</link><pubDate>Tue, 03 Nov 2026 18:02:27 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/from_bios_to_start_kernel/</guid><description>&lt;h2 id="introduction"&gt;
+ Introduction
+ &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;在探究
+
+&lt;a href="../smp/_index.md"&gt;多核启动&lt;/a&gt;
+的过程中，我们知道了第二个 CPU 的 Per CPU Data 都是由第一个 CPU 准备好，甚至于启动的汇编代码 trampoline 都是由第一个 CPU 准备的。那第一个 CPU (Bootstrap Process, BSP)呢？它是怎么启动的？从函数调用栈来看，第一个 CPU 的启动位置是 &lt;code&gt;x86_64_start_kernel&lt;/code&gt;，那它之前又是谁？本文主要探究的便是 BSP CPU 在 &lt;code&gt;x86_64_start_kernel&lt;/code&gt; 之前的代码。&lt;/p&gt;
+
+
+&lt;h2 id="notations"&gt;
+ Notations
+ &lt;a class="anchor" href="#notations" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;notation&lt;/th&gt;
+ &lt;th&gt;what&lt;/th&gt;
+ &lt;th&gt;where&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;vmlinux&lt;/td&gt;
+ &lt;td&gt;Linux 的 elf 文件&lt;/td&gt;
+ &lt;td&gt;vmlinux&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;vmlinux.bin&lt;/td&gt;
+ &lt;td&gt;vmlinux 去除 elf 包裹&lt;/td&gt;
+ &lt;td&gt;arch/x86/boot/compressed/vmlinux.bin&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;vmlinux.bin.gz&lt;/td&gt;
+ &lt;td&gt;vmlinux.bin 的 gz 压缩&lt;/td&gt;
+ &lt;td&gt;arch/x86/boot/compressed/vmlinux.bin.gz&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;vmlinux.w&lt;/td&gt;
+ &lt;td&gt;vmlinux.bin.gz + 解压代码&lt;/td&gt;
+ &lt;td&gt;arch/x86/boot/compressed/vmlinux&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;vmlinux.w.bin&lt;/td&gt;
+ &lt;td&gt;vmlinux.w 去除 elf 包裹&lt;/td&gt;
+ &lt;td&gt;arch/x86/boot/vmlinux.bin&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;bzImage&lt;/td&gt;
+ &lt;td&gt;vmlinux.w.bin + setup.bin&lt;/td&gt;
+ &lt;td&gt;arch/x86/boot/bzImage; /boot/vmlinuz-linux&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;setup.bin 是 Linux 自身的引导程序&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="tldr"&gt;
+ TL;DR;
+ &lt;a class="anchor" href="#tldr" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;在上电
+&lt;ul&gt;
+&lt;li&gt;内存和 ROM 会被连接导通，将该地址的内存初始化成 ROM 中烧写好的代码&lt;/li&gt;
+&lt;li&gt;CPU 会将 instructor pointer 设置为 &lt;code&gt;0xfff0&lt;/code&gt;，然后开始执行&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ROM (&lt;code&gt;0xfff0&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;ROM 读取硬盘的第一个扇区（MBR）中的数据到 &lt;code&gt;0x7c00&lt;/code&gt;，这正是 GRUB &lt;code&gt;stage1&lt;/code&gt; 的 MBR 代码&lt;/li&gt;
+&lt;li&gt;跳转到 &lt;code&gt;0x7c00&lt;/code&gt; (&lt;code&gt;stage1/stage1.S&lt;/code&gt;: &lt;code&gt;_start&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;GRUB &lt;code&gt;stage1&lt;/code&gt; (&lt;code&gt;0x7c00&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;将 &lt;code&gt;stage2&lt;/code&gt; 搬到了 &lt;code&gt;0x8200&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;并跳转到 &lt;code&gt;0x8200&lt;/code&gt;(&lt;code&gt;stage2/asm.S&lt;/code&gt;: &lt;code&gt;_start&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;GRUB &lt;code&gt;stage2&lt;/code&gt; (&lt;code&gt;0x8200&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;stage2&lt;/code&gt; 会去读取 &lt;code&gt;grub.cfg&lt;/code&gt;，并显示在屏幕上，供用户修改&lt;/li&gt;
+&lt;li&gt;读取 &lt;code&gt;bzImage&lt;/code&gt; 的参数信息，将 &lt;code&gt;bzImage&lt;/code&gt; 搬到指定位置的内存
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;vmlinux.w.bin&lt;/code&gt;: &lt;code&gt;0x100000&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;setup.bin&lt;/code&gt;: &lt;code&gt;0x90000&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;配置 Linux 启动参数，并修改 Linux 中参数段的指针&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;big_linux_boot&lt;/code&gt; 跳转到 &lt;code&gt;bzImage&lt;/code&gt; 指定的位置 &lt;code&gt;0x90200&lt;/code&gt; (&lt;code&gt;arch/x86/boot/header.S&lt;/code&gt;: &lt;code&gt;_start&lt;/code&gt;，0x200 跳过了 MBR code)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bzImage&lt;/code&gt; 的 &lt;code&gt;boot/vmlinux&lt;/code&gt; (被 grub 拆分到了两处)
+&lt;ul&gt;
+&lt;li&gt;把自己搬运到高位&lt;/li&gt;
+&lt;li&gt;解压 &lt;code&gt;vmlinux&lt;/code&gt; 到特定位置 &lt;code&gt;0x200000&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;跳转到 &lt;code&gt;0x200000&lt;/code&gt; (&lt;code&gt;arch/x86/kernel/head_64.S&lt;/code&gt;: &lt;code&gt;startup_64&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bzImage&lt;/code&gt; 的 &lt;code&gt;kernel/vmlinux&lt;/code&gt; (&lt;code&gt;0x200000&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;启用两张页表&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;secondary_startup_64&lt;/code&gt;，从低地址跳到高地址。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;x86_64_start_kernel&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;start_kernel&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="the-big-picture-of-bzimage"&gt;
+ The Big Picture of &lt;code&gt;bzImage&lt;/code&gt;
+ &lt;a class="anchor" href="#the-big-picture-of-bzimage" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;pre tabindex="0"&gt;&lt;code&gt;bzImage
+ ├── setup.bin
+ │   ├── boot/header.S
+ │ │ ├── ...
+ │ │ ├── (setup_sectors - 1)
+ │ │ ├── ...
+ │ │ ├── (sizeof vmlinux.w.bin)
+ │ │ ├── ...
+ │ │ ├── (root_dev_minor)
+ │ │ ├── (root_dev_major)
+ │ │ └── ...
+ │   └── ...
+ └── vmlinux.w.bin
+ ├── boot/compressed/head_64.S
+ ├── vmlinux.bin.gz
+ └── boot/compressed/misc_64.c (gzip decompress code)
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;setup_sectors - 1&lt;/code&gt; 的 1 是 MBR&lt;/li&gt;
+&lt;/ul&gt;
+
+
+&lt;h2 id="bios"&gt;
+ BIOS
+ &lt;a class="anchor" href="#bios" aria-hidden="true"&gt;#&lt;/a&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;BIOS 会将磁盘的 MBR 复制到 0x7c00 位置，然后跳转执行。&lt;/p&gt;</description></item><item><title>what happens before do_IRQ</title><link>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</link><pubDate>Sat, 18 Apr 2026 06:51:54 +0800</pubDate><guid>https://bensyz.github.io/blog/blogs/what_happens_before_do_IRQ/</guid><description>&lt;h2 id="introduction"&gt;
  Introduction
  &lt;a class="anchor" href="#introduction" aria-hidden="true"&gt;#&lt;/a&gt;
 &lt;/h2&gt;
